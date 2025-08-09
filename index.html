@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>후다닥 미세먼지 피하기</title>
+  
+  <meta property="og:title" content="후다닥 미세먼지 피하기">
+  <meta property="og:description" content="내 주변 가장 가까운 곳의 미세먼지 정보를 확인하세요!">
+  <meta property="og:image" content="https://placehold.co/600x315/1E88E5/FFFFFF?text=후다닥!%0A미세먼지%0A피하기">
+  
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- 고해상도 아이콘 및 PWA 설정 -->
+  <link rel="apple-touch-icon" sizes="180x180" href="https://placehold.co/180x180/1E88E5/FFFFFF?text=M">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://placehold.co/32x32/1E88E5/FFFFFF?text=M">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://placehold.co/16x16/1E88E5/FFFFFF?text=M">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+
+  <script>
+    window.env = {
+      AIRKOREA_KEY: 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D',
+      KAKAO_KEY: 'be29697319e13590895593f5f5508348'
+    };
+  </script>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>후다닥 미세먼지 피하기</h1>
+      <button id="shareBtn" class="share-btn" title="공유하기">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+      </button>
+    </div>
+    <div class="version-info">ver.1</div>
+    <div class="info-row">
+      <p><strong>접속지역:</strong> <span id="region">--</span></p>
+      <p><strong>측정 기준:</strong> <span id="time">--</span></p>
+    </div>
+  </header>
+
+  <section id="gauges">
+    <div class="gauge-container">
+      <h2>미세먼지</h2>
+      <div class="gauge-wrapper">
+        <div class="gauge-wheel" id="gaugePM10"></div>
+        <div class="gauge-hole">
+          <div class="gauge-status" id="statusTextPM10">--</div>
+          <div class="gauge-value" id="valueTextPM10">-- µg/m³</div>
+        </div>
+      </div>
+      <p id="stationPM10" class="station-info">--</p>
+    </div>
+    <div class="gauge-container">
+      <h2>초미세먼지</h2>
+      <div class="gauge-wrapper">
+        <div class="gauge-wheel" id="gaugePM25"></div>
+        <div class="gauge-hole">
+          <div class="gauge-status" id="statusTextPM25">--</div>
+          <div class="gauge-value" id="valueTextPM25">-- µg/m³</div>
+        </div>
+      </div>
+      <p id="stationPM25" class="station-info">--</p>
+    </div>
+  </section>
+
+  <div id="error-message" class="error-message"></div>
+
+  <section id="search">
+    <input type="text" id="place" placeholder="지역 검색 (예: 송도동, 가평군)">
+    <ul id="suggestions"></ul>
+    <button id="searchBtn">검색</button>
+  </section>
+
+  <section id="criteria">
+    <div class="criteria-card">
+      <h3>미세먼지 기준</h3>
+      <ul>
+        <li><span class="color-indicator good"></span>좋음 (0~28 µg/m³): 맑은 공기 상태</li>
+        <li><span class="color-indicator normal"></span>보통 (29~80 µg/m³): 무난한 수준</li>
+        <li><span class="color-indicator bad"></span>나쁨 (81~146 µg/m³): 민감군 주의 필요</li>
+        <li><span class="color-indicator very-bad"></span>매우나쁨 (147 µg/m³ 이상): 외출 자제 권고</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025년 08월 7일 minhoolee</p>
+    <button id="adminBtn" style="font-size: small; opacity: 0.6; margin-left: 1rem; cursor: pointer; background: none; border: none; color: var(--light-text-color); padding: 5px;">관리자 로그인</button>
+  </footer>
+
+  <!-- PC/안드로이드용 설치 팝업 -->
+  <div id="install-popup" class="pwa-popup-overlay">
+    <div class="pwa-popup-content">
+      <button id="install-close-btn" class="pwa-popup-close-btn">&times;</button>
+      <h3>앱으로 설치하기</h3>
+      <p>이 웹사이트를 앱처럼 설치하여<br>바탕화면에서 바로 사용하세요!</p>
+      <button id="install-btn" class="install-btn">앱 설치하기</button>
+    </div>
+  </div>
+
+  <!-- iOS용 안내 팝업 -->
+  <div id="ios-install-popup" class="pwa-popup-overlay">
+    <div class="pwa-popup-content">
+      <button id="ios-close-btn" class="pwa-popup-close-btn">&times;</button>
+      <h3>홈 화면에 추가하기</h3>
+      <p>아래 순서대로 홈 화면에 추가하여<br>앱처럼 사용해 보세요!</p>
+      <div class="ios-instructions">
+        1. 하단의 공유 버튼( <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg> )을 누르세요.
+      </div>
+      <div class="ios-instructions">
+        2. '홈 화면에 추가'를 선택하세요.
+      </div>
+    </div>
+  </div>
+  
+  <div id="toast-message" class="toast"></div>
+
+  <script src="gps.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
