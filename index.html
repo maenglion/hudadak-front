@@ -32,7 +32,7 @@
     </div>
     <div class="info-row">
       <p><strong>접속지역:</strong> <span id="region">--</span></p>
-      <p><strong>측정 기준:</strong> <span id="time">--</span></p>
+      <p><strong>접속시간:</strong> <span id="time">--</span></p>
     </div>
   </header>
 
@@ -64,15 +64,8 @@
   <!-- 예보 정보 UI 수정 -->
   <section id="forecast-section" class="criteria-card" style="display: none;">
     <h3>오늘의 예보 <span id="forecast-region" class="forecast-region-text"></span></h3>
-    <div class="forecast-item">
-      <span class="forecast-label">미세먼지</span>
-      <p id="forecastPM10">--</p>
-    </div>
-    <div class="forecast-item">
-      <span class="forecast-label">초미세먼지</span>
-      <p id="forecastPM25">--</p>
-    </div>
-    <p id="informCause" class="inform-cause-text"></p>
+    <p id="informCausePM10" class="inform-cause-text"></p>
+    <p id="informCausePM25" class="inform-cause-text"></p>
   </section>
 
   <div id="error-message" class="error-message"></div>
