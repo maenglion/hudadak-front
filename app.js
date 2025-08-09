@@ -17,8 +17,8 @@
   const suggestionsEl = document.getElementById('suggestions');
   const errorEl = document.getElementById('error-message');
   const gaugesEl = document.getElementById('gauges');
-  const shareResultContainer = document.getElementById('share-result-container');
   const shareResultBtn = document.getElementById('shareResultBtn');
+  const dataSourceInfo = document.getElementById('data-source-info');
 
   let currentCoords = null;
 
@@ -87,9 +87,13 @@
     currentCoords = { lat, lon };
     errorEl.style.display = 'none';
     
-    // 사용자가 직접 검색했을 때만 공유 버튼을 표시
+    // 사용자가 직접 검색했을 때만 공유 버튼을 표시하고, 아닐 경우 데이터 출처를 표시
     if (isManualSearch) {
-      shareResultContainer.style.display = 'block';
+      shareResultBtn.style.display = 'inline-flex';
+      dataSourceInfo.style.display = 'none';
+    } else {
+      shareResultBtn.style.display = 'none';
+      dataSourceInfo.style.display = 'block';
     }
 
     const stationName = findNearestStation(lat, lon);
@@ -124,7 +128,7 @@
           li.onclick = () => {
             inputEl.value = d.address_name;
             suggestionsEl.innerHTML = '';
-            updateAll(d.y, d.x, true); // 수동 검색이므로 true 전달
+            updateAll(d.y, d.x, true);
           };
           suggestionsEl.appendChild(li);
         });
@@ -147,7 +151,7 @@
       const { documents } = await res.json();
       if (documents.length > 0) {
         const { y, x, address_name } = documents[0];
-        updateAll(y, x, true); // 수동 검색이므로 true 전달
+        updateAll(y, x, true);
         inputEl.value = address_name;
       } else {
         errorEl.textContent = `'${query}'에 대한 검색 결과가 없습니다.`;
@@ -230,13 +234,13 @@
     const lon = urlParams.get('lon');
 
     if (lat && lon) {
-      updateAll(parseFloat(lat), parseFloat(lon), true); // 공유된 링크는 수동 검색으로 간주
+      updateAll(parseFloat(lat), parseFloat(lon), true);
     } else {
       navigator.geolocation.getCurrentPosition(
-        p => updateAll(p.coords.latitude, p.coords.longitude, false), // 최초 GPS 로드는 수동 검색이 아님
+        p => updateAll(p.coords.latitude, p.coords.longitude, false),
         () => {
           alert('위치 정보를 가져올 수 없습니다. 기본 위치(서울 종로구)로 조회합니다.');
-          updateAll(37.572016, 126.975319, false); // 기본 위치도 수동 검색이 아님
+          updateAll(37.572016, 126.975319, false);
         }
       );
     }

@@ -32,13 +32,6 @@ header {
   margin-bottom: 2rem;
 }
 
-.header-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
-
 header h1 {
   font-weight: 700;
   font-size: 2.5rem;
@@ -46,7 +39,6 @@ header h1 {
   margin: 0;
 }
 
-/* --- 버전 정보와 공유 버튼을 묶는 스타일 --- */
 .header-meta {
   display: flex;
   justify-content: center;
@@ -55,45 +47,25 @@ header h1 {
   margin-top: 0.75rem;
 }
 
-.share-btn {
-  /* position: absolute 속성 제거 */
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 32px; /* 크기 살짝 조정 */
-  height: 32px;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: var(--light-text-color);
-  transition: background-color 0.2s, color 0.2s;
-}
-.share-btn:hover {
-  background-color: var(--background-color);
-  color: var(--primary-color);
-}
-.share-btn svg {
-  width: 16px; /* 아이콘 크기 살짝 조정 */
-  height: 16px;
-}
-
 .version-info {
   display: inline-block;
   background-color: #e9ecef;
   color: var(--light-text-color);
   font-size: 0.75rem;
-  padding: 2px 6px;
+  padding: 4px 8px;
   border-radius: 4px;
-  margin-top: 0.5rem;
 }
 
+/* --- 접속지역/시간 UI 수정 --- */
 .info-row {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 1rem; /* 간격 축소 */
   color: var(--light-text-color);
   text-align: center;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.8rem; /* 글씨 크기 축소 */
 }
 
 #gauges { display: flex; justify-content: center; gap: 2rem; width: 100%; max-width: 800px; flex-wrap: wrap; }
@@ -116,11 +88,18 @@ header h1 {
 #suggestions li { padding: 12px 15px; cursor: pointer; }
 #suggestions li:hover { background-color: #f0f0f0; }
 
-.share-result-container {
+.post-search-area {
   width: 100%;
   max-width: 500px;
   margin: 1rem 0 2rem 0;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 40px;
+}
+.data-source-info {
+  color: var(--light-text-color);
+  font-size: 0.8rem;
 }
 .share-result-btn {
   display: inline-flex;
@@ -160,7 +139,7 @@ footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1p
 
 @media (max-width: 768px) {
   header h1 { font-size: 2rem; }
-  .info-row { flex-direction: column; gap: 0.5rem; }
+  .info-row { flex-direction: column; gap: 0.25rem; /* 모바일 간격 더 줄임 */ }
   #gauges { flex-direction: column; gap: 1.5rem; }
   .gauge-wrapper { width: 180px; height: 180px; }
   .gauge-hole { width: 120px; height: 120px; }
