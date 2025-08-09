@@ -17,6 +17,10 @@
   const suggestionsEl = document.getElementById('suggestions');
   const errorEl = document.getElementById('error-message');
   const gaugesEl = document.getElementById('gauges');
+  const shareResultContainer = document.getElementById('share-result-container');
+  const shareResultBtn = document.getElementById('shareResultBtn');
+
+  let currentCoords = null; // 현재 표시 중인 좌표를 저장할 변수
 
   function calculateDistance(lat1, lon1, lat2, lon2) {
     const dx = lon1 - lon2;
@@ -80,7 +84,10 @@
   }
 
   async function updateAll(lat, lon) {
+    currentCoords = { lat, lon }; // 현재 좌표 저장
     errorEl.style.display = 'none';
+    shareResultContainer.style.display = 'block'; // 검색 결과 공유 버튼 보이기
+
     const stationName = findNearestStation(lat, lon);
     const airData = await fetchAirData(stationName);
     drawGauge('PM10', airData.pm10, airData.station);
@@ -148,45 +155,53 @@
     }
   };
 
-  const adminBtn = document.getElementById('adminBtn');
-  if (adminBtn) {
-    adminBtn.onclick = () => {
-      const pw = prompt('비밀번호를 입력하세요.');
-      if (pw === 'leesoul0407!') {
-        window.location.href = 'admin.html';
-      } else if (pw) {
-        alert('비밀번호가 일치하지 않습니다.');
+  const shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) {
+    shareBtn.onclick = async () => {
+      const shareData = {
+        title: '후다닥 미세먼지 피하기',
+        text: '내 주변 미세먼지 정보를 확인해보세요!',
+        url: window.location.origin + window.location.pathname // 항상 기본 URL 공유
+      };
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else {
+          throw new Error('Web Share API not supported');
+        }
+      } catch (err) {
+        alert('이 브라우저에서는 공유 기능을 지원하지 않습니다.');
       }
     };
   }
-  
-  const shareBtn = document.getElementById('shareBtn');
-  if (shareBtn) {
-    shareBtn.onclick = () => {
-      const url = window.location.href;
-      const textarea = document.createElement('textarea');
-      textarea.value = url;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
 
-      const toast = document.getElementById('toast-message');
-      toast.textContent = 'URL이 복사되었어요!';
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2000);
+  // 검색 결과 공유 버튼 로직
+  if (shareResultBtn) {
+    shareResultBtn.onclick = async () => {
+      if (!currentCoords) {
+        alert('먼저 지역을 검색하거나 현재 위치를 확인해주세요.');
+        return;
+      }
+      const baseUrl = window.location.origin + window.location.pathname;
+      const shareUrl = `${baseUrl}?lat=${currentCoords.lat}&lon=${currentCoords.lon}`;
+      const regionName = document.getElementById('region').textContent || '검색 지역';
+
+      const shareData = {
+        title: `${regionName} 미세먼지 정보`,
+        text: `'${regionName}'의 미세먼지 정보를 확인해보세요!`,
+        url: shareUrl
+      };
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else {
+          throw new Error('Web Share API not supported');
+        }
+      } catch (err) {
+        alert('이 브라우저에서는 공유 기능을 지원하지 않습니다.');
+      }
     };
   }
-
-  navigator.geolocation.getCurrentPosition(
-    p => updateAll(p.coords.latitude, p.coords.longitude),
-    () => {
-      alert('위치 정보를 가져올 수 없습니다. 기본 위치(서울 종로구)로 조회합니다.');
-      updateAll(37.572016, 126.975319);
-    }
-  );
 
   function updateDateTime() {
     const timeEl = document.getElementById('time');
@@ -205,45 +220,29 @@
       regionEl.textContent = '주소 조회 실패';
     }
   }
+  
+  // --- 앱 초기 실행 로직 ---
+  function initializeApp() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = urlParams.get('lat');
+    const lon = urlParams.get('lon');
 
-  // --- PWA 설치 팝업 로직 (iOS 부분 제거) ---
-  let deferredPrompt;
-  const installPopup = document.getElementById('install-popup');
-  const installBtn = document.getElementById('install-btn');
-  const installCloseBtn = document.getElementById('install-close-btn');
-  const PWA_PROMPT_SHOWN_KEY = 'pwaPromptShown';
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    if (!localStorage.getItem(PWA_PROMPT_SHOWN_KEY)) {
-      installPopup.style.display = 'flex';
-    }
-  });
-
-  if (installBtn) {
-    installBtn.onclick = async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          console.log('User accepted the A2HS prompt');
+    if (lat && lon) {
+      // URL에 좌표가 있으면 해당 위치의 정보 표시
+      updateAll(parseFloat(lat), parseFloat(lon));
+    } else {
+      // 없으면 현재 위치 GPS 요청
+      navigator.geolocation.getCurrentPosition(
+        p => updateAll(p.coords.latitude, p.coords.longitude),
+        () => {
+          alert('위치 정보를 가져올 수 없습니다. 기본 위치(서울 종로구)로 조회합니다.');
+          updateAll(37.572016, 126.975319);
         }
-        deferredPrompt = null;
-        installPopup.style.display = 'none';
-        localStorage.setItem(PWA_PROMPT_SHOWN_KEY, 'true');
-      }
-    };
+      );
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
   }
-  
-  if (installCloseBtn) {
-    installCloseBtn.onclick = () => {
-      installPopup.style.display = 'none';
-      localStorage.setItem(PWA_PROMPT_SHOWN_KEY, 'true');
-    };
-  }
-  
-  updateDateTime();
-  setInterval(updateDateTime, 60000);
+
+  initializeApp(); // 앱 실행
 })();

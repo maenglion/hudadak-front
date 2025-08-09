@@ -102,7 +102,7 @@ header h1 {
 .gauge-value { font-size: 1.2rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
 .station-info { color: var(--light-text-color); font-size: 0.9rem; line-height: 1.4; margin-top: 1rem; }
 .error-message { display: none; width: 100%; max-width: 800px; padding: 1rem; margin: -1rem 0 1.5rem 0; background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA; border-radius: 8px; text-align: center; box-sizing: border-box; }
-#search { position: relative; width: 100%; max-width: 500px; display: flex; margin: 2rem 0; }
+#search { position: relative; width: 100%; max-width: 500px; display: flex; margin: 2rem 0 0 0; }
 #place { flex-grow: 1; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px 0 0 8px; font-size: 1rem; }
 #place:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); }
 #searchBtn { padding: 12px 20px; border: none; background-color: var(--primary-color); color: white; font-size: 1rem; cursor: pointer; border-radius: 0 8px 8px 0; transition: background-color 0.2s; }
@@ -110,6 +110,30 @@ header h1 {
 #suggestions { list-style: none; margin: 0; padding: 0; position: absolute; top: 100%; left: 0; right: 0; background: var(--card-color); border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 8px 8px; z-index: 10; box-shadow: var(--shadow); }
 #suggestions li { padding: 12px 15px; cursor: pointer; }
 #suggestions li:hover { background-color: #f0f0f0; }
+
+.share-result-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 1rem 0 2rem 0;
+  text-align: center;
+}
+.share-result-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.share-result-btn:hover { background-color: #5a6268; }
+.share-result-btn svg { width: 16px; height: 16px; }
+
 #criteria { width: 100%; max-width: 800px; margin-top: 0; }
 .criteria-card { background: var(--card-color); padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow); }
 .criteria-card h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.8rem; margin-bottom: 1rem; }
@@ -124,16 +148,10 @@ footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1p
 @keyframes blink-animation { 50% { opacity: 0.7; } }
 .blink { animation: blink-animation 0.5s ease-in-out; }
 
-.pwa-popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
-.pwa-popup-content { background-color: var(--card-color); padding: 2rem; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 90%; width: 350px; position: relative; line-height: 1.6; }
-.pwa-popup-content h3 { margin-top: 0; font-size: 1.5rem; color: var(--primary-color); }
-.pwa-popup-content p { margin-bottom: 1.5rem; color: var(--text-color); }
-.pwa-popup-close-btn { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; color: var(--light-text-color); cursor: pointer; }
-.install-btn { background-color: var(--primary-color); color: white; border: none; padding: 12px 25px; font-size: 1rem; font-weight: 700; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
-.install-btn:hover { background-color: #0056b3; }
-
-.toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1001; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 1rem; opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
-.toast.show { visibility: visible; opacity: 1; }
+.link-boxes-container { display: flex; gap: 1rem; width: 100%; max-width: 800px; margin: 2rem 0 1rem 0; }
+.link-box { flex: 1; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem; background-color: var(--card-color); border: 1px solid var(--border-color); border-radius: 10px; text-decoration: none; color: var(--text-color); font-weight: 700; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.link-box:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); }
+.youtube-logo { width: 24px; height: auto; }
 
 @media (max-width: 768px) {
   header h1 { font-size: 2rem; }
@@ -143,4 +161,5 @@ footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1p
   .gauge-hole { width: 120px; height: 120px; }
   .gauge-status { font-size: 1.6rem; }
   .gauge-value { font-size: 1rem; }
+  .link-boxes-container { flex-direction: column; }
 }
