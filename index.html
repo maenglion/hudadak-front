@@ -63,8 +63,9 @@
 
   <!-- 예보 정보 UI 수정 -->
   <section id="forecast-section" class="criteria-card" style="display: none;">
-    <h3>오늘의 미세먼지 예보</h3>
-    <p id="forecastCause"></p>
+    <h3>오늘의 예보 <span id="forecast-region" class="forecast-region-text"></span></h3>
+    <div id="whyTags" class="tag-container"></div>
+    <p id="forecastCause" class="inform-cause-text"></p>
   </section>
 
   <div id="error-message" class="error-message"></div>
@@ -106,7 +107,7 @@
   </section>
 
   <footer>
-    <p>© 2025년 08월 7일 minhoolee</p>
+    <p>© 2025년 08월 07일 minhoolee</p>
   </footer>
 
   <script src="gps.js"></script>

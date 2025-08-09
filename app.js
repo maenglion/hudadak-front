@@ -13,6 +13,7 @@
   const KAKAO_ADDRESS_API = `https://dapi.kakao.com/v2/local/search/address.json`;
   const KAKAO_COORD_API = `https://dapi.kakao.com/v2/local/geo/coord2address.json`;
   const FORECAST_API = (code) => `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=100&pageNo=1&searchDate={date}&informCode=${code}`;
+  const METEO_API = `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_direction_10m,surface_pressure,solar_radiation`;
 
   const inputEl = document.getElementById('place');
   const suggestionsEl = document.getElementById('suggestions');
@@ -23,6 +24,23 @@
   const dataSourceInfo = document.getElementById('data-source-info');
 
   let currentCoords = null;
+
+  // --- 유틸 함수 ---
+  function cleanCause(txt){
+    if(!txt) return '';
+    return txt.replace(/^\s*○\s*/, '').replace(/^\s*\[[^\]]+\]\s*/, '').trim();
+  }
+  function toNum(x){ const n = Number(x); return Number.isFinite(n) ? n : null; }
+  function degToCompass(d){
+    if(d==null) return null;
+    const dirs = ['북','북북동','북동','동북동','동','동남동','남동','남남동','남','남남서','남서','서남서','서','서북서','북서','북북서'];
+    const idx = Math.round(((d%360)+360)%360 / 22.5) % 16;
+    return dirs[idx];
+  }
+  function isFromChinaSide(dir){
+    if(dir==null) return false;
+    return (dir >= 240 && dir <= 300) || (dir >= 315 || dir <= 30); // 서~북서~북
+  }
 
   function loadCache(key, maxAgeMs) {
     const cached = localStorage.getItem(key);
@@ -120,37 +138,30 @@
         const pm10 = pickPM(item, 'pm10');
         const pm25 = pickPM(item, 'pm25');
         if (pm10 !== null || pm25 !== null) {
-          return { station: st.name, pm10, pm25 };
+          return { station: st.name, pm10, pm25, item };
         }
       }
     }
     return null;
   }
-
-  function parseRegionGrades(informGradeStr) {
-    const map = {};
-    if (!informGradeStr) return map;
-    informGradeStr.split(',').forEach(pair => {
-      const [k, v] = pair.split(':').map(s => s && s.trim());
-      if (k && v) map[k] = v;
-    });
-    return map;
-  }
-
-  function pickForecastRegionKey(gradesMap, kakaoDoc) {
-    const addr = kakaoDoc?.address || {};
-    const full = [addr.region_1depth_name, addr.region_2depth_name, addr.address_name].filter(Boolean).join(' ');
-    const keys = Object.keys(gradesMap);
-    let best = null;
-    keys.forEach(k => { if (full.includes(k) && (!best || k.length > best.length)) best = k; });
-    if (!best && /(서울|경기|인천)/.test(full) && gradesMap['수도권']) best = '수도권';
-    return best || keys[0] || null;
-  }
-
-  async function reverseAddress(lat, lon) {
-    const res = await fetch(`${KAKAO_COORD_API}?x=${lon}&y=${lat}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
-    const { documents } = await res.json();
-    return documents?.[0] || null;
+  
+  async function fetchMeteo(lat, lon) {
+    try {
+      const url = METEO_API.replace('{lat}', lat).replace('{lon}', lon);
+      const res = await fetch(url);
+      const data = await res.json();
+      const c = data.current;
+      return {
+        temp: c.temperature_2m,
+        windSpeed: c.wind_speed_10m,
+        windDir: c.wind_direction_10m,
+        rad: c.solar_radiation,
+        cloud: c.cloud_cover,
+      };
+    } catch (e) {
+      console.error("Meteo fetch error:", e);
+      return null;
+    }
   }
 
   async function fetchForecast(code, dateStrKST = null) {
@@ -172,59 +183,57 @@
       return null;
     }
     const it = items[0];
-    const out = {
-      cause: it.informCause || '',
-      overall: it.informOverall || '',
-      grades: parseRegionGrades(it.informGrade || ''),
-      date
-    };
+    const out = { cause: it.informCause || '', overall: it.informOverall || '' };
     saveCache(cacheKey, out);
     return out;
   }
 
-  function cleanCause(txt) {
-    if (!txt) return '';
-    return txt
-      .replace(/^\s*○\s*/, '')
-      .replace(/^\s*\[[^\]]+\]\s*/, '')
-      .trim();
+  // --- 태그 산출 및 해설 생성 로직 ---
+  function computeCauseTags(meas, meteo, hints){
+    const tags = new Set();
+    const pm10 = toNum(meas.pm10), pm25 = toNum(meas.pm25);
+    const o3 = toNum(meas.o3), no2 = toNum(meas.no2);
+    const ws = toNum(meteo?.windSpeed), wd = toNum(meteo?.windDir);
+    const rad = toNum(meteo?.rad), cloud = toNum(meteo?.cloud), t = toNum(meteo?.temp);
+    const pmBad = (pm25>=36) || (pm10>=81);
+    const ratio = pm25 ? (pm10/pm25) : Infinity;
+    const f10 = cleanCause(hints?.cause10 || hints?.overall10 || '');
+    const f25 = cleanCause(hints?.cause25 || hints?.overall25 || '');
+
+    if ((pm10>=81 && ratio>=2.2) || /황사/.test(f10+f25)) tags.add('황사');
+    if (pmBad && ws!=null && ws<=1.5 && ((cloud!=null && cloud<=40) || (rad!=null && rad>=350))) tags.add('대기 정체');
+    if ((pmBad && ws!=null && ws>=4 && isFromChinaSide(wd)) || /(국외|장거리|서풍|북서풍)/.test(f10+f25)) tags.add('국외 유입');
+    if ((o3!=null && o3>=0.06) || (rad!=null && rad>=500 && cloud!=null && cloud<=30 && t!=null && t>=24 && pm25>=36)) tags.add('광화학');
+    if (no2!=null && no2>=0.05 && pm25>=36) tags.add('국내 배출/교통');
+
+    return Array.from(tags);
   }
 
-  function setForecastUI(g10, g25, f10, f25) {
-    const el10Text = document.getElementById('informCausePM10');
-    const el25Text = document.getElementById('informCausePM25');
-    const sectionEl = document.getElementById('forecast-section');
+  function buildForecastExplanation(meas, meteo, hints, areaName){
+    const tags = computeCauseTags(meas, meteo, hints);
+    const pieces = [];
 
-    const cause10 = cleanCause(f10?.cause || f10?.overall || '');
-    const cause25 = cleanCause(f25?.cause || f25?.overall || '');
+    if (tags.includes('황사')) pieces.push('황사 영향 가능성이 큽니다');
+    else if (tags.includes('국외 유입')) pieces.push('국외 유입 영향 가능성이 있습니다');
+    else if (tags.includes('대기 정체')) pieces.push('대기 정체로 축적되는 양상입니다');
+    else if (tags.includes('광화학')) pieces.push('강한 일사와 광화학 반응 영향이 보입니다');
+    else if (tags.includes('국내 배출/교통')) pieces.push('국내 배출(교통 등) 영향이 큽니다');
+    else pieces.push('원인이 뚜렷하지 않습니다');
 
-    if (el10Text) el10Text.innerHTML = cause10 ? `<b>미세먼지:</b> ${cause10}` : '<b>미세먼지:</b> 제공된 정보가 없습니다.';
-    if (el25Text) el25Text.innerHTML = cause25 ? `<b>초미세먼지:</b> ${cause25}` : '<b>초미세먼지:</b> 제공된 정보가 없습니다.';
-    
-    if(sectionEl) sectionEl.style.display = 'block';
-  }
+    const ev = [];
+    const ws = toNum(meteo?.windSpeed), wd = toNum(meteo?.windDir);
+    const pm10 = toNum(meas.pm10), pm25 = toNum(meas.pm25);
+    const ratio = (pm25 && pm25>0) ? (pm10/pm25) : null;
+    const compass = degToCompass(wd);
+    if (ws!=null && compass) ev.push(`바람 ${compass} ${ws.toFixed(1)} m/s`);
+    if (ratio!=null) ev.push(`PM10/PM2.5 비율 ${ratio.toFixed(1)}`);
+    if (meas.o3!=null) ev.push(`O₃ ${Number(meas.o3).toFixed(2)} ppm`);
+    if (meas.no2!=null) ev.push(`NO₂ ${Number(meas.no2).toFixed(2)} ppm`);
+    if (toNum(meteo?.rad)!=null) ev.push(`일사 ${Math.round(meteo.rad)} W/㎡`);
+    if (toNum(meteo?.cloud)!=null) ev.push(`구름 ${Math.round(meteo.cloud)}%`);
 
-  async function updateForecastForCoords(lat, lon) {
-    const kakaoDoc = await reverseAddress(lat, lon);
-    const [f10, f25] = await Promise.all([
-      fetchForecast('PM10'),
-      fetchForecast('PM25')
-    ]);
-    if (!f10 && !f25) { 
-      setForecastUI(null, null, null, null); 
-      return; 
-    }
-
-    const key10 = f10 ? pickForecastRegionKey(f10.grades, kakaoDoc) : null;
-    const key25 = f25 ? pickForecastRegionKey(f25.grades, kakaoDoc) : null;
-
-    const g10 = key10 ? f10.grades[key10] : null;
-    const g25 = key25 ? f25.grades[key25] : null;
-
-    setForecastUI(g10, g25, f10, f25);
-    
-    const regionEl = document.getElementById('forecast-region');
-    if(regionEl) regionEl.textContent = `(${key10 || key25 || '전국'} 권역)`;
+    const text = `${areaName ? areaName+' · ' : ''}${pieces[0]}${ev.length? ' (근거: '+ev.join(', ')+')' : ''}`;
+    return { text, tags };
   }
 
   async function updateAll(lat, lon, isManualSearch = false) {
@@ -251,13 +260,29 @@
       drawGauge('PM25', null, stationName);
     }
     
-    updateRegionText(lat, lon);
+    const regionInfo = await updateRegionText(lat, lon);
     updateDateTime();
     if (gaugesEl) {
       gaugesEl.classList.add('blink');
       setTimeout(() => gaugesEl.classList.remove('blink'), 500);
     }
-    await updateForecastForCoords(lat, lon);
+    
+    const [f10, f25, meteo] = await Promise.all([
+      fetchForecast('PM10'),
+      fetchForecast('PM25'),
+      fetchMeteo(lat, lon)
+    ]);
+    
+    const exp = buildForecastExplanation(
+      { ...airData?.item, pm10: airData?.pm10, pm25: airData?.pm25 },
+      meteo,
+      { cause10: f10?.cause, cause25: f25?.cause, overall10: f10?.overall, overall25: f25?.overall },
+      regionInfo?.address_name
+    );
+
+    document.getElementById('forecastCause').textContent = exp.text;
+    document.getElementById('whyTags').innerHTML = exp.tags.map(t=>`<span class="chip">${t}</span>`).join('');
+    document.getElementById('forecast-section').style.display = 'block';
   }
   
   let debounceTimer;
