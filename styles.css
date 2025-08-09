@@ -46,16 +46,22 @@ header h1 {
   margin: 0;
 }
 
+/* --- 버전 정보와 공유 버튼을 묶는 스타일 --- */
+.header-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
 .share-btn {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  /* position: absolute 속성 제거 */
   background: none;
   border: 1px solid var(--border-color);
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 32px; /* 크기 살짝 조정 */
+  height: 32px;
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -68,8 +74,8 @@ header h1 {
   color: var(--primary-color);
 }
 .share-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 16px; /* 아이콘 크기 살짝 조정 */
+  height: 16px;
 }
 
 .version-info {
@@ -85,10 +91,10 @@ header h1 {
 .info-row {
   display: flex;
   justify-content: center;
-  gap: 2rem;
+  gap: 1rem;
   color: var(--light-text-color);
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 #gauges { display: flex; justify-content: center; gap: 2rem; width: 100%; max-width: 800px; flex-wrap: wrap; }

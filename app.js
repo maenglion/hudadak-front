@@ -20,7 +20,7 @@
   const shareResultContainer = document.getElementById('share-result-container');
   const shareResultBtn = document.getElementById('shareResultBtn');
 
-  let currentCoords = null; // 현재 표시 중인 좌표를 저장할 변수
+  let currentCoords = null;
 
   function calculateDistance(lat1, lon1, lat2, lon2) {
     const dx = lon1 - lon2;
@@ -83,10 +83,14 @@
     }
   }
 
-  async function updateAll(lat, lon) {
-    currentCoords = { lat, lon }; // 현재 좌표 저장
+  async function updateAll(lat, lon, isManualSearch = false) {
+    currentCoords = { lat, lon };
     errorEl.style.display = 'none';
-    shareResultContainer.style.display = 'block'; // 검색 결과 공유 버튼 보이기
+    
+    // 사용자가 직접 검색했을 때만 공유 버튼을 표시
+    if (isManualSearch) {
+      shareResultContainer.style.display = 'block';
+    }
 
     const stationName = findNearestStation(lat, lon);
     const airData = await fetchAirData(stationName);
@@ -120,7 +124,7 @@
           li.onclick = () => {
             inputEl.value = d.address_name;
             suggestionsEl.innerHTML = '';
-            updateAll(d.y, d.x);
+            updateAll(d.y, d.x, true); // 수동 검색이므로 true 전달
           };
           suggestionsEl.appendChild(li);
         });
@@ -143,7 +147,7 @@
       const { documents } = await res.json();
       if (documents.length > 0) {
         const { y, x, address_name } = documents[0];
-        updateAll(y, x);
+        updateAll(y, x, true); // 수동 검색이므로 true 전달
         inputEl.value = address_name;
       } else {
         errorEl.textContent = `'${query}'에 대한 검색 결과가 없습니다.`;
@@ -161,7 +165,7 @@
       const shareData = {
         title: '후다닥 미세먼지 피하기',
         text: '내 주변 미세먼지 정보를 확인해보세요!',
-        url: window.location.origin + window.location.pathname // 항상 기본 URL 공유
+        url: window.location.origin + window.location.pathname
       };
       try {
         if (navigator.share) {
@@ -175,7 +179,6 @@
     };
   }
 
-  // 검색 결과 공유 버튼 로직
   if (shareResultBtn) {
     shareResultBtn.onclick = async () => {
       if (!currentCoords) {
@@ -221,22 +224,19 @@
     }
   }
   
-  // --- 앱 초기 실행 로직 ---
   function initializeApp() {
     const urlParams = new URLSearchParams(window.location.search);
     const lat = urlParams.get('lat');
     const lon = urlParams.get('lon');
 
     if (lat && lon) {
-      // URL에 좌표가 있으면 해당 위치의 정보 표시
-      updateAll(parseFloat(lat), parseFloat(lon));
+      updateAll(parseFloat(lat), parseFloat(lon), true); // 공유된 링크는 수동 검색으로 간주
     } else {
-      // 없으면 현재 위치 GPS 요청
       navigator.geolocation.getCurrentPosition(
-        p => updateAll(p.coords.latitude, p.coords.longitude),
+        p => updateAll(p.coords.latitude, p.coords.longitude, false), // 최초 GPS 로드는 수동 검색이 아님
         () => {
           alert('위치 정보를 가져올 수 없습니다. 기본 위치(서울 종로구)로 조회합니다.');
-          updateAll(37.572016, 126.975319);
+          updateAll(37.572016, 126.975319, false); // 기본 위치도 수동 검색이 아님
         }
       );
     }
@@ -244,5 +244,5 @@
     setInterval(updateDateTime, 60000);
   }
 
-  initializeApp(); // 앱 실행
+  initializeApp();
 })();

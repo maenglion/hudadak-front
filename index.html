@@ -26,13 +26,14 @@
 </head>
 <body>
   <header>
-    <div class="header-content">
-      <h1>후다닥 미세먼지 피하기</h1>
+    <h1>후다닥 미세먼지 피하기</h1>
+    <!-- 버전 정보와 공유 버튼을 함께 묶는 컨테이너 -->
+    <div class="header-meta">
+      <div class="version-info">ver.1</div>
       <button id="shareBtn" class="share-btn" title="공유하기">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
       </button>
     </div>
-    <div class="version-info">ver.1</div>
     <div class="info-row">
       <p><strong>접속지역:</strong> <span id="region">--</span></p>
       <p><strong>측정 기준:</strong> <span id="time">--</span></p>
@@ -72,7 +73,6 @@
     <button id="searchBtn">검색</button>
   </section>
 
-  <!-- 검색 결과 공유 버튼 (초기에는 숨김) -->
   <div id="share-result-container" class="share-result-container" style="display: none;">
     <button id="shareResultBtn" class="share-result-btn">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
