@@ -2,12 +2,6 @@
 
 /* 새로운 폰트 추가 */
 @font-face {
-    font-family: 'Katuri';
-    src: url('https://gcore.jsdelivr.net/gh/projectnoonnu/noonfonts_13@1.0/Katuri.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-}
-@font-face {
     font-family: 'ONE-Mobile-Title';
     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-Title.woff') format('woff');
     font-weight: normal;
@@ -47,7 +41,7 @@ header {
 }
 
 header h1 {
-  font-family: 'Katuri', sans-serif; /* 폰트 적용 */
+  font-family: 'ONE-Mobile-Title', sans-serif; /* 폰트 적용 */
   font-weight: normal;
   font-size: 2.3rem;
   color: var(--primary-color);
@@ -91,7 +85,7 @@ header h1 {
 .gauge-wheel { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--gauge-color) var(--angle), #eee var(--angle)); transition: --angle 1s ease-out, --gauge-color 0.5s ease; }
 .gauge-hole { width: 160px; height: 160px; background: var(--card-color); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .gauge-status { 
-  font-family: 'ONE-Mobile-Title', sans-serif; /* 폰트 적용 */
+  font-family: 'Noto Sans KR', sans-serif; /* 폰트 적용 */
   font-weight: normal;
   font-size: 1.8rem; 
   position: absolute; 
@@ -100,7 +94,7 @@ header h1 {
   transform: translate(-50%, -60%); 
   transition: color 0.5s ease; 
 }
-.gauge-value { font-size: 1.2rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
+.gauge-value { font-size: 1.0rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
 .station-info { color: var(--light-text-color); font-size: 0.9rem; line-height: 1.4; margin-top: 1rem; }
 
 #forecast-section {
