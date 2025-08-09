@@ -280,17 +280,32 @@
     }
     
     const [f10, f25, meteo] = await Promise.all([
-      fetchForecast('PM10'),
-      fetchForecast('PM25'),
-      fetchMeteo(lat, lon)
-    ]);
+  fetchForecast('PM10'),
+  fetchForecast('PM25'),
+  fetchMeteo(lat, lon)
+]);
+    
+     const meas = {
+  pm10: toNum(airData?.pm10),
+  pm25: toNum(airData?.pm25),
+  o3:   toNum(airData?.item?.o3Value),
+  no2:  toNum(airData?.item?.no2Value)
+};
+
     
     const exp = buildForecastExplanation(
-      { ...airData?.item, pm10: airData?.pm10, pm25: airData?.pm25 },
-      meteo,
-      { cause10: f10?.cause, cause25: f25?.cause, overall10: f10?.overall, overall25: f25?.overall },
-      regionName
-    );
+  { ...airData?.item, pm10: airData?.pm10, pm25: airData?.pm25 },
+  meteo,
+  { cause10: f10?.cause, cause25: f25?.cause, overall10: f10?.overall, overall25: f25?.overall },
+  null // ← 주소 표시 제거 (또는 이 인자 자체를 없애도 됨)
+);
+
+const hints = {
+  cause10:   cleanCause(f10?.cause)   || '',
+  overall10: cleanCause(f10?.overall) || '',
+  cause25:   cleanCause(f25?.cause)   || '',
+  overall25: cleanCause(f25?.overall) || ''
+};
 
     document.getElementById('forecastCause').textContent = exp.text;
     document.getElementById('whyTags').innerHTML = exp.tags.map(t=>`<span class="chip">${t}</span>`).join('');
