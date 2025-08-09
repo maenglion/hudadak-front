@@ -191,8 +191,8 @@
   // --- 태그 산출 및 해설 생성 로직 ---
   function computeCauseTags(meas, meteo, hints){
     const tags = new Set();
-    const pm10 = toNum(meas.pm10), pm25 = toNum(meas.pm25);
-    const o3 = toNum(meas.o3), no2 = toNum(meas.no2);
+    const pm10 = toNum(meas?.pm10), pm25 = toNum(meas?.pm25);
+    const o3 = toNum(meas?.o3), no2 = toNum(meas?.no2);
     const ws = toNum(meteo?.windSpeed), wd = toNum(meteo?.windDir);
     const rad = toNum(meteo?.rad), cloud = toNum(meteo?.cloud), t = toNum(meteo?.temp);
     const pmBad = (pm25>=36) || (pm10>=81);
@@ -218,17 +218,18 @@
     else if (tags.includes('대기 정체')) pieces.push('대기 정체로 축적되는 양상입니다');
     else if (tags.includes('광화학')) pieces.push('강한 일사와 광화학 반응 영향이 보입니다');
     else if (tags.includes('국내 배출/교통')) pieces.push('국내 배출(교통 등) 영향이 큽니다');
-    else pieces.push('원인이 뚜렷하지 않습니다');
+    else if (meas?.pm10 > 0 || meas?.pm25 > 0) pieces.push('복합적인 원인으로 분석됩니다.');
+    else pieces.push('오늘의 예보 분석 정보입니다.');
 
     const ev = [];
     const ws = toNum(meteo?.windSpeed), wd = toNum(meteo?.windDir);
-    const pm10 = toNum(meas.pm10), pm25 = toNum(meas.pm25);
+    const pm10 = toNum(meas?.pm10), pm25 = toNum(meas?.pm25);
     const ratio = (pm25 && pm25>0) ? (pm10/pm25) : null;
     const compass = degToCompass(wd);
     if (ws!=null && compass) ev.push(`바람 ${compass} ${ws.toFixed(1)} m/s`);
     if (ratio!=null) ev.push(`PM10/PM2.5 비율 ${ratio.toFixed(1)}`);
-    if (meas.o3!=null) ev.push(`O₃ ${Number(meas.o3).toFixed(2)} ppm`);
-    if (meas.no2!=null) ev.push(`NO₂ ${Number(meas.no2).toFixed(2)} ppm`);
+    if (meas?.o3!=null) ev.push(`O₃ ${Number(meas.o3).toFixed(2)} ppm`);
+    if (meas?.no2!=null) ev.push(`NO₂ ${Number(meas.no2).toFixed(2)} ppm`);
     if (toNum(meteo?.rad)!=null) ev.push(`일사 ${Math.round(meteo.rad)} W/㎡`);
     if (toNum(meteo?.cloud)!=null) ev.push(`구름 ${Math.round(meteo.cloud)}%`);
 
@@ -260,7 +261,7 @@
       drawGauge('PM25', null, stationName);
     }
     
-    const regionInfo = await updateRegionText(lat, lon);
+    const regionName = await updateRegionText(lat, lon);
     updateDateTime();
     if (gaugesEl) {
       gaugesEl.classList.add('blink');
@@ -277,7 +278,7 @@
       { ...airData?.item, pm10: airData?.pm10, pm25: airData?.pm25 },
       meteo,
       { cause10: f10?.cause, cause25: f25?.cause, overall10: f10?.overall, overall25: f25?.overall },
-      regionInfo?.address_name
+      regionName
     );
 
     document.getElementById('forecastCause').textContent = exp.text;
@@ -382,7 +383,7 @@
       const address = documents[0]?.address;
       if (address) {
         regionEl.textContent = address.address_name;
-        return address;
+        return address.address_name;
       }
       return null;
     } catch (e) {
