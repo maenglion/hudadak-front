@@ -199,7 +199,7 @@
       fetchForecast('PM25')
     ]);
     
-    setCauseText(f10?.informCause, f25?.informCause);
+    setCauseText(f10?.cause, f25?.cause);
   }
 
   async function updateAll(lat, lon, isManualSearch = false) {
