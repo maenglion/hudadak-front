@@ -94,8 +94,7 @@ header h1 {
   transform: translate(-50%, -60%); 
   transition: color 0.5s ease; 
 }
-.gauge-value { font-family: 'ONE-Mobile-Title', sans-serif; /* 폰트 적용 */
-  font-weight: normal; font-size: 1.0rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
+.gauge-value { font-size: 1.0rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
 .station-info { color: var(--light-text-color); font-size: 0.9rem; line-height: 1.4; margin-top: 1rem; }
 
 #forecast-section {

@@ -32,7 +32,7 @@
     </div>
     <div class="info-row">
       <p><strong>접속지역:</strong> <span id="region">--</span></p>
-      <p><strong>검색일시:</strong> <span id="time">--</span></p>
+      <p><strong>측정 기준:</strong> <span id="time">--</span></p>
     </div>
   </header>
 
@@ -63,9 +63,8 @@
 
   <!-- 예보 정보 UI 수정 -->
   <section id="forecast-section" class="criteria-card" style="display: none;">
-    <h3>오늘의 예보 <span id="forecast-region" class="forecast-region-text"></span></h3>
-    <p id="informCausePM10" class="inform-cause-text"></p>
-    <p id="informCausePM25" class="inform-cause-text"></p>
+    <h3>오늘의 미세먼지 예보</h3>
+    <p id="forecastCause"></p>
   </section>
 
   <div id="error-message" class="error-message"></div>
@@ -107,7 +106,7 @@
   </section>
 
   <footer>
-    <p>© 2025년 08월 07일 minhoolee</p>
+    <p>© 2025년 08월 7일 minhoolee</p>
   </footer>
 
   <script src="gps.js"></script>
