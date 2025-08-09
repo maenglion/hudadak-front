@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
 
+/* 새로운 폰트 추가 */
+@font-face {
+    font-family: 'SBAggroB';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroB.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
 @property --angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @property --gauge-color { syntax: '<color>'; inherits: false; initial-value: #eee; }
 
@@ -33,7 +41,8 @@ header {
 }
 
 header h1 {
-  font-weight: 700;
+  font-family: 'SBAggroB', sans-serif; /* 폰트 적용 */
+  font-weight: 500;
   font-size: 2.5rem;
   color: var(--primary-color);
   margin: 0;
@@ -75,7 +84,16 @@ header h1 {
 .gauge-wheel, .gauge-hole { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 .gauge-wheel { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--gauge-color) var(--angle), #eee var(--angle)); transition: --angle 1s ease-out, --gauge-color 0.5s ease; }
 .gauge-hole { width: 160px; height: 160px; background: var(--card-color); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.gauge-status { font-weight: 700; font-size: 1.8rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%); transition: color 0.5s ease; }
+.gauge-status { 
+  font-family: 'SBAggroB', sans-serif; /* 폰트 적용 */
+  font-weight: 500;
+  font-size: 1.8rem; 
+  position: absolute; 
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -60%); 
+  transition: color 0.5s ease; 
+}
 .gauge-value { font-size: 1.2rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
 .station-info { color: var(--light-text-color); font-size: 0.9rem; line-height: 1.4; margin-top: 1rem; }
 
@@ -92,29 +110,17 @@ header h1 {
   color: var(--light-text-color);
   font-size: 1rem;
 }
-.forecast-item {
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  padding: 0.5rem 0;
-}
-.forecast-label {
-  font-weight: 700;
-  flex-basis: 100px;
-  flex-shrink: 0;
-}
-#forecastPM10, #forecastPM25 {
-  margin: 0;
-  line-height: 1.6;
-  flex-grow: 1;
-}
 .inform-cause-text {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  font-size: 0.9rem;
+  margin: 0;
+  padding: 0.75rem 0;
   line-height: 1.6;
-  white-space: pre-wrap;
+  font-size: 1rem;
+}
+.inform-cause-text:not(:first-child) {
+  border-top: 1px solid var(--border-color);
+}
+.inform-cause-text b {
+  margin-right: 0.5rem;
 }
 
 .error-message { display: none; width: 100%; max-width: 800px; padding: 1rem; margin: -1rem 0 1.5rem 0; background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA; border-radius: 8px; text-align: center; box-sizing: border-box; }

@@ -12,11 +12,7 @@
   const AIRKOREA_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName={station}&dataTerm=DAILY&ver=1.3`;
   const KAKAO_ADDRESS_API = `https://dapi.kakao.com/v2/local/search/address.json`;
   const KAKAO_COORD_API = `https://dapi.kakao.com/v2/local/geo/coord2address.json`;
-  // ✅ PM10 / PM25를 모두 부를 수 있게
-const FORECAST_API = (code) =>
-  `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth` +
-  `?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=100&pageNo=1&searchDate={date}&informCode=${code}`;
-
+  const FORECAST_API = (code) => `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=100&pageNo=1&searchDate={date}&informCode=${code}`;
 
   const inputEl = document.getElementById('place');
   const suggestionsEl = document.getElementById('suggestions');
@@ -91,7 +87,7 @@ const FORECAST_API = (code) =>
     }
     
     const status = getStatus(value);
-    const ratio = Math.min(value / status.max, 1);
+    const ratio = Math.min(value / 150, 1);
     const deg = 360 * ratio;
 
     wheelEl.style.setProperty('--gauge-color', status.color);
@@ -151,19 +147,11 @@ const FORECAST_API = (code) =>
     return best || keys[0] || null;
   }
 
- async function reverseAddress(lat, lon) {
-  const url =
-    `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json` +
-    `?x=${lon}&y=${lat}&input_coord=WGS84`;
-
-  const res = await fetch(url, {
-    headers: { Authorization: `KakaoAK ${KAKAO_KEY}` }
-  });
-  const { documents = [] } = await res.json();
-  // 행정동(H) 우선, 없으면 첫 문서
-  const doc = documents.find(d => d.region_type === 'H') || documents[0] || null;
-  return doc;
-}
+  async function reverseAddress(lat, lon) {
+    const res = await fetch(`${KAKAO_COORD_API}?x=${lon}&y=${lat}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
+    const { documents } = await res.json();
+    return documents?.[0] || null;
+  }
 
   async function fetchForecast(code, dateStrKST = null) {
     const date = dateStrKST || new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().slice(0,10);
@@ -194,41 +182,24 @@ const FORECAST_API = (code) =>
     return out;
   }
 
-  function setCauseText(text) {
-    const el = document.getElementById('informCause');
-    if (!el) return;
-    el.textContent = text || '';
-    el.style.display = text ? 'block' : 'none';
-  }
+  function setCauseText(pm10Cause, pm25Cause) {
+    const pm10El = document.getElementById('informCausePM10');
+    const pm25El = document.getElementById('informCausePM25');
+    const sectionEl = document.getElementById('forecast-section');
+    if (!pm10El || !pm25El || !sectionEl) return;
 
-  function setForecastUI(pm10Grade, pm25Grade, causeText) {
-    const el10 = document.getElementById('forecastPM10');
-    const el25 = document.getElementById('forecastPM25');
-    if (el10) el10.textContent = pm10Grade || '-';
-    if (el25) el25.textContent = pm25Grade || '-';
-    setCauseText(causeText);
+    pm10El.innerHTML = pm10Cause ? `<b>미세먼지:</b> ${pm10Cause}` : `<b>미세먼지:</b> 예보 정보가 없습니다.`;
+    pm25El.innerHTML = pm25Cause ? `<b>초미세먼지:</b> ${pm25Cause}` : `<b>초미세먼지:</b> 예보 정보가 없습니다.`;
+    sectionEl.style.display = 'block';
   }
 
   async function updateForecastForCoords(lat, lon) {
-    const kakaoDoc = await reverseAddress(lat, lon);
     const [f10, f25] = await Promise.all([
       fetchForecast('PM10'),
       fetchForecast('PM25')
     ]);
-    if (!f10 && !f25) { setForecastUI('-', '-', ''); return; }
-
-    const key10 = f10 ? pickForecastRegionKey(f10.grades, kakaoDoc) : null;
-    const key25 = f25 ? pickForecastRegionKey(f25.grades, kakaoDoc) : null;
-
-    const g10 = key10 ? f10.grades[key10] : null;
-    const g25 = key25 ? f25.grades[key25] : null;
-
-    const cause = (f25 && f25.cause) ? f25.cause : (f10 && f10.cause) ? f10.cause : '';
-    setForecastUI(g10, g25, cause);
     
-    const regionEl = document.getElementById('forecast-region');
-    if(regionEl) regionEl.textContent = `(${key10 || key25 || '전국'} 권역)`;
-    document.getElementById('forecast-section').style.display = 'block';
+    setCauseText(f10?.informCause, f25?.informCause);
   }
 
   async function updateAll(lat, lon, isManualSearch = false) {
