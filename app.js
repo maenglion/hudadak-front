@@ -182,24 +182,49 @@
     return out;
   }
 
-  function setCauseText(pm10Cause, pm25Cause) {
-    const pm10El = document.getElementById('informCausePM10');
-    const pm25El = document.getElementById('informCausePM25');
-    const sectionEl = document.getElementById('forecast-section');
-    if (!pm10El || !pm25El || !sectionEl) return;
+  function cleanCause(txt) {
+    if (!txt) return '';
+    return txt
+      .replace(/^\s*○\s*/, '')
+      .replace(/^\s*\[[^\]]+\]\s*/, '')
+      .trim();
+  }
 
-    pm10El.innerHTML = pm10Cause ? `<b>미세먼지:</b> ${pm10Cause}` : `<b>미세먼지:</b> 예보 정보가 없습니다.`;
-    pm25El.innerHTML = pm25Cause ? `<b>초미세먼지:</b> ${pm25Cause}` : `<b>초미세먼지:</b> 예보 정보가 없습니다.`;
-    sectionEl.style.display = 'block';
+  function setForecastUI(g10, g25, f10, f25) {
+    const el10Text = document.getElementById('informCausePM10');
+    const el25Text = document.getElementById('informCausePM25');
+    const sectionEl = document.getElementById('forecast-section');
+
+    const cause10 = cleanCause(f10?.cause || f10?.overall || '');
+    const cause25 = cleanCause(f25?.cause || f25?.overall || '');
+
+    if (el10Text) el10Text.innerHTML = cause10 ? `<b>미세먼지:</b> ${cause10}` : '<b>미세먼지:</b> 제공된 정보가 없습니다.';
+    if (el25Text) el25Text.innerHTML = cause25 ? `<b>초미세먼지:</b> ${cause25}` : '<b>초미세먼지:</b> 제공된 정보가 없습니다.';
+    
+    if(sectionEl) sectionEl.style.display = 'block';
   }
 
   async function updateForecastForCoords(lat, lon) {
+    const kakaoDoc = await reverseAddress(lat, lon);
     const [f10, f25] = await Promise.all([
       fetchForecast('PM10'),
       fetchForecast('PM25')
     ]);
+    if (!f10 && !f25) { 
+      setForecastUI(null, null, null, null); 
+      return; 
+    }
+
+    const key10 = f10 ? pickForecastRegionKey(f10.grades, kakaoDoc) : null;
+    const key25 = f25 ? pickForecastRegionKey(f25.grades, kakaoDoc) : null;
+
+    const g10 = key10 ? f10.grades[key10] : null;
+    const g25 = key25 ? f25.grades[key25] : null;
+
+    setForecastUI(g10, g25, f10, f25);
     
-    setCauseText(f10?.cause, f25?.cause);
+    const regionEl = document.getElementById('forecast-region');
+    if(regionEl) regionEl.textContent = `(${key10 || key25 || '전국'} 권역)`;
   }
 
   async function updateAll(lat, lon, isManualSearch = false) {
