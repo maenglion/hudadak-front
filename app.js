@@ -24,7 +24,6 @@
 
   let currentCoords = null;
 
-  // --- 캐싱 함수 ---
   function loadCache(key, maxAgeMs) {
     const cached = localStorage.getItem(key);
     if (!cached) return null;
@@ -45,10 +44,9 @@
     localStorage.setItem(key, JSON.stringify(item));
   }
 
-  // --- 하버사인 거리 계산 ---
   function calculateDistance(lat1, lon1, lat2, lon2) {
     const toRad = d => (d * Math.PI) / 180;
-    const R = 6371000; // 지구 반지름 (미터)
+    const R = 6371000;
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
     const a = Math.sin(dLat / 2) ** 2 +
@@ -71,6 +69,7 @@
   }
 
   function getStatus(v) {
+    if (v === null || v === undefined) return null;
     return CAT.find(c => v <= c.max) || CAT[CAT.length - 1];
   }
 
@@ -81,9 +80,18 @@
     const stationEl = document.getElementById(`station${pmType}`);
     if (!wheelEl || !statusTextEl || !valueTextEl || !stationEl) return;
     
+    if (value === null || value === undefined) {
+      wheelEl.style.setProperty('--gauge-color', '#cccccc');
+      wheelEl.style.setProperty('--angle', '0deg');
+      statusTextEl.textContent = '정보없음';
+      statusTextEl.style.color = 'var(--light-text-color)';
+      valueTextEl.textContent = '- µg/m³';
+      stationEl.textContent = `측정소: ${station}`;
+      return;
+    }
+    
     const status = getStatus(value);
-    // --- 게이지 비율 수정 ---
-    const ratio = Math.min(value / status.max, 1);
+    const ratio = Math.min(value / 150, 1);
     const deg = 360 * ratio;
 
     wheelEl.style.setProperty('--gauge-color', status.color);
@@ -102,24 +110,23 @@
       const data = await res.json();
       const item = data.response.body.items[0];
       if (!item || !item.pm10Value) {
-        return { pm10: 0, pm25: 0, station: `${station} (데이터 없음)` };
+        return { pm10: null, pm25: null, station: `${station}` };
       }
       return { 
-        pm10: parseFloat(item.pm10Value) || 0, 
-        pm25: parseFloat(item.pm25Value) || 0, 
+        pm10: parseFloat(item.pm10Value), 
+        pm25: parseFloat(item.pm25Value), 
         station: station
       };
     } catch (e) {
       console.error(`AirKorea 데이터 API 오류:`, e);
-      return { pm10: 0, pm25: 0, station: `${station} (조회 실패)` };
+      return { pm10: null, pm25: null, station: `${station}` };
     }
   }
 
-  // --- 예보 정보 가져오기 ---
   async function fetchForecastCause(dateStrKST = null) {
     const today = dateStrKST || new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().slice(0, 10);
     const cacheKey = `forecast_${today}`;
-    const cached = loadCache(cacheKey, 3 * 60 * 60 * 1000); // 3시간 캐시
+    const cached = loadCache(cacheKey, 3 * 60 * 60 * 1000);
     if (cached) return cached;
 
     try {
@@ -143,12 +150,20 @@
       return null;
     }
   }
+
+  // --- UI 업데이트 로직 수정 ---
   function setCauseText(text) {
     const el = document.getElementById('informCause');
     const sectionEl = document.getElementById('forecast-section');
     if (!el || !sectionEl) return;
-    el.textContent = text || '오늘의 예보 정보가 없습니다.';
-    sectionEl.style.display = 'block';
+
+    // 텍스트가 있으면 예보를 보여주고, 없으면(null) 숨깁니다.
+    if (text) {
+      el.textContent = text;
+      sectionEl.style.display = 'block';
+    } else {
+      sectionEl.style.display = 'none';
+    }
   }
 
   async function updateAll(lat, lon, isManualSearch = false) {
@@ -173,8 +188,13 @@
       gaugesEl.classList.add('blink');
       setTimeout(() => gaugesEl.classList.remove('blink'), 500);
     }
-    // 예보 정보 비동기 호출
-    fetchForecastCause().then(setCauseText);
+
+    // 실시간 데이터가 있을 때만 예보 정보를 가져옵니다.
+    if (airData.pm10 !== null) {
+        fetchForecastCause().then(setCauseText);
+    } else {
+        setCauseText(null); // 데이터가 없으면 예보도 숨깁니다.
+    }
   }
   
   let debounceTimer;
