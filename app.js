@@ -285,7 +285,14 @@
   fetchMeteo(lat, lon)
 ]);
     
-     const meas = {
+   const hints = {
+  cause10:   cleanCause(f10?.cause)   || '',
+  overall10: cleanCause(f10?.overall) || '',
+  cause25:   cleanCause(f25?.cause)   || '',
+  overall25: cleanCause(f25?.overall) || ''
+};
+
+const meas = {
   pm10: toNum(airData?.pm10),
   pm25: toNum(airData?.pm25),
   o3:   toNum(airData?.item?.o3Value),
@@ -300,12 +307,12 @@
   null // ← 주소 표시 제거 (또는 이 인자 자체를 없애도 됨)
 );
 
-const hints = {
-  cause10:   cleanCause(f10?.cause)   || '',
-  overall10: cleanCause(f10?.overall) || '',
-  cause25:   cleanCause(f25?.cause)   || '',
-  overall25: cleanCause(f25?.overall) || ''
-};
+const causeEl = document.getElementById('forecastCause');
+  const tagsEl  = document.getElementById('whyTags');
+  if (causeEl) causeEl.textContent = exp.text;
+  if (tagsEl)  tagsEl.innerHTML = (exp.tags && exp.tags.length)
+    ? exp.tags.map(t => `<span class="chip">${t}</span>`).join('')
+    : '원인 정보를 추정할 수 없습니다.';
 
     document.getElementById('forecastCause').textContent = exp.text;
     document.getElementById('whyTags').innerHTML = exp.tags.map(t=>`<span class="chip">${t}</span>`).join('');
