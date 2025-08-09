@@ -79,7 +79,6 @@ header h1 {
 .gauge-value { font-size: 1.2rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
 .station-info { color: var(--light-text-color); font-size: 0.9rem; line-height: 1.4; margin-top: 1rem; }
 
-/* --- 예보 정보 스타일 --- */
 #forecast-section {
   width: 100%;
   max-width: 800px;
@@ -88,18 +87,34 @@ header h1 {
   text-align: left;
   box-sizing: border-box;
 }
-#forecast-section h3 {
-  margin-top: 0;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.8rem;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-#informCause {
+.forecast-region-text {
+  font-weight: normal;
+  color: var(--light-text-color);
   font-size: 1rem;
+}
+.forecast-item {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+.forecast-label {
+  font-weight: 700;
+  flex-basis: 100px;
+  flex-shrink: 0;
+}
+#forecastPM10, #forecastPM25 {
+  margin: 0;
+  line-height: 1.6;
+  flex-grow: 1;
+}
+.inform-cause-text {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.9rem;
   line-height: 1.6;
   white-space: pre-wrap;
-  margin: 0;
 }
 
 .error-message { display: none; width: 100%; max-width: 800px; padding: 1rem; margin: -1rem 0 1.5rem 0; background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA; border-radius: 8px; text-align: center; box-sizing: border-box; }

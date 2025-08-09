@@ -12,7 +12,7 @@
   const AIRKOREA_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName={station}&dataTerm=DAILY&ver=1.3`;
   const KAKAO_ADDRESS_API = `https://dapi.kakao.com/v2/local/search/address.json`;
   const KAKAO_COORD_API = `https://dapi.kakao.com/v2/local/geo/coord2address.json`;
-  const FORECAST_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=10&pageNo=1&searchDate={date}&informCode=PM10`;
+  const FORECAST_API = (code) => `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=100&pageNo=1&searchDate={date}&informCode=${code}`;
 
   const inputEl = document.getElementById('place');
   const suggestionsEl = document.getElementById('suggestions');
@@ -54,18 +54,14 @@
               Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
-
-  function findNearestStation(userLat, userLon) {
-    let closestStation = null;
-    let minDistance = Infinity;
-    stations.forEach(station => {
-      const distance = calculateDistance(userLat, userLon, station.lat, station.lon);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestStation = station;
-      }
-    });
-    return closestStation.name;
+  
+  function findNearbyStationsSorted(userLat, userLon) {
+    return stations
+      .map(station => ({
+        ...station,
+        distance: calculateDistance(userLat, userLon, station.lat, station.lon)
+      }))
+      .sort((a, b) => a.distance - b.distance);
   }
 
   function getStatus(v) {
@@ -83,7 +79,7 @@
     if (value === null || value === undefined) {
       wheelEl.style.setProperty('--gauge-color', '#cccccc');
       wheelEl.style.setProperty('--angle', '0deg');
-      statusTextEl.textContent = '정보없음';
+      statusTextEl.textContent = '--';
       statusTextEl.style.color = 'var(--light-text-color)';
       valueTextEl.textContent = '- µg/m³';
       stationEl.textContent = `측정소: ${station}`;
@@ -91,7 +87,7 @@
     }
     
     const status = getStatus(value);
-    const ratio = Math.min(value / 150, 1);
+    const ratio = Math.min(value / status.max, 1);
     const deg = 360 * ratio;
 
     wheelEl.style.setProperty('--gauge-color', status.color);
@@ -102,65 +98,133 @@
     stationEl.textContent = `측정소: ${station}`;
   }
 
-  async function fetchAirData(station) {
-    try {
-      const url = AIRKOREA_API.replace('{station}', encodeURIComponent(station));
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`AirKorea 데이터 API 오류`);
-      const data = await res.json();
-      const item = data.response.body.items[0];
-      if (!item || !item.pm10Value) {
-        return { pm10: null, pm25: null, station: `${station}` };
-      }
-      return { 
-        pm10: parseFloat(item.pm10Value), 
-        pm25: parseFloat(item.pm25Value), 
-        station: station
-      };
-    } catch (e) {
-      console.error(`AirKorea 데이터 API 오류:`, e);
-      return { pm10: null, pm25: null, station: `${station}` };
-    }
+  async function fetchByStation(stationName) {
+    const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
+    const res = await fetch(url);
+    return await res.json();
   }
 
-  async function fetchForecastCause(dateStrKST = null) {
-    const today = dateStrKST || new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().slice(0, 10);
-    const cacheKey = `forecast_${today}`;
-    const cached = loadCache(cacheKey, 3 * 60 * 60 * 1000);
+  function pickPM(item, type = 'pm25') {
+    const toNum = v => (v && v !== '-' ? Number(v) : null);
+    if (type === 'pm10') {
+        return toNum(item.pm10Value) ?? toNum(item.pm10Value24) ?? null;
+    }
+    return toNum(item.pm25Value) ?? toNum(item.pm25Value24) ?? null;
+  }
+
+  async function findFirstHealthyData(sortedStations, N = 5) {
+    for (const st of sortedStations.slice(0, N)) {
+      const resp = await fetchByStation(st.name);
+      const item = resp?.response?.body?.items?.[0];
+      if (item) {
+        const pm10 = pickPM(item, 'pm10');
+        const pm25 = pickPM(item, 'pm25');
+        if (pm10 !== null || pm25 !== null) {
+          return { station: st.name, pm10, pm25 };
+        }
+      }
+    }
+    return null;
+  }
+
+  function parseRegionGrades(informGradeStr) {
+    const map = {};
+    if (!informGradeStr) return map;
+    informGradeStr.split(',').forEach(pair => {
+      const [k, v] = pair.split(':').map(s => s && s.trim());
+      if (k && v) map[k] = v;
+    });
+    return map;
+  }
+
+  function pickForecastRegionKey(gradesMap, kakaoDoc) {
+    const addr = kakaoDoc?.address || {};
+    const full = [addr.region_1depth_name, addr.region_2depth_name, addr.address_name].filter(Boolean).join(' ');
+    const keys = Object.keys(gradesMap);
+    let best = null;
+    keys.forEach(k => { if (full.includes(k) && (!best || k.length > best.length)) best = k; });
+    if (!best && /(서울|경기|인천)/.test(full) && gradesMap['수도권']) best = '수도권';
+    return best || keys[0] || null;
+  }
+
+ async function reverseAddress(lat, lon) {
+  const url =
+    `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json` +
+    `?x=${lon}&y=${lat}&input_coord=WGS84`;
+
+  const res = await fetch(url, {
+    headers: { Authorization: `KakaoAK ${KAKAO_KEY}` }
+  });
+  const { documents = [] } = await res.json();
+  // 행정동(H) 우선, 없으면 첫 문서
+  const doc = documents.find(d => d.region_type === 'H') || documents[0] || null;
+  return doc;
+}
+
+  async function fetchForecast(code, dateStrKST = null) {
+    const date = dateStrKST || new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().slice(0,10);
+    const cacheKey = `forecast_${code}_${date}`;
+    const cached = loadCache(cacheKey, 3*60*60*1000);
     if (cached) return cached;
 
-    try {
-      const url = FORECAST_API.replace('{date}', today);
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('API fetching failed');
-      const data = await res.json();
-      const item = data.response.body.items[0];
-      if (!item) {
-        if (!dateStrKST) {
-          const yesterday = new Date(new Date(today) - 86400000).toISOString().slice(0, 10);
-          return fetchForecastCause(yesterday);
-        }
-        return null;
+    const url = FORECAST_API(code).replace('{date}', date);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('forecast fetch failed');
+    const data = await res.json();
+    const items = data?.response?.body?.items || [];
+    if (!items.length) {
+      if (!dateStrKST) {
+        const y = new Date(new Date(date).getTime() - 86400000).toISOString().slice(0,10);
+        return fetchForecast(code, y);
       }
-      const causeText = item.informCause;
-      saveCache(cacheKey, causeText);
-      return causeText;
-    } catch (e) {
-      console.error('Forecast fetch error:', e);
       return null;
     }
+    const it = items[0];
+    const out = {
+      cause: it.informCause || '',
+      overall: it.informOverall || '',
+      grades: parseRegionGrades(it.informGrade || ''),
+      date
+    };
+    saveCache(cacheKey, out);
+    return out;
   }
+
   function setCauseText(text) {
     const el = document.getElementById('informCause');
-    const sectionEl = document.getElementById('forecast-section');
-    if (!el || !sectionEl) return;
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.display = text ? 'block' : 'none';
+  }
 
-    if (text) {
-      el.textContent = text;
-      sectionEl.style.display = 'block';
-    } else {
-      sectionEl.style.display = 'none';
-    }
+  function setForecastUI(pm10Grade, pm25Grade, causeText) {
+    const el10 = document.getElementById('forecastPM10');
+    const el25 = document.getElementById('forecastPM25');
+    if (el10) el10.textContent = pm10Grade || '-';
+    if (el25) el25.textContent = pm25Grade || '-';
+    setCauseText(causeText);
+  }
+
+  async function updateForecastForCoords(lat, lon) {
+    const kakaoDoc = await reverseAddress(lat, lon);
+    const [f10, f25] = await Promise.all([
+      fetchForecast('PM10'),
+      fetchForecast('PM25')
+    ]);
+    if (!f10 && !f25) { setForecastUI('-', '-', ''); return; }
+
+    const key10 = f10 ? pickForecastRegionKey(f10.grades, kakaoDoc) : null;
+    const key25 = f25 ? pickForecastRegionKey(f25.grades, kakaoDoc) : null;
+
+    const g10 = key10 ? f10.grades[key10] : null;
+    const g25 = key25 ? f25.grades[key25] : null;
+
+    const cause = (f25 && f25.cause) ? f25.cause : (f10 && f10.cause) ? f10.cause : '';
+    setForecastUI(g10, g25, cause);
+    
+    const regionEl = document.getElementById('forecast-region');
+    if(regionEl) regionEl.textContent = `(${key10 || key25 || '전국'} 권역)`;
+    document.getElementById('forecast-section').style.display = 'block';
   }
 
   async function updateAll(lat, lon, isManualSearch = false) {
@@ -175,21 +239,25 @@
       dataSourceInfo.style.display = 'block';
     }
 
-    const stationName = findNearestStation(lat, lon);
-    const airData = await fetchAirData(stationName);
-    drawGauge('PM10', airData.pm10, airData.station);
-    drawGauge('PM25', airData.pm25, airData.station);
+    const sortedStations = findNearbyStationsSorted(lat, lon);
+    const airData = await findFirstHealthyData(sortedStations);
+    
+    if (airData) {
+      drawGauge('PM10', airData.pm10, airData.station);
+      drawGauge('PM25', airData.pm25, airData.station);
+    } else {
+      const stationName = sortedStations.length > 0 ? sortedStations[0].name : '정보 없음';
+      drawGauge('PM10', null, stationName);
+      drawGauge('PM25', null, stationName);
+    }
+    
     updateRegionText(lat, lon);
     updateDateTime();
     if (gaugesEl) {
       gaugesEl.classList.add('blink');
       setTimeout(() => gaugesEl.classList.remove('blink'), 500);
     }
-    if (airData.pm10 !== null) {
-        fetchForecastCause().then(setCauseText);
-    } else {
-        setCauseText(null);
-    }
+    await updateForecastForCoords(lat, lon);
   }
   
   let debounceTimer;
@@ -281,14 +349,20 @@
   
   async function updateRegionText(lat, lon) {
     const regionEl = document.getElementById('region');
-    if (!regionEl) return;
+    if (!regionEl) return null;
     try {
       const res = await fetch(`${KAKAO_COORD_API}?x=${lon}&y=${lat}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
       if (!res.ok) throw new Error();
       const { documents } = await res.json();
-      regionEl.textContent = documents[0]?.address?.address_name || '--';
+      const address = documents[0]?.address;
+      if (address) {
+        regionEl.textContent = address.address_name;
+        return address;
+      }
+      return null;
     } catch (e) {
       regionEl.textContent = '주소 조회 실패';
+      return null;
     }
   }
   
