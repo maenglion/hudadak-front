@@ -150,14 +150,11 @@
       return null;
     }
   }
-
-  // --- UI 업데이트 로직 수정 ---
   function setCauseText(text) {
     const el = document.getElementById('informCause');
     const sectionEl = document.getElementById('forecast-section');
     if (!el || !sectionEl) return;
 
-    // 텍스트가 있으면 예보를 보여주고, 없으면(null) 숨깁니다.
     if (text) {
       el.textContent = text;
       sectionEl.style.display = 'block';
@@ -188,12 +185,10 @@
       gaugesEl.classList.add('blink');
       setTimeout(() => gaugesEl.classList.remove('blink'), 500);
     }
-
-    // 실시간 데이터가 있을 때만 예보 정보를 가져옵니다.
     if (airData.pm10 !== null) {
         fetchForecastCause().then(setCauseText);
     } else {
-        setCauseText(null); // 데이터가 없으면 예보도 숨깁니다.
+        setCauseText(null);
     }
   }
   
