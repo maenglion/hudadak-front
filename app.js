@@ -206,16 +206,12 @@
     }
   }
 
-  // --- PWA 설치 팝업 로직 ---
+  // --- PWA 설치 팝업 로직 (iOS 부분 제거) ---
   let deferredPrompt;
   const installPopup = document.getElementById('install-popup');
   const installBtn = document.getElementById('install-btn');
   const installCloseBtn = document.getElementById('install-close-btn');
-  const iosInstallPopup = document.getElementById('ios-install-popup');
-  const iosCloseBtn = document.getElementById('ios-close-btn');
   const PWA_PROMPT_SHOWN_KEY = 'pwaPromptShown';
-
-  const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -247,46 +243,6 @@
       localStorage.setItem(PWA_PROMPT_SHOWN_KEY, 'true');
     };
   }
-
-  function showIosInstallPopup() {
-    if (isIos() && !localStorage.getItem(PWA_PROMPT_SHOWN_KEY)) {
-      iosInstallPopup.style.display = 'flex';
-    }
-  }
-
-  if (iosCloseBtn) {
-    iosCloseBtn.onclick = () => {
-      iosInstallPopup.style.display = 'none';
-      localStorage.setItem(PWA_PROMPT_SHOWN_KEY, 'true');
-    };
-  }
-
-  window.addEventListener('load', showIosInstallPopup);
-
-    // --- 서비스 워커 등록 로직 (추가) ---
-  function registerServiceWorker() {
-    // 'serviceWorker' in navigator는 현재 브라우저가 서비스 워커를 지원하는지 확인하는 코드입니다.
-    if ('serviceWorker' in navigator) {
-      // window.addEventListener('load', ...)는 페이지의 모든 리소스(이미지, 스타일시트 등)가
-      // 완전히 로드된 후에 서비스 워커를 등록하여, 페이지 초기 로딩을 방해하지 않도록 합니다.
-      window.addEventListener('load', () => {
-        // navigator.serviceWorker.register('/sw.js')가 서비스 워커를 등록하는 핵심 명령입니다.
-        // 브라우저는 사이트의 최상위 경로에서 'sw.js' 파일을 찾아 등록합니다.
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => {
-            // 등록에 성공하면 콘솔에 성공 메시지를 출력합니다.
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          })
-          .catch(err => {
-            // 등록에 실패하면 콘솔에 오류 메시지를 출력합니다.
-            console.log('ServiceWorker registration failed: ', err);
-          });
-      });
-    }
-  }
-
-  // --- 함수 실행 ---
-  registerServiceWorker(); // 위에서 정의한 서비스 워커 등록 함수를 실행합니다.
   
   updateDateTime();
   setInterval(updateDateTime, 60000);

@@ -131,7 +131,6 @@ footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1p
 .pwa-popup-close-btn { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; color: var(--light-text-color); cursor: pointer; }
 .install-btn { background-color: var(--primary-color); color: white; border: none; padding: 12px 25px; font-size: 1rem; font-weight: 700; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
 .install-btn:hover { background-color: #0056b3; }
-.ios-instructions { background-color: var(--background-color); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; text-align: left; }
 
 .toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1001; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 1rem; opacity: 0; transition: opacity 0.5s, visibility 0.5s; }
 .toast.show { visibility: visible; opacity: 1; }

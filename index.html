@@ -86,7 +86,7 @@
   </section>
 
   <footer>
-    <p>© 2025년 08월 7일 minhoolee</p>
+    <p>© 2025년 08월 07일 minhoolee</p>
     <button id="adminBtn" style="font-size: small; opacity: 0.6; margin-left: 1rem; cursor: pointer; background: none; border: none; color: var(--light-text-color); padding: 5px;">관리자 로그인</button>
   </footer>
 
@@ -99,24 +99,38 @@
       <button id="install-btn" class="install-btn">앱 설치하기</button>
     </div>
   </div>
+ <div id="toast-message" class="toast"></div>
 
-  <!-- iOS용 안내 팝업 -->
-  <div id="ios-install-popup" class="pwa-popup-overlay">
+  <!-- 소개 페이지 링크 추가 -->
+  <div class="about-link-container">
+    <a href="about.html" class="about-link">이 앱의 특별한 이야기 보러가기</a>
+  </div>
+
+  <footer>
+    <p>© 2025년 08월 7일 minhoolee</p>
+    <button id="adminBtn" style="font-size: small; opacity: 0.6; margin-left: 1rem; cursor: pointer; background: none; border: none; color: var(--light-text-color); padding: 5px;">관리자 로그인</button>
+  </footer>
+
+  <div id="pwa-popup" class="pwa-popup-overlay">
     <div class="pwa-popup-content">
-      <button id="ios-close-btn" class="pwa-popup-close-btn">&times;</button>
+      <button id="pwa-close-btn" class="pwa-popup-close-btn">&times;</button>
       <h3>홈 화면에 추가하기</h3>
-      <p>아래 순서대로 홈 화면에 추가하여<br>앱처럼 사용해 보세요!</p>
-      <div class="ios-instructions">
-        1. 하단의 공유 버튼( <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg> )을 누르세요.
+      <p>이 웹사이트를 앱처럼 사용하려면 홈 화면에 추가하세요!</p>
+      <div class="pwa-instructions">
+        <strong>PC (Chrome):</strong><br>
+        오른쪽 상단 메뉴(⋮) > '추가 도구' > '바로가기 만들기'
       </div>
-      <div class="ios-instructions">
-        2. '홈 화면에 추가'를 선택하세요.
+      <div class="pwa-instructions">
+        <strong>Android (Chrome):</strong><br>
+        오른쪽 상단 메뉴(⋮) > '홈 화면에 추가' 선택
+      </div>
+      <div class="pwa-instructions">
+        <strong>iOS (Safari):</strong><br>
+        하단 공유 버튼(↑) > '홈 화면에 추가' 선택
       </div>
     </div>
-  </div>
-  
-  <div id="toast-message" class="toast"></div>
-
+  </div>  
+ 
   <script src="gps.js"></script>
   <script src="app.js"></script>
 </body>
