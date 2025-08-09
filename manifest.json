@@ -3,6 +3,7 @@
   "name": "후다닥 미-세먼지 피하기",
   "description": "내 주변 가장 가까운 곳의 미세먼지 정보를 확인하는 앱",
   "lang": "ko-KR",
+  "dir": "auto",
   "id": "/?source=pwa",
   "start_url": ".",
   "scope": "/",
@@ -44,7 +45,7 @@
     {
       "src": "icon-512.png",
       "type": "image/png",
-      "sizes": "512x512",
+      "sizes": "512x192",
       "purpose": "maskable"
     }
   ]
