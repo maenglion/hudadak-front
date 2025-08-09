@@ -37,6 +37,7 @@ header h1 {
   font-size: 2.5rem;
   color: var(--primary-color);
   margin: 0;
+  margin-top: 1rem;
 }
 
 .header-meta {
@@ -56,16 +57,15 @@ header h1 {
   border-radius: 4px;
 }
 
-/* --- 접속지역/시간 UI 수정 --- */
 .info-row {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem; /* 간격 축소 */
+  gap: 1rem;
   color: var(--light-text-color);
   text-align: center;
   margin-top: 1.5rem;
-  font-size: 0.8rem; /* 글씨 크기 축소 */
+  font-size: 0.8rem;
 }
 
 #gauges { display: flex; justify-content: center; gap: 2rem; width: 100%; max-width: 800px; flex-wrap: wrap; }
@@ -78,8 +78,36 @@ header h1 {
 .gauge-status { font-weight: 700; font-size: 1.8rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%); transition: color 0.5s ease; }
 .gauge-value { font-size: 1.2rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
 .station-info { color: var(--light-text-color); font-size: 0.9rem; line-height: 1.4; margin-top: 1rem; }
+
+/* --- 예보 정보 스타일 --- */
+#forecast-section {
+  width: 100%;
+  max-width: 800px;
+  margin-top: -1rem;
+  margin-bottom: 2rem;
+  text-align: left;
+  background-color: var(--card-color);
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  box-sizing: border-box;
+}
+#forecast-section h3 {
+  margin-top: 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+#informCause {
+  font-size: 1rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
 .error-message { display: none; width: 100%; max-width: 800px; padding: 1rem; margin: -1rem 0 1.5rem 0; background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA; border-radius: 8px; text-align: center; box-sizing: border-box; }
-#search { position: relative; width: 100%; max-width: 500px; display: flex; margin: 2rem 0 0 0; }
+#search { position: relative; width: 100%; max-width: 500px; display: flex; margin: 0; }
 #place { flex-grow: 1; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px 0 0 8px; font-size: 1rem; }
 #place:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); }
 #searchBtn { padding: 12px 20px; border: none; background-color: var(--primary-color); color: white; font-size: 1rem; cursor: pointer; border-radius: 0 8px 8px 0; transition: background-color 0.2s; }
@@ -119,7 +147,7 @@ header h1 {
 .share-result-btn svg { width: 16px; height: 16px; }
 
 #criteria { width: 100%; max-width: 800px; margin-top: 0; }
-.criteria-card { background: var(--card-color); padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow); }
+.criteria-card { background-color: var(--card-color); padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow); }
 .criteria-card h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.8rem; margin-bottom: 1rem; }
 .criteria-card ul { list-style: none; padding: 0; margin: 0; }
 .criteria-card li { padding: 0.5rem 0; }
@@ -139,7 +167,10 @@ footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1p
 
 @media (max-width: 768px) {
   header h1 { font-size: 2rem; }
-  .info-row { flex-direction: column; gap: 0.25rem; /* 모바일 간격 더 줄임 */ }
+  .info-row { 
+    flex-direction: column; 
+    gap: 0.25rem;
+  }
   #gauges { flex-direction: column; gap: 1.5rem; }
   .gauge-wrapper { width: 180px; height: 180px; }
   .gauge-hole { width: 120px; height: 120px; }

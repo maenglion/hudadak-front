@@ -32,7 +32,7 @@
     </div>
     <div class="info-row">
       <p><strong>접속지역:</strong> <span id="region">--</span></p>
-      <p><strong>측정 기준:</strong> <span id="time">--</span></p>
+      <p><strong>접속일시:</strong> <span id="time">--</span></p>
     </div>
   </header>
 
@@ -61,10 +61,16 @@
     </div>
   </section>
 
+  <!-- 예보 정보 UI 추가 -->
+  <section id="forecast-section" class="criteria-card" style="display: none;">
+    <h3>오늘의 미세먼지 예보</h3>
+    <p id="informCause"></p>
+  </section>
+
   <div id="error-message" class="error-message"></div>
 
   <section id="search">
-    <input type="text" id="place" placeholder="지역 검색 후 공유해보세요">
+    <input type="text" id="place" placeholder="지역검색 후 공유하세요">
     <ul id="suggestions"></ul>
     <button id="searchBtn">검색</button>
   </section>

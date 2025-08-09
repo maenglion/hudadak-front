@@ -12,20 +12,49 @@
   const AIRKOREA_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName={station}&dataTerm=DAILY&ver=1.3`;
   const KAKAO_ADDRESS_API = `https://dapi.kakao.com/v2/local/search/address.json`;
   const KAKAO_COORD_API = `https://dapi.kakao.com/v2/local/geo/coord2address.json`;
-  
+  const FORECAST_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=10&pageNo=1&searchDate={date}&informCode=PM10`;
+
   const inputEl = document.getElementById('place');
   const suggestionsEl = document.getElementById('suggestions');
   const errorEl = document.getElementById('error-message');
   const gaugesEl = document.getElementById('gauges');
+  const shareResultContainer = document.getElementById('share-result-container');
   const shareResultBtn = document.getElementById('shareResultBtn');
   const dataSourceInfo = document.getElementById('data-source-info');
 
   let currentCoords = null;
 
+  // --- 캐싱 함수 ---
+  function loadCache(key, maxAgeMs) {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+    try {
+      const { timestamp, data } = JSON.parse(cached);
+      if (Date.now() - timestamp > maxAgeMs) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      return data;
+    } catch (e) {
+      localStorage.removeItem(key);
+      return null;
+    }
+  }
+  function saveCache(key, data) {
+    const item = { timestamp: Date.now(), data };
+    localStorage.setItem(key, JSON.stringify(item));
+  }
+
+  // --- 하버사인 거리 계산 ---
   function calculateDistance(lat1, lon1, lat2, lon2) {
-    const dx = lon1 - lon2;
-    const dy = lat1 - lat2;
-    return dx * dx + dy * dy;
+    const toRad = d => (d * Math.PI) / 180;
+    const R = 6371000; // 지구 반지름 (미터)
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
   function findNearestStation(userLat, userLon) {
@@ -51,9 +80,12 @@
     const valueTextEl = document.getElementById(`valueText${pmType}`);
     const stationEl = document.getElementById(`station${pmType}`);
     if (!wheelEl || !statusTextEl || !valueTextEl || !stationEl) return;
+    
     const status = getStatus(value);
-    const ratio = Math.min(value / 150, 1);
+    // --- 게이지 비율 수정 ---
+    const ratio = Math.min(value / status.max, 1);
     const deg = 360 * ratio;
+
     wheelEl.style.setProperty('--gauge-color', status.color);
     wheelEl.style.setProperty('--angle', `${deg}deg`);
     statusTextEl.textContent = status.name;
@@ -83,11 +115,46 @@
     }
   }
 
+  // --- 예보 정보 가져오기 ---
+  async function fetchForecastCause(dateStrKST = null) {
+    const today = dateStrKST || new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().slice(0, 10);
+    const cacheKey = `forecast_${today}`;
+    const cached = loadCache(cacheKey, 3 * 60 * 60 * 1000); // 3시간 캐시
+    if (cached) return cached;
+
+    try {
+      const url = FORECAST_API.replace('{date}', today);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('API fetching failed');
+      const data = await res.json();
+      const item = data.response.body.items[0];
+      if (!item) {
+        if (!dateStrKST) {
+          const yesterday = new Date(new Date(today) - 86400000).toISOString().slice(0, 10);
+          return fetchForecastCause(yesterday);
+        }
+        return null;
+      }
+      const causeText = item.informCause;
+      saveCache(cacheKey, causeText);
+      return causeText;
+    } catch (e) {
+      console.error('Forecast fetch error:', e);
+      return null;
+    }
+  }
+  function setCauseText(text) {
+    const el = document.getElementById('informCause');
+    const sectionEl = document.getElementById('forecast-section');
+    if (!el || !sectionEl) return;
+    el.textContent = text || '오늘의 예보 정보가 없습니다.';
+    sectionEl.style.display = 'block';
+  }
+
   async function updateAll(lat, lon, isManualSearch = false) {
     currentCoords = { lat, lon };
     errorEl.style.display = 'none';
     
-    // 사용자가 직접 검색했을 때만 공유 버튼을 표시하고, 아닐 경우 데이터 출처를 표시
     if (isManualSearch) {
       shareResultBtn.style.display = 'inline-flex';
       dataSourceInfo.style.display = 'none';
@@ -106,6 +173,8 @@
       gaugesEl.classList.add('blink');
       setTimeout(() => gaugesEl.classList.remove('blink'), 500);
     }
+    // 예보 정보 비동기 호출
+    fetchForecastCause().then(setCauseText);
   }
   
   let debounceTimer;
@@ -162,26 +231,6 @@
       errorEl.style.display = 'block';
     }
   };
-
-  const shareBtn = document.getElementById('shareBtn');
-  if (shareBtn) {
-    shareBtn.onclick = async () => {
-      const shareData = {
-        title: '후다닥 미세먼지 피하기',
-        text: '내 주변 미세먼지 정보를 확인해보세요!',
-        url: window.location.origin + window.location.pathname
-      };
-      try {
-        if (navigator.share) {
-          await navigator.share(shareData);
-        } else {
-          throw new Error('Web Share API not supported');
-        }
-      } catch (err) {
-        alert('이 브라우저에서는 공유 기능을 지원하지 않습니다.');
-      }
-    };
-  }
 
   if (shareResultBtn) {
     shareResultBtn.onclick = async () => {
