@@ -1,19 +1,19 @@
 (() => {
-  // (교체) ─ PM10/PM2.5 각각의 국내 기준(µg/m³)
-  const CAT = {
-   PM10: [
-    { name:'좋음',   max: 30,  color:'#1E88E5' },
-    { name:'보통',   max: 80,  color:'#43A047' },
-    { name:'나쁨',   max: 150, color:'#F57C00' },
-    { name:'매우나쁨', max: 1000, color:'#D32F2F' }
-  ],
-  PM25: [
-    { name:'좋음',   max: 15,  color:'#1E88E5' },
-    { name:'보통',   max: 35,  color:'#43A047' },
-    { name:'나쁨',   max: 75,  color:'#F57C00' },
-    { name:'매우나쁨', max: 1000, color:'#D32F2F' }
-  ]
-};
+  // (수정) ─ 변수명을 SCALE로 통일
+  const SCALE = {
+    PM10: [
+      { name:'좋음',   max: 30,  color:'#1E88E5' },
+      { name:'보통',   max: 80,  color:'#43A047' },
+      { name:'나쁨',   max: 150, color:'#F57C00' },
+      { name:'매우나쁨', max: 1000, color:'#D32F2F' }
+    ],
+    PM25: [
+      { name:'좋음',   max: 15,  color:'#1E88E5' },
+      { name:'보통',   max: 35,  color:'#43A047' },
+      { name:'나쁨',   max: 75,  color:'#F57C00' },
+      { name:'매우나쁨', max: 1000, color:'#D32F2F' }
+    ]
+  };
 
   const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D';
   const KAKAO_KEY = window.env?.KAKAO_KEY || 'be29697319e13590895593f5f5508348';
@@ -91,41 +91,42 @@
       .sort((a, b) => a.distance - b.distance);
   }
 
-  function getStatus(v) {
-  if (v === null || v === undefined) return null;
-  const arr = SCALE[type] || SCALE.PM25;
-  return arr.find(c => v <= c.max) || arr[arr.length - 1];
-}
-    
-
-  function drawGauge(pmType, value, station) {
-const wheelEl = document.getElementById(`gauge${pmType}`);
-  const statusTextEl = document.getElementById(`statusText${pmType}`);
-  const valueTextEl = document.getElementById(`valueText${pmType}`);
-  const stationEl = document.getElementById(`station${pmType}`);
-  if (!wheelEl || !statusTextEl || !valueTextEl || !stationEl) return;
-
-  if (value === null || value === undefined) {
-    wheelEl.style.setProperty('--gauge-color', '#cccccc');
-    wheelEl.style.setProperty('--angle', '0deg');
-    statusTextEl.textContent = '--';
-    statusTextEl.style.color = 'var(--light-text-color)';
-    valueTextEl.textContent = '- µg/m³';
-    stationEl.textContent = `측정소: ${station}`;
-    return;
+  // (수정) ─ 타입별 상태 반환 함수 정의 수정
+  function getStatus(type, v) {
+    if (v === null || v === undefined) return null;
+    const arr = SCALE[type] || SCALE.PM25; // 기본값으로 PM2.5 사용
+    return arr.find(c => v <= c.max) || arr[arr.length - 1];
   }
     
-  const status = getStatus(pmType, Number(value));
-  const ratio  = Math.min(Number(value) / (status?.max || 1), 1);
-  const deg    = 360 * ratio;
+  // (수정) ─ 게이지 그리기 함수 (로직은 동일, getStatus 호출 부분 확인)
+  function drawGauge(pmType, value, station) {
+    const wheelEl = document.getElementById(`gauge${pmType}`);
+    const statusTextEl = document.getElementById(`statusText${pmType}`);
+    const valueTextEl = document.getElementById(`valueText${pmType}`);
+    const stationEl = document.getElementById(`station${pmType}`);
+    if (!wheelEl || !statusTextEl || !valueTextEl || !stationEl) return;
 
-  wheelEl.style.setProperty('--gauge-color', status.color);
-  wheelEl.style.setProperty('--angle', `${deg}deg`);
-  statusTextEl.textContent = status.name;
-  statusTextEl.style.color = status.color;
-  valueTextEl.textContent = `${value} µg/m³`;
-  stationEl.textContent = `측정소: ${station}`;
-}
+    if (value === null || value === undefined) {
+      wheelEl.style.setProperty('--gauge-color', '#cccccc');
+      wheelEl.style.setProperty('--angle', '0deg');
+      statusTextEl.textContent = '--';
+      statusTextEl.style.color = 'var(--light-text-color)';
+      valueTextEl.textContent = '- µg/m³';
+      stationEl.textContent = `측정소: ${station || '정보 없음'}`;
+      return;
+    }
+    
+    const status = getStatus(pmType, Number(value));
+    const ratio  = Math.min(Number(value) / (status?.max || 1), 1);
+    const deg    = 360 * ratio;
+
+    wheelEl.style.setProperty('--gauge-color', status.color);
+    wheelEl.style.setProperty('--angle', `${deg}deg`);
+    statusTextEl.textContent = status.name;
+    statusTextEl.style.color = status.color;
+    valueTextEl.textContent = `${value} µg/m³`;
+    stationEl.textContent = `측정소: ${station}`;
+  }
 
   async function fetchByStation(stationName) {
     const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
@@ -291,42 +292,39 @@ const wheelEl = document.getElementById(`gauge${pmType}`);
     }
     
     const [f10, f25, meteo] = await Promise.all([
-  fetchForecast('PM10'),
-  fetchForecast('PM25'),
-  fetchMeteo(lat, lon)
-]);
+      fetchForecast('PM10'),
+      fetchForecast('PM25'),
+      fetchMeteo(lat, lon)
+    ]);
     
-   const hints = {
-  cause10:   cleanCause(f10?.cause)   || '',
-  overall10: cleanCause(f10?.overall) || '',
-  cause25:   cleanCause(f25?.cause)   || '',
-  overall25: cleanCause(f25?.overall) || ''
-};
+    const hints = {
+      cause10:   cleanCause(f10?.cause)   || '',
+      overall10: cleanCause(f10?.overall) || '',
+      cause25:   cleanCause(f25?.cause)   || '',
+      overall25: cleanCause(f25?.overall) || ''
+    };
 
-const meas = {
-  pm10: toNum(airData?.pm10),
-  pm25: toNum(airData?.pm25),
-  o3:   toNum(airData?.item?.o3Value),
-  no2:  toNum(airData?.item?.no2Value)
-};
-
+    const meas = {
+      pm10: toNum(airData?.pm10),
+      pm25: toNum(airData?.pm25),
+      o3:   toNum(airData?.item?.o3Value),
+      no2:  toNum(airData?.item?.no2Value)
+    };
     
     const exp = buildForecastExplanation(
-  { ...airData?.item, pm10: airData?.pm10, pm25: airData?.pm25 },
-  meteo,
-  { cause10: f10?.cause, cause25: f25?.cause, overall10: f10?.overall, overall25: f25?.overall },
-  null // ← 주소 표시 제거 (또는 이 인자 자체를 없애도 됨)
-);
+      meas,
+      meteo,
+      hints,
+      null
+    );
 
-const causeEl = document.getElementById('forecastCause');
-  const tagsEl  = document.getElementById('whyTags');
-  if (causeEl) causeEl.textContent = exp.text;
-  if (tagsEl)  tagsEl.innerHTML = (exp.tags && exp.tags.length)
-    ? exp.tags.map(t => `<span class="chip">${t}</span>`).join('')
-    : '원인 정보를 추정할 수 없습니다.';
+    const causeEl = document.getElementById('forecastCause');
+    const tagsEl  = document.getElementById('whyTags');
+    if (causeEl) causeEl.textContent = exp.text;
+    if (tagsEl)  tagsEl.innerHTML = (exp.tags && exp.tags.length)
+      ? exp.tags.map(t => `<span class="chip">${t}</span>`).join('')
+      : '원인 정보를 추정할 수 없습니다.';
 
-    document.getElementById('forecastCause').textContent = exp.text;
-    document.getElementById('whyTags').innerHTML = exp.tags.map(t=>`<span class="chip">${t}</span>`).join('');
     document.getElementById('forecast-section').style.display = 'block';
   }
   
