@@ -18,9 +18,6 @@
   const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D';
   const KAKAO_KEY = window.env?.KAKAO_KEY || 'be29697319e13590895593f5f5508348';
   
-  // (수정) Gemini API 키는 그대로 비워둡니다.
-  const GEMINI_API_KEY = ""; 
-
   const AIRKOREA_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName={station}&dataTerm=DAILY&ver=1.3`;
   const KAKAO_ADDRESS_API = `https://dapi.kakao.com/v2/local/search/address.json`;
   const KAKAO_COORD_API = `https://dapi.kakao.com/v2/local/geo/coord2address.json`;
@@ -28,7 +25,7 @@
   const METEO_API = `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=wind_speed_10m,wind_direction_10m,shortwave_radiation,cloud_cover,temperature_2m&timezone=Asia%2FSeoul`;
   
   // (수정) API URL에서 키 부분을 제거하고 기본 주소만 남깁니다.
-  const GEMINI_API_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent`;
+  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent`;
 
 
   const inputEl = document.getElementById('place');
@@ -243,9 +240,8 @@
     `;
     
     try {
-      // (수정) API URL을 함수 내에서 동적으로 생성합니다.
-      const apiUrl = `${GEMINI_API_BASE_URL}?key=${GEMINI_API_KEY}`;
-      const response = await fetch(apiUrl, {
+      // (수정) API URL에서 키 부분을 제거하고, 플랫폼이 자동으로 키를 추가하도록 합니다.
+      const response = await fetch(GEMINI_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
