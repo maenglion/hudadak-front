@@ -18,11 +18,16 @@
   const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D';
   const KAKAO_KEY = window.env?.KAKAO_KEY || 'be29697319e13590895593f5f5508348';
   
+  // (추가) Gemini API 키 (실제 사용 시에는 안전하게 관리 필요)
+  const GEMINI_API_KEY = ""; // API 키는 비워둡니다.
+
   const AIRKOREA_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName={station}&dataTerm=DAILY&ver=1.3`;
   const KAKAO_ADDRESS_API = `https://dapi.kakao.com/v2/local/search/address.json`;
   const KAKAO_COORD_API = `https://dapi.kakao.com/v2/local/geo/coord2address.json`;
   const FORECAST_API = (code) => `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=100&pageNo=1&searchDate={date}&informCode=${code}`;
   const METEO_API = `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=wind_speed_10m,wind_direction_10m,shortwave_radiation,cloud_cover,temperature_2m&timezone=Asia%2FSeoul`;
+  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+
 
   const inputEl = document.getElementById('place');
   const suggestionsEl = document.getElementById('suggestions');
@@ -45,10 +50,6 @@
     const dirs = ['북','북북동','북동','동북동','동','동남동','남동','남남동','남','남남서','남서','서남서','서','서북서','북서','북북서'];
     const idx = Math.round(((d%360)+360)%360 / 22.5) % 16;
     return dirs[idx];
-  }
-  function isFromChinaSide(dir){
-    if(dir==null) return false;
-    return (dir >= 240 && dir <= 300) || (dir >= 315 || dir <= 30); // 서~북서~북
   }
 
   function loadCache(key, maxAgeMs) {
@@ -91,14 +92,12 @@
       .sort((a, b) => a.distance - b.distance);
   }
 
-  // (수정) ─ 타입별 상태 반환 함수 정의 수정
   function getStatus(type, v) {
     if (v === null || v === undefined) return null;
-    const arr = SCALE[type] || SCALE.PM25; // 기본값으로 PM2.5 사용
+    const arr = SCALE[type] || SCALE.PM25;
     return arr.find(c => v <= c.max) || arr[arr.length - 1];
   }
     
-  // (수정) ─ 게이지 그리기 함수 (로직은 동일, getStatus 호출 부분 확인)
   function drawGauge(pmType, value, station) {
     const wheelEl = document.getElementById(`gauge${pmType}`);
     const statusTextEl = document.getElementById(`statusText${pmType}`);
@@ -211,54 +210,60 @@
     return out;
   }
 
-  // --- 태그 산출 및 해설 생성 로직 ---
-  function computeCauseTags(meas, meteo, hints){
-    const tags = new Set();
-    const pm10 = toNum(meas?.pm10), pm25 = toNum(meas?.pm25);
-    const o3 = toNum(meas?.o3), no2 = toNum(meas?.no2);
-    const ws = toNum(meteo?.windSpeed), wd = toNum(meteo?.windDir);
-    const rad = toNum(meteo?.rad), cloud = toNum(meteo?.cloud), t = toNum(meteo?.temp);
-    const pmBad = (pm25>=36) || (pm10>=81);
-    const ratio = pm25 ? (pm10/pm25) : Infinity;
-    const f10 = cleanCause(hints?.cause10 || hints?.overall10 || '');
-    const f25 = cleanCause(hints?.cause25 || hints?.overall25 || '');
-
-    if ((pm10>=81 && ratio>=2.2) || /황사/.test(f10+f25)) tags.add('황사');
-    if (pmBad && ws!=null && ws<=1.5 && ((cloud!=null && cloud<=40) || (rad!=null && rad>=350))) tags.add('대기 정체');
-    if ((pmBad && ws!=null && ws>=4 && isFromChinaSide(wd)) || /(국외|장거리|서풍|북서풍)/.test(f10+f25)) tags.add('국외 유입');
-    if ((o3!=null && o3>=0.06) || (rad!=null && rad>=500 && cloud!=null && cloud<=30 && t!=null && t>=24 && pm25>=36)) tags.add('광화학');
-    if (no2!=null && no2>=0.05 && pm25>=36) tags.add('국내 배출/교통');
-
-    return Array.from(tags);
-  }
-
-  function buildForecastExplanation(meas, meteo, hints, areaName){
-    const tags = computeCauseTags(meas, meteo, hints);
-    const pieces = [];
-
-    if (tags.includes('황사')) pieces.push('황사 영향 가능성이 큽니다');
-    else if (tags.includes('국외 유입')) pieces.push('국외 유입 영향 가능성이 있습니다');
-    else if (tags.includes('대기 정체')) pieces.push('대기 정체로 축적되는 양상입니다');
-    else if (tags.includes('광화학')) pieces.push('강한 일사와 광화학 반응 영향이 보입니다');
-    else if (tags.includes('국내 배출/교통')) pieces.push('국내 배출(교통 등) 영향이 큽니다');
-    else if (meas?.pm10 > 0 || meas?.pm25 > 0) pieces.push('복합적인 원인으로 분석됩니다.');
-    else pieces.push('오늘의 예보 분석 정보입니다.');
-
-    const ev = [];
-    const ws = toNum(meteo?.windSpeed), wd = toNum(meteo?.windDir);
-    const pm10 = toNum(meas?.pm10), pm25 = toNum(meas?.pm25);
-    const ratio = (pm25 && pm25>0) ? (pm10/pm25) : null;
+  // (신규) ─ AI를 이용한 예보 해설 생성 함수
+  async function generateAiExplanation(meas, meteo, hints, areaName) {
+    const pm10 = toNum(meas?.pm10);
+    const pm25 = toNum(meas?.pm25);
+    const ws = toNum(meteo?.windSpeed);
+    const wd = toNum(meteo?.windDir);
     const compass = degToCompass(wd);
-    if (ws!=null && compass) ev.push(`바람 ${compass} ${ws.toFixed(1)} m/s`);
-    if (ratio!=null) ev.push(`PM10/PM2.5 비율 ${ratio.toFixed(1)}`);
-    if (meas?.o3!=null) ev.push(`O₃ ${Number(meas.o3).toFixed(2)} ppm`);
-    if (meas?.no2!=null) ev.push(`NO₂ ${Number(meas.no2).toFixed(2)} ppm`);
-    if (toNum(meteo?.rad)!=null) ev.push(`일사 ${Math.round(meteo.rad)} W/㎡`);
-    if (toNum(meteo?.cloud)!=null) ev.push(`구름 ${Math.round(meteo.cloud)}%`);
+    const ratio = (pm25 && pm25 > 0) ? (pm10 / pm25) : null;
 
-    const text = `${areaName ? areaName+' · ' : ''}${pieces[0]}${ev.length? ' (근거: '+ev.join(', ')+')' : ''}`;
-    return { text, tags };
+    const prompt = `
+      당신은 대한민국 최고의 대기질 분석 전문가입니다. 아래 데이터를 바탕으로 현재 대기질 상태와 원인을 일반인이 이해하기 쉽게 자연스러운 한국어 문장으로 설명해주세요. 딱딱한 데이터 나열이 아닌, 종합적인 분석을 담아 2~3문장으로 요약해주세요.
+
+      [분석 데이터]
+      - 현재 지역: ${areaName || '알 수 없음'}
+      - 미세먼지(PM10): ${pm10 ?? '측정값 없음'} µg/m³
+      - 초미세먼지(PM2.5): ${pm25 ?? '측정값 없음'} µg/m³
+      - PM10/PM2.5 비율: ${ratio ? ratio.toFixed(1) : '계산 불가'}
+      - 바람: ${compass ? `${compass} ${ws.toFixed(1)}m/s` : '정보 없음'}
+      - 공식 예보 (미세먼지): ${cleanCause(hints?.cause10 || hints?.overall10) || '정보 없음'}
+      - 공식 예보 (초미세먼지): ${cleanCause(hints?.cause25 || hints?.overall25) || '정보 없음'}
+      - 오존(O₃): ${toNum(meas?.o3) ? toNum(meas.o3).toFixed(3) : '측정값 없음'} ppm
+      - 이산화질소(NO₂): ${toNum(meas?.no2) ? toNum(meas.no2).toFixed(3) : '측정값 없음'} ppm
+      - 일사량: ${toNum(meteo?.rad) ?? '정보 없음'} W/㎡
+      - 구름 양: ${toNum(meteo?.cloud) ?? '정보 없음'} %
+
+      [분석 결과 예시]
+      예시 1: 현재 대기 정체가 이어지면서 국내에서 발생한 오염물질이 계속 쌓이고 있는 상황입니다. 특히 바람이 약해 미세먼지가 흩어지지 못하고 있어 주의가 필요합니다.
+      예시 2: 중국 등 국외에서 유입된 미세먼지의 영향으로 전국 대부분 지역의 공기가 탁합니다. 서풍 계열의 바람을 타고 오염물질이 계속 들어오고 있으니, 외출 시 마스크를 꼭 착용하세요.
+    `;
+    
+    try {
+      const response = await fetch(GEMINI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI API 호출 실패: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      return text || 'AI 분석 중 오류가 발생했습니다.';
+    } catch (error) {
+      console.error('AI Explanation Error:', error);
+      return 'AI 분석에 실패했습니다. 잠시 후 다시 시도해주세요.';
+    }
   }
+
 
   async function updateAll(lat, lon, isManualSearch = false) {
     currentCoords = { lat, lon };
@@ -291,6 +296,14 @@
       setTimeout(() => gaugesEl.classList.remove('blink'), 500);
     }
     
+    const causeEl = document.getElementById('forecastCause');
+    const tagsEl  = document.getElementById('whyTags');
+    
+    // AI 분석 시작 전 로딩 메시지 표시
+    if (causeEl) causeEl.textContent = 'AI가 오늘의 공기질을 분석하고 있어요... 🧐';
+    if (tagsEl) tagsEl.innerHTML = '';
+    document.getElementById('forecast-section').style.display = 'block';
+
     const [f10, f25, meteo] = await Promise.all([
       fetchForecast('PM10'),
       fetchForecast('PM25'),
@@ -311,21 +324,12 @@
       no2:  toNum(airData?.item?.no2Value)
     };
     
-    const exp = buildForecastExplanation(
-      meas,
-      meteo,
-      hints,
-      null
-    );
-
-    const causeEl = document.getElementById('forecastCause');
-    const tagsEl  = document.getElementById('whyTags');
-    if (causeEl) causeEl.textContent = exp.text;
-    if (tagsEl)  tagsEl.innerHTML = (exp.tags && exp.tags.length)
-      ? exp.tags.map(t => `<span class="chip">${t}</span>`).join('')
-      : '원인 정보를 추정할 수 없습니다.';
-
-    document.getElementById('forecast-section').style.display = 'block';
+    // AI에게 해설 생성 요청
+    const aiExplanation = await generateAiExplanation(meas, meteo, hints, regionName);
+    
+    if (causeEl) causeEl.textContent = aiExplanation;
+    // 태그는 일단 비워두거나, AI가 생성하도록 프롬프트를 수정할 수 있습니다.
+    if (tagsEl) tagsEl.innerHTML = '<span class="chip">AI 분석</span>';
   }
   
   let debounceTimer;
