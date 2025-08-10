@@ -1,10 +1,19 @@
 (() => {
-  const CAT = [
-    { name: '좋음', max: 28, color: '#1E88E5' },
-    { name: '보통', max: 80, color: '#43A047' },
-    { name: '나쁨', max: 146, color: '#F57C00' },
-    { name: '매우나쁨', max: 1000, color: '#D32F2F' }
-  ];
+  // (교체) ─ PM10/PM2.5 각각의 국내 기준(µg/m³)
+  const CAT = {
+   PM10: [
+    { name:'좋음',   max: 30,  color:'#1E88E5' },
+    { name:'보통',   max: 80,  color:'#43A047' },
+    { name:'나쁨',   max: 150, color:'#F57C00' },
+    { name:'매우나쁨', max: 1000, color:'#D32F2F' }
+  ],
+  PM25: [
+    { name:'좋음',   max: 15,  color:'#1E88E5' },
+    { name:'보통',   max: 35,  color:'#43A047' },
+    { name:'나쁨',   max: 75,  color:'#F57C00' },
+    { name:'매우나쁨', max: 1000, color:'#D32F2F' }
+  ]
+};
 
   const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D';
   const KAKAO_KEY = window.env?.KAKAO_KEY || 'be29697319e13590895593f5f5508348';
@@ -83,38 +92,40 @@
   }
 
   function getStatus(v) {
-    if (v === null || v === undefined) return null;
-    return CAT.find(c => v <= c.max) || CAT[CAT.length - 1];
-  }
+  if (v === null || v === undefined) return null;
+  const arr = SCALE[type] || SCALE.PM25;
+  return arr.find(c => v <= c.max) || arr[arr.length - 1];
+}
+    
 
   function drawGauge(pmType, value, station) {
-    const wheelEl = document.getElementById(`gauge${pmType}`);
-    const statusTextEl = document.getElementById(`statusText${pmType}`);
-    const valueTextEl = document.getElementById(`valueText${pmType}`);
-    const stationEl = document.getElementById(`station${pmType}`);
-    if (!wheelEl || !statusTextEl || !valueTextEl || !stationEl) return;
-    
-    if (value === null || value === undefined) {
-      wheelEl.style.setProperty('--gauge-color', '#cccccc');
-      wheelEl.style.setProperty('--angle', '0deg');
-      statusTextEl.textContent = '--';
-      statusTextEl.style.color = 'var(--light-text-color)';
-      valueTextEl.textContent = '- µg/m³';
-      stationEl.textContent = `측정소: ${station}`;
-      return;
-    }
-    
-    const status = getStatus(value);
-    const ratio = Math.min(value / 150, 1);
-    const deg = 360 * ratio;
+const wheelEl = document.getElementById(`gauge${pmType}`);
+  const statusTextEl = document.getElementById(`statusText${pmType}`);
+  const valueTextEl = document.getElementById(`valueText${pmType}`);
+  const stationEl = document.getElementById(`station${pmType}`);
+  if (!wheelEl || !statusTextEl || !valueTextEl || !stationEl) return;
 
-    wheelEl.style.setProperty('--gauge-color', status.color);
-    wheelEl.style.setProperty('--angle', `${deg}deg`);
-    statusTextEl.textContent = status.name;
-    statusTextEl.style.color = status.color;
-    valueTextEl.textContent = `${value} µg/m³`;
+  if (value === null || value === undefined) {
+    wheelEl.style.setProperty('--gauge-color', '#cccccc');
+    wheelEl.style.setProperty('--angle', '0deg');
+    statusTextEl.textContent = '--';
+    statusTextEl.style.color = 'var(--light-text-color)';
+    valueTextEl.textContent = '- µg/m³';
     stationEl.textContent = `측정소: ${station}`;
+    return;
   }
+    
+  const status = getStatus(pmType, Number(value));
+  const ratio  = Math.min(Number(value) / (status?.max || 1), 1);
+  const deg    = 360 * ratio;
+
+  wheelEl.style.setProperty('--gauge-color', status.color);
+  wheelEl.style.setProperty('--angle', `${deg}deg`);
+  statusTextEl.textContent = status.name;
+  statusTextEl.style.color = status.color;
+  valueTextEl.textContent = `${value} µg/m³`;
+  stationEl.textContent = `측정소: ${station}`;
+}
 
   async function fetchByStation(stationName) {
     const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
