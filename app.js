@@ -207,6 +207,10 @@
 
   // (신규) ─ AI를 이용한 예보 해설 생성 함수
   async function generateAiExplanation(meas, meteo, hints, areaName) {
+    // (수정) API 키를 다른 키와 동일한 방식으로 window.env에서 가져옵니다.
+    const GEMINI_API_KEY = window.env?.GEMINI_API_KEY || "";
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+
     const pm10 = toNum(meas?.pm10);
     const pm25 = toNum(meas?.pm25);
     const ws = toNum(meteo?.windSpeed);
@@ -236,11 +240,7 @@
     `;
     
     try {
-      // (수정) API 키를 함수 내에서 선언하고 URL을 동적으로 생성합니다.
-      const apiKey = ""; // 플랫폼이 키를 주입하도록 비워둡니다.
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch(GEMINI_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
