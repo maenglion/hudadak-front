@@ -209,7 +209,6 @@
     return out;
   }
 
-  // (신규) ─ 규칙 기반 분석 로직
   function computeCauseTags(meas, meteo, hints){
     const tags = new Set();
     const pm10 = toNum(meas?.pm10), pm25 = toNum(meas?.pm25);
@@ -250,6 +249,7 @@
     return notes.slice(0,2).join(', ');
   }
   
+  // (수정) ─ 오존 정보를 포함하도록 해설 생성 로직 변경
   function buildForecastExplanation(meas, meteo, hints){
     const tags = computeCauseTags(meas, meteo, hints);
     const order = ['황사','국외 유입','대기 정체','광화학','국내 배출/교통'];
@@ -269,7 +269,15 @@
     }
   
     const ev = describeEvidence(meas, meteo, mainTag);
-    return { text: ev ? `${line} (${ev})` : line, tags };
+    let fullText = ev ? `${line} (${ev})` : line;
+
+    // 오존 농도가 '나쁨' (0.091 ppm) 이상일 경우 문구 추가
+    const o3 = toNum(meas?.o3);
+    if (o3 !== null && o3 >= 0.091) {
+      fullText += " 또한, 오존 농도도 높으니 주의가 필요합니다.";
+    }
+
+    return { text: fullText, tags };
   }
 
 
@@ -331,7 +339,6 @@
       no2:  toNum(airData?.item?.no2Value)
     };
     
-    // (수정) 규칙 기반 해설 생성 함수 호출
     const exp = buildForecastExplanation(meas, meteo, hints);
     
     if (causeEl) causeEl.textContent = exp.text;
