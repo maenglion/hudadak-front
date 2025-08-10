@@ -24,10 +24,6 @@
   const FORECAST_API = (code) => `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=100&pageNo=1&searchDate={date}&informCode=${code}`;
   const METEO_API = `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=wind_speed_10m,wind_direction_10m,shortwave_radiation,cloud_cover,temperature_2m&timezone=Asia%2FSeoul`;
   
-  // (수정) API URL에서 키 부분을 제거하고 기본 주소만 남깁니다.
-  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent`;
-
-
   const inputEl = document.getElementById('place');
   const suggestionsEl = document.getElementById('suggestions');
   const errorEl = document.getElementById('error-message');
@@ -240,8 +236,11 @@
     `;
     
     try {
-      // (수정) API URL에서 키 부분을 제거하고, 플랫폼이 자동으로 키를 추가하도록 합니다.
-      const response = await fetch(GEMINI_API_URL, {
+      // (수정) API 키를 함수 내에서 선언하고 URL을 동적으로 생성합니다.
+      const apiKey = ""; // 플랫폼이 키를 주입하도록 비워둡니다.
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
