@@ -11,6 +11,7 @@
   "orientation": "portrait-primary",
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
+  "version": "1.0.1",
   "categories": [
     "weather",
     "lifestyle"
