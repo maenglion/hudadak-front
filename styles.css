@@ -44,7 +44,7 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   margin: 0;
-  padding: 20px;
+  padding: 40px 20px 20px; /* ◀ 상단 여백 40px, 좌우 20px, 하단 20px로 변경 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -60,12 +60,12 @@ header {
 }
 
 header h1 {
-  font-family: 'ONE-Mobile-Title', sans-serif;
+  font-family: 'ONE-Mobile-Title', sans-serif; /* 폰트 적용 */
   font-weight: normal;
   font-size: 2.3rem;
   color: var(--primary-color);
-  margin: 0;
-  margin-top: 1rem;
+  max-width: 80%; /* ◀ 최대 가로 폭을 80%로 제한 */
+  margin: 1rem auto 0; /* ◀ 위쪽 여백 1rem, 좌우 자동(가운데 정렬), 아래 0 */
 }
 
 .header-meta {
