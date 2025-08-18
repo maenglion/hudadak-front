@@ -12,12 +12,14 @@
 @property --gauge-color { syntax: '<color>'; inherits: false; initial-value: #eee; }
 
 :root {
+  /* ※ 진짜 동작하는 속성 */
+  color-scheme: light;
 
-  --color-scheme: light;
+  /* 테마 변수 (디자인용) */
   --background-color: #f4f6f8;
   --card-color: #ffffff;
-  --text-color: #333;
-  --light-text-color: #777;
+  --text-color: #333333;
+  --light-text-color: #777777;
   --border-color: #e0e0e0;
   --primary-color: #007bff;
   --shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
