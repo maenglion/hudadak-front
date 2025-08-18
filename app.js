@@ -307,10 +307,20 @@
     
     const regionName = await updateRegionText(lat, lon);
     updateDateTime();
-    if (gaugesEl) {
-      gaugesEl.classList.add('blink');
-      setTimeout(() => gaugesEl.classList.remove('blink'), 500);
+    // 게이지 전체 대신, 업데이트된 텍스트 요소들에만 효과 적용
+    const elementsToBlink = [
+      document.getElementById('statusTextPM10'),
+      document.getElementById('valueTextPM10'),
+      document.getElementById('statusTextPM25'),
+      document.getElementById('valueTextPM25')
+    ];
+
+    elementsToBlink.forEach(el => {
+      if (el) {
+        el.classList.add('blink-effect');
+        setTimeout(() => el.classList.remove('blink-effect'), 500);
     }
+  });
     
     const causeEl = document.getElementById('forecastCause');
     const tagsEl  = document.getElementById('whyTags');
@@ -347,45 +357,32 @@
       : '<span class="chip">분석 완료</span>';
   }
   
-   let debounceTimer;
+  let debounceTimer;
   inputEl.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
       const query = inputEl.value;
       if (!query) {
         suggestionsEl.innerHTML = '';
-        suggestionsEl.style.display = 'none'; // ◀ 1. 입력창이 비면 숨기기
         return;
       }
       try {
         const res = await fetch(`${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
-        if (!res.ok) {
-            suggestionsEl.style.display = 'none'; // ◀ 2. API 요청 실패 시 숨기기
-            return;
-        }
+        if (!res.ok) return;
         const { documents } = await res.json();
         suggestionsEl.innerHTML = '';
-
-        if (documents.length > 0) {
-            suggestionsEl.style.display = 'block'; // ◀ 3. 검색 결과가 있으면 보여주기
-        } else {
-            suggestionsEl.style.display = 'none'; // 결과가 없으면 숨기기
-        }
-
         documents.slice(0, 5).forEach(d => {
           const li = document.createElement('li');
           li.textContent = d.address_name;
           li.onclick = () => {
             inputEl.value = d.address_name;
             suggestionsEl.innerHTML = '';
-            suggestionsEl.style.display = 'none'; // ◀ 4. 항목 선택 시 숨기기
             updateAll(d.y, d.x, true);
           };
           suggestionsEl.appendChild(li);
         });
       } catch (e) {
         console.error('카카오 검색 오류:', e);
-        suggestionsEl.style.display = 'none'; // 에러 발생 시 숨기기
       }
     }, 300); 
   });
