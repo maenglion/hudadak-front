@@ -99,8 +99,7 @@ header h1 {
 #gauges { display: flex; justify-content: center; gap: 2rem; width: 100%; max-width: 800px; flex-wrap: wrap; }
 .gauge-container { background-color: var(--card-color); border-radius: 15px; padding: 1.5rem; text-align: center; box-shadow: var(--shadow); flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; }
 .gauge-container h2 { margin-top: 0; font-weight: 700; font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-color);}
-.gauge-wrapper { position: relative; width: 220px; height: 220px; margin: 0 auto; }
-.gauge-wheel, .gauge-hole { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.gauge-wrapper, .gauge-wheel, .gauge-hole { opacity: 1 !important; }
 
 /* --- 다크 모드 수정 부분 --- */
 .gauge-wheel { 
@@ -251,8 +250,13 @@ footer p {
   text-decoration: underline;
 }
 
-@keyframes blink-animation { 50% { opacity: 0.7; } }
-.blink { animation: blink-animation 0.5s ease-in-out; }
+.gauge-container .blink,
+.gauge-wrapper .blink,
+.gauge-wheel.blink,
+.gauge-hole.blink {
+  animation: none !important;
+  opacity: 1 !important;
+}
 
 .link-boxes-container { display: flex; gap: 1rem; width: 100%; max-width: 800px; margin: 2rem 0 1rem 0; }
 .link-box { flex: 1; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem; background-color: var(--card-color); border: 1px solid var(--border-color); border-radius: 10px; text-decoration: none; color: var(--text-color); font-weight: 700; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
@@ -321,7 +325,7 @@ footer p {
   .gauge-status { font-size: 1.6rem; }
   .gauge-value { font-size: 1rem; }
   .link-boxes-container { flex-direction: column; }
-  
+
   #criteria {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -337,3 +341,22 @@ footer p {
     font-size: 1.2rem;
   }
 }
+
+    /* 게이지 영역에서 blink 무력화 */
+.gauge-container.blink,
+.gauge-container .blink,
+.gauge-wrapper.blink,
+.gauge-wrapper .blink,
+.gauge-wheel.blink,
+.gauge-hole.blink {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+/* 안전장치: 게이지 핵심 요소는 항상 불투명 */
+.gauge-wrapper,
+.gauge-wheel,
+.gauge-hole {
+  opacity: 1 !important;
+}
+
