@@ -20,8 +20,8 @@
   --border-color: #e0e0e0;
   --primary-color: #007bff;
   --shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
- --gauge-wheel-bg: #eee;
-  --subtle-bg-color: #e9ecef; /* ◀ 라이트 모드용 버전 박스 배경색 */
+  --gauge-wheel-bg: #eee;
+  --subtle-bg-color: #e9ecef;
 }
 
 /* 다크 모드 색상 변수 정의 */
@@ -34,15 +34,15 @@
     --border-color: #424242;
     --primary-color: #4dabf7;
     --shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-     --gauge-wheel-bg: #474646;
-    --subtle-bg-color: #3a3a3a; /* ◀ 다크 모드용 버전 박스 배경색 */
+    --gauge-wheel-bg: #474646;
+    --subtle-bg-color: #3a3a3a;
   }
 }
 
 body {
   font-family: 'Noto Sans KR', sans-serif;
-  background-color: var(--background-color); /* 변수 사용으로 변경 */
-  color: var(--text-color); /* 변수 사용으로 변경 */
+  background-color: var(--background-color);
+  color: var(--text-color);
   margin: 0;
   padding: 20px;
   display: flex;
@@ -60,7 +60,7 @@ header {
 }
 
 header h1 {
-  font-family: 'ONE-Mobile-Title', sans-serif; /* 폰트 적용 */
+  font-family: 'ONE-Mobile-Title', sans-serif;
   font-weight: normal;
   font-size: 2.3rem;
   color: var(--primary-color);
@@ -78,7 +78,7 @@ header h1 {
 
 .version-info {
   display: inline-block;
-  background-color: var(--subtle-bg-color); /* ◀ 이렇게 변수로 변경 */
+  background-color: var(--subtle-bg-color);
   color: var(--light-text-color);
   font-size: 0.75rem;
   padding: 4px 8px;
@@ -102,27 +102,24 @@ header h1 {
 .gauge-wrapper { position: relative; width: 220px; height: 220px; margin: 0 auto; }
 .gauge-wheel, .gauge-hole { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
-/* --- 다크 모드 수정 부분 --- */
-.gauge-wheel { 
-  width: 100%; 
-  height: 100%; 
-  border-radius: 50%; 
-  /* 게이지 배경을 변수로 처리하고, 미세먼지 농도 색상은 투명도 없이 그대로 표시 */
-  background: conic-gradient(var(--gauge-color) var(--angle), var(--gauge-wheel-bg) var(--angle)); 
-  transition: --angle 1s ease-out, --gauge-color 0.5s ease; 
+.gauge-wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(var(--gauge-color) var(--angle), var(--gauge-wheel-bg) var(--angle));
+  transition: --angle 1s ease-out, --gauge-color 0.5s ease;
 }
-/* --- 수정 끝 --- */
 
 .gauge-hole { width: 160px; height: 160px; background: var(--card-color); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.gauge-status { 
-  font-family: 'ONE-Mobile-Title', sans-serif; /* 폰트 적용 */
+.gauge-status {
+  font-family: 'ONE-Mobile-Title', sans-serif;
   font-weight: normal;
-  font-size: 1.8rem; 
-  position: absolute; 
-  top: 50%; 
-  left: 50%; 
-  transform: translate(-50%, -60%); 
-  transition: color 0.5s ease; 
+  font-size: 1.8rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  transition: color 0.5s ease;
 }
 .gauge-value { font-size: 1.0rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
 .station-info { color: var(--light-text-color); font-size: 0.9rem; line-height: 1.4; margin-top: 1rem; }
@@ -157,7 +154,23 @@ header h1 {
 #place:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); }
 #searchBtn { padding: 12px 20px; border: none; background-color: var(--primary-color); color: white; font-size: 1rem; cursor: pointer; border-radius: 0 8px 8px 0; transition: background-color 0.2s; }
 #searchBtn:hover { background-color: #0056b3; }
-#suggestions { display: none; list-style: none; margin: 0; padding: 0; position: absolute; top: 100%; left: 0; right: 0; background: var(--card-color); border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 8px 8px; z-index: 10; box-shadow: var(--shadow); }
+
+#suggestions {
+  display: none; /* 기본 숨김 처리 */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-color);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  z-index: 10;
+  box-shadow: var(--shadow);
+}
 #suggestions li { padding: 12px 15px; cursor: pointer; }
 #suggestions li:hover { background-color: var(--background-color); }
 
@@ -191,33 +204,33 @@ header h1 {
 .share-result-btn:hover { background-color: #5a6268; }
 .share-result-btn svg { width: 16px; height: 16px; }
 
-#criteria { 
-  width: 100%; 
-  max-width: 800px; 
+#criteria {
+  width: 100%;
+  max-width: 800px;
   margin-top: 2rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
-.criteria-card { 
-  background-color: var(--card-color); 
-  padding: 1.5rem; 
-  border-radius: 15px; 
-  box-shadow: var(--shadow); 
+.criteria-card {
+  background-color: var(--card-color);
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
 }
-.criteria-card h3 { 
-  margin-top: 0; 
-  border-bottom: 1px solid var(--border-color); 
-  padding-bottom: 0.8rem; 
-  margin-bottom: 1rem; 
+.criteria-card h3 {
+  margin-top: 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.8rem;
+  margin-bottom: 1rem;
   font-size: 1.1rem;
 }
-.criteria-card ul { 
-  list-style: none; 
-  padding: 0; 
-  margin: 0; 
+.criteria-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
-.criteria-card li { 
+.criteria-card li {
   padding: 0.3rem 0;
   font-size: 0.9rem;
 }
@@ -228,14 +241,14 @@ header h1 {
 .color-indicator.bad { background-color: #F57C00; }
 .color-indicator.very-bad { background-color: #D32F2F; }
 
-footer { 
-  text-align: center; 
-  margin-top: 2rem; 
-  padding-top: 1rem; 
-  border-top: 1px solid var(--border-color); 
-  width: 100%; 
-  max-width: 800px; 
-  color: var(--light-text-color); 
+footer {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  width: 100%;
+  max-width: 800px;
+  color: var(--light-text-color);
   font-size: 0.9rem;
 }
 footer p {
@@ -251,8 +264,15 @@ footer p {
   text-decoration: underline;
 }
 
-@keyframes blink-animation { 50% { opacity: 0.7; } }
-.blink { animation: blink-animation 0.5s ease-in-out; }
+/* 개선된 '반짝' 효과 애니메이션 */
+@keyframes pulse-animation {
+  50% { filter: brightness(1.2); }
+}
+
+.blink-effect {
+  animation: pulse-animation 0.5s ease-in-out;
+}
+
 
 .link-boxes-container { display: flex; gap: 1rem; width: 100%; max-width: 800px; margin: 2rem 0 1rem 0; }
 .link-box { flex: 1; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem; background-color: var(--card-color); border: 1px solid var(--border-color); border-radius: 10px; text-decoration: none; color: var(--text-color); font-weight: 700; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
@@ -308,8 +328,8 @@ footer p {
     padding: 10px;
   }
   header h1 { font-size: 2rem; }
-  .info-row { 
-    flex-direction: column; 
+  .info-row {
+    flex-direction: column;
     gap: 0;
   }
   .info-row p {
