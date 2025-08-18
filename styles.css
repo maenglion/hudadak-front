@@ -20,7 +20,8 @@
   --border-color: #e0e0e0;
   --primary-color: #007bff;
   --shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  --gauge-wheel-bg: #eee; /* 라이트 모드 게이지 배경색 */
+ --gauge-wheel-bg: #eee;
+  --subtle-bg-color: #e9ecef; /* ◀ 라이트 모드용 버전 박스 배경색 */
 }
 
 /* 다크 모드 색상 변수 정의 */
@@ -33,7 +34,8 @@
     --border-color: #424242;
     --primary-color: #4dabf7;
     --shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    --gauge-wheel-bg: #424242; /* 다크 모드 게이지 배경색 (연한 회색) */
+     --gauge-wheel-bg: #474646;
+    --subtle-bg-color: #3a3a3a; /* ◀ 다크 모드용 버전 박스 배경색 */
   }
 }
 
@@ -76,7 +78,7 @@ header h1 {
 
 .version-info {
   display: inline-block;
-  background-color: #e9ecef;
+  background-color: var(--subtle-bg-color); /* ◀ 이렇게 변수로 변경 */
   color: var(--light-text-color);
   font-size: 0.75rem;
   padding: 4px 8px;
