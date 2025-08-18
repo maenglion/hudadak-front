@@ -140,20 +140,36 @@
     return toNum(item.pm25Value) ?? toNum(item.pm25Value24) ?? null;
   }
 
-  async function findFirstHealthyData(sortedStations, N = 5) {
-    for (const st of sortedStations.slice(0, N)) {
-      const resp = await fetchByStation(st.name);
-      const item = resp?.response?.body?.items?.[0];
-      if (item) {
-        const pm10 = pickPM(item, 'pm10');
-        const pm25 = pickPM(item, 'pm25');
-        if (pm10 !== null || pm25 !== null) {
-          return { station: st.name, pm10, pm25, item };
-        }
-      }
-    }
-    return null;
-  }
+async function findFirstHealthyData(sortedStations, N = 5) {
+  // 1. 가까운 N개 측정소에 대한 API 요청을 '동시에' 모두 보냅니다.
+  const promises = sortedStations.slice(0, N).map(st => 
+    fetchByStation(st.name).then(resp => ({
+      station: st.name,
+      item: resp?.response?.body?.items?.[0]
+    }))
+  );
+
+  // 2. 모든 요청이 끝날 때까지 기다립니다.
+  const results = await Promise.all(promises);
+
+  // 3. 도착한 결과 중에서 가장 먼저 유효한 데이터를 찾아서 반환합니다.
+  const validResult = results.find(res => {
+    if (!res.item) return false;
+    const pm10 = pickPM(res.item, 'pm10');
+    const pm25 = pickPM(res.item, 'pm25');
+    return pm10 !== null || pm25 !== null;
+  });
+
+  if (!validResult) return null;
+
+  // 4. 찾은 유효한 데이터로 최종 결과 객체를 만들어 반환합니다.
+  return {
+    station: validResult.station,
+    pm10: pickPM(validResult.item, 'pm10'),
+    pm25: pickPM(validResult.item, 'pm25'),
+    item: validResult.item
+  };
+}
   
   async function fetchMeteo(lat, lon) {
     try {
