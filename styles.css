@@ -12,23 +12,35 @@
 @property --gauge-color { syntax: '<color>'; inherits: false; initial-value: #eee; }
 
 :root {
-  /* ※ 진짜 동작하는 속성 */
-  color-scheme: light;
-
-  /* 테마 변수 (디자인용) */
+  /* 라이트 모드 기본 색상 변수 */
   --background-color: #f4f6f8;
   --card-color: #ffffff;
-  --text-color: #333333;
-  --light-text-color: #777777;
+  --text-color: #333;
+  --light-text-color: #777;
   --border-color: #e0e0e0;
   --primary-color: #007bff;
   --shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  --gauge-wheel-bg: #eee; /* 라이트 모드 게이지 배경색 */
+}
+
+/* 다크 모드 색상 변수 정의 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #121212;
+    --card-color: #1e1e1e;
+    --text-color: #e0e0e0;
+    --light-text-color: #9e9e9e;
+    --border-color: #424242;
+    --primary-color: #4dabf7;
+    --shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --gauge-wheel-bg: #424242; /* 다크 모드 게이지 배경색 (연한 회색) */
+  }
 }
 
 body {
   font-family: 'Noto Sans KR', sans-serif;
-  background: #ffffff !important;
-  color: #111111 !important;
+  background-color: var(--background-color); /* 변수 사용으로 변경 */
+  color: var(--text-color); /* 변수 사용으로 변경 */
   margin: 0;
   padding: 20px;
   display: flex;
@@ -84,10 +96,21 @@ header h1 {
 
 #gauges { display: flex; justify-content: center; gap: 2rem; width: 100%; max-width: 800px; flex-wrap: wrap; }
 .gauge-container { background-color: var(--card-color); border-radius: 15px; padding: 1.5rem; text-align: center; box-shadow: var(--shadow); flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; }
-.gauge-container h2 { margin-top: 0; font-weight: 700; font-size: 1.5rem; margin-bottom: 1rem; }
+.gauge-container h2 { margin-top: 0; font-weight: 700; font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-color);}
 .gauge-wrapper { position: relative; width: 220px; height: 220px; margin: 0 auto; }
 .gauge-wheel, .gauge-hole { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-.gauge-wheel { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--gauge-color) var(--angle), #eee var(--angle)); transition: --angle 1s ease-out, --gauge-color 0.5s ease; }
+
+/* --- 다크 모드 수정 부분 --- */
+.gauge-wheel { 
+  width: 100%; 
+  height: 100%; 
+  border-radius: 50%; 
+  /* 게이지 배경을 변수로 처리하고, 미세먼지 농도 색상은 투명도 없이 그대로 표시 */
+  background: conic-gradient(var(--gauge-color) var(--angle), var(--gauge-wheel-bg) var(--angle)); 
+  transition: --angle 1s ease-out, --gauge-color 0.5s ease; 
+}
+/* --- 수정 끝 --- */
+
 .gauge-hole { width: 160px; height: 160px; background: var(--card-color); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .gauge-status { 
   font-family: 'ONE-Mobile-Title', sans-serif; /* 폰트 적용 */
@@ -128,13 +151,13 @@ header h1 {
 
 .error-message { display: none; width: 100%; max-width: 800px; padding: 1rem; margin: -1rem 0 1.5rem 0; background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA; border-radius: 8px; text-align: center; box-sizing: border-box; }
 #search { position: relative; width: 100%; max-width: 500px; display: flex; margin: 0; }
-#place { flex-grow: 1; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px 0 0 8px; font-size: 1rem; }
+#place { flex-grow: 1; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px 0 0 8px; font-size: 1rem; background-color: var(--card-color); color: var(--text-color); }
 #place:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); }
 #searchBtn { padding: 12px 20px; border: none; background-color: var(--primary-color); color: white; font-size: 1rem; cursor: pointer; border-radius: 0 8px 8px 0; transition: background-color 0.2s; }
 #searchBtn:hover { background-color: #0056b3; }
 #suggestions { list-style: none; margin: 0; padding: 0; position: absolute; top: 100%; left: 0; right: 0; background: var(--card-color); border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 8px 8px; z-index: 10; box-shadow: var(--shadow); }
 #suggestions li { padding: 12px 15px; cursor: pointer; }
-#suggestions li:hover { background-color: #f0f0f0; }
+#suggestions li:hover { background-color: var(--background-color); }
 
 .post-search-area {
   width: 100%;
@@ -166,7 +189,6 @@ header h1 {
 .share-result-btn:hover { background-color: #5a6268; }
 .share-result-btn svg { width: 16px; height: 16px; }
 
-/* --- 수정된 부분 --- */
 #criteria { 
   width: 100%; 
   max-width: 800px; 
@@ -194,10 +216,9 @@ header h1 {
   margin: 0; 
 }
 .criteria-card li { 
-  padding: 0.3rem 0; /* 상하 간격 줄임 */
-  font-size: 0.9rem;   /* 폰트 크기 살짝 줄임 */
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
 }
-/* --- 수정 끝 --- */
 
 .color-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; vertical-align: middle; position: relative; top: -1px; }
 .color-indicator.good { background-color: #1E88E5; }
@@ -299,12 +320,10 @@ footer p {
   .gauge-value { font-size: 1rem; }
   .link-boxes-container { flex-direction: column; }
   
-  /* --- 반응형 수정 --- */
   #criteria {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  /* --- 수정 끝 --- */
 
   .privacy-policy-container {
     padding: 1.5rem;
