@@ -112,17 +112,19 @@ header h1 {
 }
 
 .gauge-hole { width: 160px; height: 160px; background: var(--card-color); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.gauge-status {
+.gauge-status { 
   font-family: 'ONE-Mobile-Title', sans-serif;
   font-weight: normal;
-  font-size: 1.8rem;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -60%);
-  transition: color 0.5s ease;
+  font-size: 1.8rem; 
+  transition: color 0.5s ease; 
+  /* ◀ position, top, left, transform 속성 제거 */
 }
-.gauge-value { font-size: 1.0rem; color: var(--light-text-color); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60%); }
+.gauge-value {
+  font-size: 1.0rem;
+  color: var(--light-text-color);
+  white-space: nowrap;
+  /* ◀ position, top, left, transform 속성 제거 */
+}
 .station-info { color: var(--light-text-color); font-size: 0.9rem; line-height: 1.4; margin-top: 1rem; }
 
 #forecast-section {
