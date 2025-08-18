@@ -12,6 +12,8 @@
 @property --gauge-color { syntax: '<color>'; inherits: false; initial-value: #eee; }
 
 :root {
+
+  --color-scheme: light;
   --background-color: #f4f6f8;
   --card-color: #ffffff;
   --text-color: #333;
@@ -23,8 +25,8 @@
 
 body {
   font-family: 'Noto Sans KR', sans-serif;
-  background-color: var(--background-color);
-  color: var(--text-color);
+  background: #ffffff !important;
+  color: #111111 !important;
   margin: 0;
   padding: 20px;
   display: flex;
