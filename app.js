@@ -126,11 +126,12 @@
     stationEl.textContent = `측정소: ${station}`;
   }
 
-  async function fetchByStation(stationName) {
-    const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
-    const res = await fetch(url);
-    return await res.json();
-  }
+async function fetchByStation(stationName, fetchOpts = {}) {
+  const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
+  const res = await fetch(url, fetchOpts);
+  if (!res.ok) throw new Error('airkorea fetch failed');
+  return res.json();
+}
 
   function pickPM(item, type = 'pm25') {
     const toNum = v => (v && v !== '-' ? Number(v) : null);
@@ -140,36 +141,30 @@
     return toNum(item.pm25Value) ?? toNum(item.pm25Value24) ?? null;
   }
 
-async function findFirstHealthyData(sortedStations, N = 5) {
-  // 1. 가까운 N개 측정소에 대한 API 요청을 '동시에' 모두 보냅니다.
-  const promises = sortedStations.slice(0, N).map(st => 
-    fetchByStation(st.name).then(resp => ({
-      station: st.name,
-      item: resp?.response?.body?.items?.[0]
-    }))
-  );
+async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
+  // 네트워크 상태에 따라 병렬 폭 조절(3g면 2개만)
+  const slowNet = navigator.connection?.effectiveType?.includes('3g');
+  const take = slowNet ? Math.min(2, N) : N;
 
-  // 2. 모든 요청이 끝날 때까지 기다립니다.
-  const results = await Promise.all(promises);
-
-  // 3. 도착한 결과 중에서 가장 먼저 유효한 데이터를 찾아서 반환합니다.
-  const validResult = results.find(res => {
-    if (!res.item) return false;
-    const pm10 = pickPM(res.item, 'pm10');
-    const pm25 = pickPM(res.item, 'pm25');
-    return pm10 !== null || pm25 !== null;
-  });
-
-  if (!validResult) return null;
-
-  // 4. 찾은 유효한 데이터로 최종 결과 객체를 만들어 반환합니다.
-  return {
-    station: validResult.station,
-    pm10: pickPM(validResult.item, 'pm10'),
-    pm25: pickPM(validResult.item, 'pm25'),
-    item: validResult.item
-  };
-}
+  const controllers = [];
+  const tasks = sortedStations.slice(0, take).map(st => new Promise(async (resolve, reject) => {
+    // 1) 캐시 먼저 (3분 이내면 즉시 사용 + 백그라운드 갱신)
+    const cacheKey = `air_${st.name}`;
+    const cached = loadCache(cacheKey, 3 * 60 * 1000);
+    if (cached) {
+      resolve({ ...cached, station: st.name, fromCache: true });
+      // 백그라운드 갱신 시도(결과 오면 캐시 교체)
+      fetchByStation(st.name).then(resp => {
+        const item = resp?.response?.body?.items?.[0];
+        if (item) {
+          const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
+          if (pm10 !== null || pm25 !== null) {
+            saveCache(cacheKey, { pm10, pm25, item });
+          }
+        }
+      }).catch(()=>{});
+      return;
+    }
   
   async function fetchMeteo(lat, lon) {
     try {
@@ -189,6 +184,42 @@ async function findFirstHealthyData(sortedStations, N = 5) {
       return null;
     }
   }
+
+  // 2) 네트워크(타임아웃+abort)
+    const ac = new AbortController();
+    controllers.push(ac);
+    const t = setTimeout(()=>{ ac.abort(); reject(new Error('timeout')); }, timeoutMs);
+
+    try {
+      const resp = await fetchByStation(st.name, { signal: ac.signal });
+      const item = resp?.response?.body?.items?.[0];
+      const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
+      if (pm10 !== null || pm25 !== null) {
+        const out = { station: st.name, pm10, pm25, item };
+        saveCache(cacheKey, { pm10, pm25, item });
+        resolve(out);
+      } else {
+        reject(new Error('invalid'));
+      }
+    } catch (e) {
+      reject(e);
+    } finally {
+      clearTimeout(t);
+    }
+  }));
+
+  try {
+    const first = await Promise.any(tasks);
+    // 남은 요청은 중단
+    controllers.forEach(c => c.abort());
+    return first;
+  } catch {
+    // 다 실패하면, 가장 가까운 측정소 캐시라도 반환
+    const nearest = sortedStations[0]?.name;
+    const fallback = nearest ? loadCache(`air_${nearest}`, 3 * 60 * 1000) : null;
+    return fallback || null;
+  }
+}
 
   function nearestHourIndex(times){
     if (!Array.isArray(times) || !times.length) return 0;
@@ -301,107 +332,120 @@ async function findFirstHealthyData(sortedStations, N = 5) {
     currentCoords = { lat, lon };
     errorEl.style.display = 'none';
     
-    if (isManualSearch) {
-      shareResultBtn.style.display = 'inline-flex';
-      dataSourceInfo.style.display = 'none';
-    } else {
-      shareResultBtn.style.display = 'none';
-      dataSourceInfo.style.display = 'block';
-    }
+   // 버튼/출처 표시는 즉시
+  if (isManualSearch) { shareResultBtn.style.display = 'inline-flex'; dataSourceInfo.style.display = 'none'; }
+  else { shareResultBtn.style.display = 'none'; dataSourceInfo.style.display = 'block'; }
 
-    const sortedStations = findNearbyStationsSorted(lat, lon);
-    const airData = await findFirstHealthyData(sortedStations);
-    
-    if (airData) {
-      drawGauge('PM10', airData.pm10, airData.station);
-      drawGauge('PM25', airData.pm25, airData.station);
-    } else {
-      const stationName = sortedStations.length > 0 ? sortedStations[0].name : '정보 없음';
-      drawGauge('PM10', null, stationName);
-      drawGauge('PM25', null, stationName);
-    }
-    
-    const regionName = await updateRegionText(lat, lon);
-    updateDateTime();
-    // 게이지 전체 대신, 업데이트된 텍스트 요소들에만 효과 적용
-    const elementsToBlink = [
-      document.getElementById('statusTextPM10'),
-      document.getElementById('valueTextPM10'),
-      document.getElementById('statusTextPM25'),
-      document.getElementById('valueTextPM25')
-    ];
+  const sortedStations = findNearbyStationsSorted(lat, lon);
+ // 1) 역지오코딩은 '비대기'로 시작 (await 하지 않음)
+  const regionTask = updateRegionText(lat, lon);
 
-    elementsToBlink.forEach(el => {
-      if (el) {
-        el.classList.add('blink-effect');
-        setTimeout(() => el.classList.remove('blink-effect'), 500);
-    }
-  });
-    
-    const causeEl = document.getElementById('forecastCause');
-    const tagsEl  = document.getElementById('whyTags');
-    
-    if (causeEl) causeEl.textContent = '오늘의 공기질을 분석하고 있어요... 🧐';
-    if (tagsEl) tagsEl.innerHTML = '';
-    document.getElementById('forecast-section').style.display = 'block';
+  // 2) 즉시 게이지를 채우기 위한 실시간 데이터 '선도착 우선' 요청
+  const airTask = findFirstHealthyData(sortedStations, /*N*/ 4, /*timeoutMs*/ 3500);
 
-    const [f10, f25, meteo] = await Promise.all([
-      fetchForecast('PM10'),
-      fetchForecast('PM25'),
-      fetchMeteo(lat, lon)
-    ]);
-    
-    const hints = {
-      cause10:   cleanCause(f10?.cause)   || '',
-      overall10: cleanCause(f10?.overall) || '',
-      cause25:   cleanCause(f25?.cause)   || '',
-      overall25: cleanCause(f25?.overall) || ''
-    };
+  // 3) 예보/기상은 병렬
+  document.getElementById('forecast-section').style.display = 'block';
+  const causeEl = document.getElementById('forecastCause');
+  const tagsEl  = document.getElementById('whyTags');
+  if (causeEl) causeEl.textContent = '오늘의 공기질을 분석하고 있어요... 🧐';
+  if (tagsEl) tagsEl.innerHTML = '';
 
-    const meas = {
-      pm10: toNum(airData?.pm10),
-      pm25: toNum(airData?.pm25),
-      o3:   toNum(airData?.item?.o3Value),
-      no2:  toNum(airData?.item?.no2Value)
-    };
-    
-    const exp = buildForecastExplanation(meas, meteo, hints);
-    
-    if (causeEl) causeEl.textContent = exp.text;
-    if (tagsEl)  tagsEl.innerHTML = (exp.tags && exp.tags.length)
-      ? exp.tags.map(t => `<span class="chip">${t}</span>`).join('')
-      : '<span class="chip">분석 완료</span>';
+  const f10P = fetchForecast('PM10');
+  const f25P = fetchForecast('PM25');
+  const meteoP = fetchMeteo(lat, lon);
+
+
+  // 4) 실시간 먼저 도착하면 바로 게이지 그리기
+  const airData = await airTask;
+  if (airData) {
+    drawGauge('PM10', airData.pm10, airData.station);
+    drawGauge('PM25', airData.pm25, airData.station);
+  } else {
+    const stationName = sortedStations[0]?.name || '정보 없음';
+    drawGauge('PM10', null, stationName);
+    drawGauge('PM25', null, stationName);
   }
-  
-  let debounceTimer;
-  inputEl.addEventListener('input', () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
-      const query = inputEl.value;
-      if (!query) {
-        suggestionsEl.innerHTML = '';
-        return;
-      }
-      try {
-        const res = await fetch(`${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
-        if (!res.ok) return;
-        const { documents } = await res.json();
-        suggestionsEl.innerHTML = '';
-        documents.slice(0, 5).forEach(d => {
-          const li = document.createElement('li');
-          li.textContent = d.address_name;
-          li.onclick = () => {
-            inputEl.value = d.address_name;
-            suggestionsEl.innerHTML = '';
-            updateAll(d.y, d.x, true);
-          };
-          suggestionsEl.appendChild(li);
-        });
-      } catch (e) {
-        console.error('카카오 검색 오류:', e);
-      }
-    }, 300); 
+
+   // 깜빡이 효과는 비동기 후처리
+  ['statusTextPM10','valueTextPM10','statusTextPM25','valueTextPM25'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) { el.classList.add('blink-effect'); setTimeout(()=>el.classList.remove('blink-effect'), 500); }
   });
+    
+      // 5) 나머지 도착 결과로 해설/태그 렌더
+  const [f10R, f25R, meteoR] = await Promise.allSettled([f10P, f25P, meteoP]);
+  const f10 = f10R.status === 'fulfilled' ? f10R.value : null;
+  const f25 = f25R.status === 'fulfilled' ? f25R.value : null;
+  const meteo = meteoR.status === 'fulfilled' ? meteoR.value : null;
+
+  const meas = {
+    pm10: toNum(airData?.pm10),
+    pm25: toNum(airData?.pm25),
+    o3:   toNum(airData?.item?.o3Value),
+    no2:  toNum(airData?.item?.no2Value)
+  };
+  const hints = {
+    cause10:   cleanCause(f10?.cause)   || '',
+    overall10: cleanCause(f10?.overall) || '',
+    cause25:   cleanCause(f25?.cause)   || '',
+    overall25: cleanCause(f25?.overall) || ''
+  };
+  const exp = buildForecastExplanation(meas, meteo, hints);
+  if (causeEl) causeEl.textContent = exp.text;
+  if (tagsEl)  tagsEl.innerHTML = (exp.tags?.length ? exp.tags.map(t=>`<span class="chip">${t}</span>`).join('') : '<span class="chip">분석 완료</span>');
+  
+    // 6) 지역명은 백그라운드로 이미 진행 중
+  regionTask.catch(()=>{}); // 오류 무시
+  updateDateTime();
+}
+    
+let debounceTimer;
+let currentCtrl = null;
+let qSeq = 0;
+
+inputEl.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(async () => {
+    const query = inputEl.value.trim();
+    if (!query) {
+      suggestionsEl.innerHTML = '';
+      if (currentCtrl) currentCtrl.abort();
+      return;
+    }
+
+    // 새 요청 준비: 이전 요청 중단 + 시퀀스 증가
+    if (currentCtrl) currentCtrl.abort();
+    currentCtrl = new AbortController();
+    const seq = ++qSeq;
+
+    try {
+      const res = await fetch(
+        `${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`,
+        { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` }, signal: currentCtrl.signal }
+      );
+      if (!res.ok) return;
+      const { documents } = await res.json();
+
+      // 오래된 응답 무시
+      if (seq !== qSeq) return;
+
+      suggestionsEl.innerHTML = '';
+      documents.slice(0, 5).forEach(d => {
+        const li = document.createElement('li');
+        li.textContent = d.address_name;
+        li.onclick = () => {
+          inputEl.value = d.address_name;
+          suggestionsEl.innerHTML = '';
+          // Kakao: y=lat, x=lon 주의
+          updateAll(d.y, d.x, true);
+        };
+        suggestionsEl.appendChild(li);
+      });
+    } catch (e) {
+      if (e.name !== 'AbortError') console.error('카카오 검색 오류:', e);
+    }
+  }, 300);
+});
 
   document.getElementById('searchBtn').onclick = async () => {
     const query = inputEl.value.trim();
@@ -460,24 +504,30 @@ async function findFirstHealthyData(sortedStations, N = 5) {
     if(timeEl) timeEl.textContent = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
   }
   
-  async function updateRegionText(lat, lon) {
-    const regionEl = document.getElementById('region');
-    if (!regionEl) return null;
-    try {
-      const res = await fetch(`${KAKAO_COORD_API}?x=${lon}&y=${lat}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
-      if (!res.ok) throw new Error();
-      const { documents } = await res.json();
-      const address = documents[0]?.address;
-      if (address) {
-        regionEl.textContent = address.address_name;
-        return address.address_name;
-      }
-      return null;
-    } catch (e) {
-      regionEl.textContent = '주소 조회 실패';
-      return null;
-    }
+async function updateRegionText(lat, lon) {
+  const regionEl = document.getElementById('region');
+  if (!regionEl) return null;
+
+  const qLat = Math.round(lat * 1000) / 1000;   // ~100m 격자
+  const qLon = Math.round(lon * 1000) / 1000;
+  const cacheKey = `rev_${qLat}_${qLon}`;
+  const cached = loadCache(cacheKey, 24 * 60 * 60 * 1000); // 24h
+  if (cached) { regionEl.textContent = cached; return cached; }
+
+  try {
+    const res = await fetch(`${KAKAO_COORD_API}?x=${lon}&y=${lat}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
+    if (!res.ok) throw new Error();
+    const { documents } = await res.json();
+    const address = documents[0]?.address?.address_name || '주소 조회 실패';
+    regionEl.textContent = address;
+    saveCache(cacheKey, address);
+    return address;
+  } catch {
+    regionEl.textContent = '주소 조회 실패';
+    return null;
   }
+}
+
   
   function initializeApp() {
     const urlParams = new URLSearchParams(window.location.search);
