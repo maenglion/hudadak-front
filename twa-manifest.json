@@ -1,0 +1,17 @@
+{
+  "packageId": "app.netlify.app_hudadak.twa",       
+  "host": "app-hudadak.netlify.app",               
+  "name": "후다닥 미세먼지 피하기",                  
+  "launcherName": "후다닥",                        
+  "themeColor": "#ffffff",                         
+  "navigationColor": "#ffffff",
+  "navigationColorDark": "#000000",
+  "backgroundColor": "#ffffff",                   
+  "enableNotifications": true,                     
+  "startUrl": "/?twa=1&v=20250820",                
+  "iconUrl": "icon-512.png",                       
+  "splashScreenFadeOutDuration": 300,              
+  "appVersionName": "6.2.7",                       
+  "appVersionCode": 45                       
+}
+
