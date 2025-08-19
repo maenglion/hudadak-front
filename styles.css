@@ -532,3 +532,8 @@ footer p {
 .privacy-policy-container li {
   margin-bottom: 0.5rem;
 }
+
+.gauge-wheel {
+  /* 기존 transform 속성에 rotate(-90deg)를 추가하여 시작점을 12시 방향으로 변경 */
+  transform: translate(-50%, -50%) rotate(-90deg);
+}
