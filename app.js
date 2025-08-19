@@ -433,6 +433,29 @@ async function findFirstWithPM(sortedStations, type = 'pm25', N = 6, timeoutMs =
     drawGauge('PM25', null, stationName);
   }
 
+
+  // ✅ PM2.5가 비어 있으면 근처 다른 측정소에서라도 찾아서 채움
+if (airData && (airData.pm25 == null)) {
+  const pm25Only = await findFirstWithPM(sortedStations, 'pm25', 6, 3500);
+  if (pm25Only) {
+    drawGauge('PM25', pm25Only.value, pm25Only.station);
+    // 이후 해설용 meas에도 반영
+    airData.pm25 = pm25Only.value;
+    airData.item = airData.item || pm25Only.item;
+  }
+}
+
+// (선택) PM10이 비었을 때도 같은 방식으로 보충하고 싶으면:
+if (airData && (airData.pm10 == null)) {
+  const pm10Only = await findFirstWithPM(sortedStations, 'pm10', 6, 3500);
+  if (pm10Only) {
+    drawGauge('PM10', pm10Only.value, pm10Only.station);
+    airData.pm10 = pm10Only.value;
+    airData.item = airData.item || pm10Only.item;
+  }
+}
+
+
    // 깜빡이 효과는 비동기 후처리
   ['statusTextPM10','valueTextPM10','statusTextPM25','valueTextPM25'].forEach(id=>{
     const el = document.getElementById(id);
