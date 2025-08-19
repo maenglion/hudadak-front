@@ -38,6 +38,13 @@
     --shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     --gauge-wheel-bg: #3a3a3a;
     --subtle-bg-color: #3a3a3a;
+    --search-input-bg: #313b46; /* 어두운 하늘색 계열 */
+  }
+ 
+  /* (추가) 다크모드 검색창 스타일 적용 */
+  #place {
+    background-color: var(--search-input-bg);
+    border-color: #555; /* 배경색에 맞춰 테두리 색도 약간 조정 */
   }
 }
 

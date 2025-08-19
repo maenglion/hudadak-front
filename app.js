@@ -170,7 +170,66 @@ async function fetchByStation(stationName, fetchOpts = {}) {
     return toNum(item.pm25Value) ?? toNum(item.pm25Value24) ?? null;
   }
 
-async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
+// ✅ 가장 먼저 PM(type) 값을 돌려주는 버전 (캐시/타임아웃 포함)
+async function findFirstWithPM(sortedStations, type = 'pm25', N = 6, timeoutMs = 3500) {
+  const slowNet = navigator.connection?.effectiveType?.includes('3g');
+  const take = slowNet ? Math.min(2, N) : N;
+
+  const controllers = [];
+  const tasks = sortedStations.slice(0, take).map(st => new Promise(async (resolve, reject) => {
+    const cacheKey = `air_${st.name}`;
+    const cached = loadCache(cacheKey, 3 * 60 * 1000);
+    if (cached) {
+      const val = (type === 'pm10') ? cached.pm10 : cached.pm25;
+      if (val != null) {
+        resolve({ station: st.name, value: val, item: cached.item, fromCache: true });
+        // 백그라운드 갱신
+        fetchByStation(st.name).then(resp => {
+          const item = resp?.response?.body?.items?.[0];
+          if (item) {
+            const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
+            if (pm10 !== null || pm25 !== null) saveCache(cacheKey, { pm10, pm25, item });
+          }
+        }).catch(()=>{});
+        return;
+      }
+    }
+
+    const ac = new AbortController();
+    controllers.push(ac);
+    const t = setTimeout(() => { ac.abort(); reject(new Error('timeout')); }, timeoutMs);
+
+    try {
+      const resp = await fetchByStation(st.name, { signal: ac.signal });
+      const item = resp?.response?.body?.items?.[0];
+      const v = pickPM(item, type);
+      if (v != null) {
+        // 전체 캐시도 갱신해두기
+        const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
+        saveCache(`air_${st.name}`, { pm10, pm25, item });
+        resolve({ station: st.name, value: v, item });
+      } else {
+        reject(new Error('invalid'));
+      }
+    } catch (e) {
+      reject(e);
+    } finally {
+      clearTimeout(t);
+    }
+  }));
+
+  try {
+    const first = await Promise.any(tasks);
+    controllers.forEach(c => c.abort());
+    return first; // { station, value, item }
+  } catch {
+    return null;
+  }
+}
+
+
+
+  async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
   const slowNet = navigator.connection?.effectiveType?.includes('3g');
   const take = slowNet ? Math.min(2, N) : N;
 
