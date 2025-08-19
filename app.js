@@ -227,6 +227,62 @@ async function findFirstWithPM(sortedStations, type = 'pm25', N = 6, timeoutMs =
   }
 }
 
+async function findFirstWithPM(sortedStations, type = 'pm25', N = 6, timeoutMs = 3500) {
+  const slowNet = navigator.connection?.effectiveType?.includes('3g');
+  const take = slowNet ? Math.min(2, N) : N;
+
+  const controllers = [];
+  const tasks = sortedStations.slice(0, take).map(st => new Promise(async (resolve, reject) => {
+    const cacheKey = `air_${st.name}`;
+    const cached = loadCache(cacheKey, 3 * 60 * 1000);
+
+    if (cached) {
+      const val = (type === 'pm10') ? cached.pm10 : cached.pm25;
+      if (val != null) {
+        resolve({ station: st.name, value: val, item: cached.item, fromCache: true });
+        // 백그라운드 갱신
+        fetchByStation(st.name).then(resp => {
+          const item = resp?.response?.body?.items?.[0];
+          if (item) {
+            const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
+            if (pm10 != null || pm25 != null) saveCache(cacheKey, { pm10, pm25, item });
+          }
+        }).catch(()=>{});
+        return;
+      }
+    }
+
+    const ac = new AbortController();
+    controllers.push(ac);
+    const t = setTimeout(() => { ac.abort(); reject(new Error('timeout')); }, timeoutMs);
+
+    try {
+      const resp = await fetchByStation(st.name, { signal: ac.signal });
+      const item = resp?.response?.body?.items?.[0];
+      const v = pickPM(item, type);
+      if (v != null) {
+        // 전체 캐시 갱신
+        const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
+        saveCache(`air_${st.name}`, { pm10, pm25, item });
+        resolve({ station: st.name, value: v, item });
+      } else {
+        reject(new Error('invalid'));
+      }
+    } catch (e) {
+      reject(e);
+    } finally {
+      clearTimeout(t);
+    }
+  }));
+
+  try {
+    const first = await Promise.any(tasks);   // ✅ 가장 먼저 성공한 한 개
+    controllers.forEach(c => c.abort());      // 나머지 중단
+    return first; // { station, value, item }
+  } catch {
+    return null;
+  }
+}
 
 
   async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
@@ -394,85 +450,68 @@ async function findFirstWithPM(sortedStations, type = 'pm25', N = 6, timeoutMs =
     return { text: fullText, tags };
   }
 
-
-  async function updateAll(lat, lon, isManualSearch = false) {
-    currentCoords = { lat, lon };
-    errorEl.style.display = 'none';
-    
-   // 버튼/출처 표시는 즉시
+async function updateAll(lat, lon, isManualSearch = false) {
+  currentCoords = { lat, lon };
+  errorEl.style.display = 'none';
   if (isManualSearch) { shareResultBtn.style.display = 'inline-flex'; dataSourceInfo.style.display = 'none'; }
   else { shareResultBtn.style.display = 'none'; dataSourceInfo.style.display = 'block'; }
 
   const sortedStations = findNearbyStationsSorted(lat, lon);
- // 1) 역지오코딩은 '비대기'로 시작 (await 하지 않음)
+
+  // ---- 지역명/예보/기상은 병렬 시작(대기 X)
   const regionTask = updateRegionText(lat, lon);
-
-  // 2) 즉시 게이지를 채우기 위한 실시간 데이터 '선도착 우선' 요청
-  const airTask = findFirstHealthyData(sortedStations, /*N*/ 4, /*timeoutMs*/ 3500);
-
-  // 3) 예보/기상은 병렬
   document.getElementById('forecast-section').style.display = 'block';
   const causeEl = document.getElementById('forecastCause');
   const tagsEl  = document.getElementById('whyTags');
   if (causeEl) causeEl.textContent = '오늘의 공기질을 분석하고 있어요... 🧐';
-  if (tagsEl) tagsEl.innerHTML = '';
+  if (tagsEl)  tagsEl.innerHTML = '';
 
   const f10P = fetchForecast('PM10');
   const f25P = fetchForecast('PM25');
-  const meteoP = fetchMeteo(lat, lon);
+  const meteoP = fetchMeteo(lat, lon);   // ← 최상위에 선언된 함수여야 함
 
+  // ---- 핵심: PM10/PM2.5를 각각 독립적으로 "가장 빠른 유효값"으로
+  const pm10P = findFirstWithPM(sortedStations, 'pm10', 6, 3500);
+  const pm25P = findFirstWithPM(sortedStations, 'pm25', 6, 3500);
 
-  // 4) 실시간 먼저 도착하면 바로 게이지 그리기
-  const airData = await airTask;
-  if (airData) {
-    drawGauge('PM10', airData.pm10, airData.station);
-    drawGauge('PM25', airData.pm25, airData.station);
-  } else {
-    const stationName = sortedStations[0]?.name || '정보 없음';
-    drawGauge('PM10', null, stationName);
-    drawGauge('PM25', null, stationName);
+  // 도착하는 대로 바로 렌더하고 싶으면 then으로 스트리밍
+  pm10P.then(r => { if (r) drawGauge('PM10', r.value, r.station); });
+  pm25P.then(r => { if (r) drawGauge('PM25', r.value, r.station); });
+
+  // 해설 합성 위해 결과는 모아서 사용
+  const [pm10R, pm25R, f10R, f25R, meteoR] = await Promise.allSettled([pm10P, pm25P, f10P, f25P, meteoP]);
+
+  const pm10 = pm10R.status === 'fulfilled' ? pm10R.value : null;
+  const pm25 = pm25R.status === 'fulfilled' ? pm25R.value : null;
+
+  // 값이 못 왔으면 기본 렌더
+  if (!pm10) {
+    const s = sortedStations[0]?.name || '정보 없음';
+    drawGauge('PM10', null, s);
+  }
+  if (!pm25) {
+    const s = sortedStations[0]?.name || '정보 없음';
+    drawGauge('PM25', null, s);
   }
 
-
-  // ✅ PM2.5가 비어 있으면 근처 다른 측정소에서라도 찾아서 채움
-if (airData && (airData.pm25 == null)) {
-  const pm25Only = await findFirstWithPM(sortedStations, 'pm25', 6, 3500);
-  if (pm25Only) {
-    drawGauge('PM25', pm25Only.value, pm25Only.station);
-    // 이후 해설용 meas에도 반영
-    airData.pm25 = pm25Only.value;
-    airData.item = airData.item || pm25Only.item;
-  }
-}
-
-// (선택) PM10이 비었을 때도 같은 방식으로 보충하고 싶으면:
-if (airData && (airData.pm10 == null)) {
-  const pm10Only = await findFirstWithPM(sortedStations, 'pm10', 6, 3500);
-  if (pm10Only) {
-    drawGauge('PM10', pm10Only.value, pm10Only.station);
-    airData.pm10 = pm10Only.value;
-    airData.item = airData.item || pm10Only.item;
-  }
-}
-
-
-   // 깜빡이 효과는 비동기 후처리
+  // 깜빡 효과(선택)
   ['statusTextPM10','valueTextPM10','statusTextPM25','valueTextPM25'].forEach(id=>{
     const el = document.getElementById(id);
     if (el) { el.classList.add('blink-effect'); setTimeout(()=>el.classList.remove('blink-effect'), 500); }
   });
-    
-      // 5) 나머지 도착 결과로 해설/태그 렌더
-  const [f10R, f25R, meteoR] = await Promise.allSettled([f10P, f25P, meteoP]);
+
+  // ---- 해설 생성
   const f10 = f10R.status === 'fulfilled' ? f10R.value : null;
   const f25 = f25R.status === 'fulfilled' ? f25R.value : null;
   const meteo = meteoR.status === 'fulfilled' ? meteoR.value : null;
 
+  // 오존/NO2는 둘 중 한쪽 item에서라도 끌어옴
+  const pickItem = pm25?.item || pm10?.item || null;
   const meas = {
-    pm10: toNum(airData?.pm10),
-    pm25: toNum(airData?.pm25),
-    o3:   toNum(airData?.item?.o3Value),
-    no2:  toNum(airData?.item?.no2Value)
+    pm10: pm10?.value ?? null,
+    pm25: pm25?.value ?? null,
+    o3:   toNum(pickItem?.o3Value),
+    no2:  toNum(pickItem?.no2Value)
   };
   const hints = {
     cause10:   cleanCause(f10?.cause)   || '',
@@ -483,14 +522,12 @@ if (airData && (airData.pm10 == null)) {
   const exp = buildForecastExplanation(meas, meteo, hints);
   if (causeEl) causeEl.textContent = exp.text;
   if (tagsEl)  tagsEl.innerHTML = (exp.tags?.length ? exp.tags.map(t=>`<span class="chip">${t}</span>`).join('') : '<span class="chip">분석 완료</span>');
-  
-  loadingModal.style.display = 'none'; // 로딩 종료
-    
 
-    // 6) 지역명은 백그라운드로 이미 진행 중
-  regionTask.catch(()=>{}); // 오류 무시
+  // 지역명은 백그라운드 완료
+  regionTask.catch(()=>{});
   updateDateTime();
 }
+
     
 let debounceTimer;
 let currentCtrl = null;
