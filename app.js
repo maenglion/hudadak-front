@@ -1,5 +1,4 @@
 (() => {
-  // (수정) ─ 변수명을 SCALE로 통일
   const SCALE = {
     PM10: [
       { name: '좋음',   max: 30,  color: { light: ['#367BB8', '#7C9CC5'], dark: ['#1e88e5', '#69AAFF'] } },
@@ -15,7 +14,7 @@
     ]
   };
 
-const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D';
+  const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D';
   const KAKAO_KEY = window.env?.KAKAO_KEY || 'be29697319e13590895593f5f5508348';
 
   const AIRKOREA_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName={station}&dataTerm=DAILY&ver=1.3`;
@@ -27,11 +26,9 @@ const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvj
   const inputEl = document.getElementById('place');
   const suggestionsEl = document.getElementById('suggestions');
   const errorEl = document.getElementById('error-message');
-  const gaugesEl = document.getElementById('gauges');
-  const shareResultContainer = document.getElementById('share-result-container');
   const shareResultBtn = document.getElementById('shareResultBtn');
   const dataSourceInfo = document.getElementById('data-source-info');
-  const loadingModal = document.getElementById('loading-modal'); // (추가) 로딩 모달 엘리먼트
+  const loadingModal = document.getElementById('loading-modal');
 
   let currentCoords = null;
 
@@ -49,7 +46,7 @@ const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvj
   }
   function isFromChinaSide(dir){
     if(dir==null) return false;
-    return (dir >= 240 && dir <= 300) || (dir >= 315 || dir <= 30); // 서~북서~북
+    return (dir >= 240 && dir <= 300) || (dir >= 315 || dir <= 30);
   }
 
   function loadCache(key, maxAgeMs) {
@@ -98,7 +95,6 @@ const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvj
     return arr.find(c => v <= c.max) || arr[arr.length - 1];
   }
     
-   // (수정) drawGauge 함수 - 그라데이션 및 다크모드 대응 로직 적용
   function drawGauge(pmType, value, station) {
     const wheelEl = document.getElementById(`gauge${pmType}`);
     const statusTextEl = document.getElementById(`statusText${pmType}`);
@@ -132,35 +128,33 @@ const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvj
     valueTextEl.textContent = `${value} µg/m³`;
     stationEl.textContent = `측정소: ${station}`;
   }
-
-// ✅ 최상위 레벨에 위치해야 함(다른 함수 바깥)
-async function fetchMeteo(lat, lon) {
-  try {
-    const url = METEO_API.replace('{lat}', lat).replace('{lon}', lon);
-    const res = await fetch(url);
-    const data = await res.json();
-    const idx = nearestHourIndex(data.hourly?.time || []);
-    return {
-      temp: data.hourly?.temperature_2m?.[idx] ?? null,
-      windSpeed: data.hourly?.wind_speed_10m?.[idx] ?? null,
-      windDir: data.hourly?.wind_direction_10m?.[idx] ?? null,
-      rad: data.hourly?.shortwave_radiation?.[idx] ?? null,
-      cloud: data.hourly?.cloud_cover?.[idx] ?? null,
-    };
-  } catch (e) {
-    console.error("Meteo fetch error:", e);
-    return null;
+  
+  // ✅ (수정) drawGauge 함수 바깥의 최상위 레벨로 이동
+  async function fetchMeteo(lat, lon) {
+    try {
+      const url = METEO_API.replace('{lat}', lat).replace('{lon}', lon);
+      const res = await fetch(url);
+      const data = await res.json();
+      const idx = nearestHourIndex(data.hourly?.time || []);
+      return {
+        temp: data.hourly?.temperature_2m?.[idx] ?? null,
+        windSpeed: data.hourly?.wind_speed_10m?.[idx] ?? null,
+        windDir: data.hourly?.wind_direction_10m?.[idx] ?? null,
+        rad: data.hourly?.shortwave_radiation?.[idx] ?? null,
+        cloud: data.hourly?.cloud_cover?.[idx] ?? null,
+      };
+    } catch (e) {
+      console.error("Meteo fetch error:", e);
+      return null;
+    }
   }
-}
 
-
-
-async function fetchByStation(stationName, fetchOpts = {}) {
-  const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
-  const res = await fetch(url, fetchOpts);
-  if (!res.ok) throw new Error('airkorea fetch failed');
-  return res.json();
-}
+  async function fetchByStation(stationName, fetchOpts = {}) {
+    const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
+    const res = await fetch(url, fetchOpts);
+    if (!res.ok) throw new Error('airkorea fetch failed');
+    return res.json();
+  }
 
   function pickPM(item, type = 'pm25') {
     const toNum = v => (v && v !== '-' ? Number(v) : null);
@@ -170,64 +164,61 @@ async function fetchByStation(stationName, fetchOpts = {}) {
     return toNum(item.pm25Value) ?? toNum(item.pm25Value24) ?? null;
   }
 
-async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
-  const slowNet = navigator.connection?.effectiveType?.includes('3g');
-  const take = slowNet ? Math.min(2, N) : N;
+  async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
+    const slowNet = navigator.connection?.effectiveType?.includes('3g');
+    const take = slowNet ? Math.min(2, N) : N;
 
-  const controllers = [];
-  const tasks = sortedStations.slice(0, take).map(st => new Promise(async (resolve, reject) => {
-    const cacheKey = `air_${st.name}`;
-    const cached = loadCache(cacheKey, 3 * 60 * 1000);
+    const controllers = [];
+    const tasks = sortedStations.slice(0, take).map(st => new Promise(async (resolve, reject) => {
+      const cacheKey = `air_${st.name}`;
+      const cached = loadCache(cacheKey, 3 * 60 * 1000);
 
-    // 1) 캐시 먼저 반환 (+ 백그라운드 갱신)
-    if (cached) {
-      resolve({ ...cached, station: st.name, fromCache: true });
-      fetchByStation(st.name).then(resp => {
-        const item = resp?.response?.body?.items?.[0];
-        if (item) {
-          const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
-          if (pm10 !== null || pm25 !== null) {
-            saveCache(cacheKey, { pm10, pm25, item });
+      if (cached) {
+        resolve({ ...cached, station: st.name, fromCache: true });
+        fetchByStation(st.name).then(resp => {
+          const item = resp?.response?.body?.items?.[0];
+          if (item) {
+            const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
+            if (pm10 !== null || pm25 !== null) {
+              saveCache(cacheKey, { pm10, pm25, item });
+            }
           }
-        }
-      }).catch(()=>{});
-      return;                   // ← 여기서 Promise 콜백 조기 종료
-    }                           // ← ✅ 이 중괄호로 캐시 분기 닫아야 함
+        }).catch(()=>{});
+        return;
+      }
 
-    // 2) 네트워크(타임아웃 + abort)
-    const ac = new AbortController();
-    controllers.push(ac);
-    const t = setTimeout(() => { ac.abort(); reject(new Error('timeout')); }, timeoutMs);
+      const ac = new AbortController();
+      controllers.push(ac);
+      const t = setTimeout(() => { ac.abort(); reject(new Error('timeout')); }, timeoutMs);
+
+      try {
+        const resp = await fetchByStation(st.name, { signal: ac.signal });
+        const item = resp?.response?.body?.items?.[0];
+        const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
+        if (pm10 !== null || pm25 !== null) {
+          const out = { station: st.name, pm10, pm25, item };
+          saveCache(cacheKey, { pm10, pm25, item });
+          resolve(out);
+        } else {
+          reject(new Error('invalid'));
+        }
+      } catch (e) {
+        reject(e);
+      } finally {
+        clearTimeout(t);
+      }
+    }));
 
     try {
-      const resp = await fetchByStation(st.name, { signal: ac.signal });
-      const item = resp?.response?.body?.items?.[0];
-      const pm10 = pickPM(item, 'pm10'), pm25 = pickPM(item, 'pm25');
-      if (pm10 !== null || pm25 !== null) {
-        const out = { station: st.name, pm10, pm25, item };
-        saveCache(cacheKey, { pm10, pm25, item });
-        resolve(out);
-      } else {
-        reject(new Error('invalid'));
-      }
-    } catch (e) {
-      reject(e);
-    } finally {
-      clearTimeout(t);
+      const first = await Promise.any(tasks);
+      controllers.forEach(c => c.abort());
+      return first;
+    } catch {
+      const nearest = sortedStations[0]?.name;
+      const fallback = nearest ? loadCache(`air_${nearest}`, 3 * 60 * 1000) : null;
+      return fallback || null;
     }
-  }));
-
-  try {
-    const first = await Promise.any(tasks);
-    controllers.forEach(c => c.abort());
-    return first;
-  } catch {
-    const nearest = sortedStations[0]?.name;
-    const fallback = nearest ? loadCache(`air_${nearest}`, 3 * 60 * 1000) : null;
-    return fallback || null;
   }
-}
-
 
   function nearestHourIndex(times){
     if (!Array.isArray(times) || !times.length) return 0;
@@ -304,7 +295,6 @@ async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
     return notes.slice(0,2).join(', ');
   }
   
-  // (수정) ─ 오존 정보를 포함하도록 해설 생성 로직 변경
   function buildForecastExplanation(meas, meteo, hints){
     const tags = computeCauseTags(meas, meteo, hints);
     const order = ['황사','국외 유입','대기 정체','광화학','국내 배출/교통'];
@@ -326,7 +316,6 @@ async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
     const ev = describeEvidence(meas, meteo, mainTag);
     let fullText = ev ? `${line} (${ev})` : line;
 
-    // 오존 농도가 '나쁨' (0.091 ppm) 이상일 경우 문구 추가
     const o3 = toNum(meas?.o3);
     if (o3 !== null && o3 >= 0.091) {
       fullText += " 또한, 오존 농도도 높으니 주의가 필요합니다.";
@@ -335,128 +324,118 @@ async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
     return { text: fullText, tags };
   }
 
-
   async function updateAll(lat, lon, isManualSearch = false) {
     currentCoords = { lat, lon };
     errorEl.style.display = 'none';
     
-   // 버튼/출처 표시는 즉시
-  if (isManualSearch) { shareResultBtn.style.display = 'inline-flex'; dataSourceInfo.style.display = 'none'; }
-  else { shareResultBtn.style.display = 'none'; dataSourceInfo.style.display = 'block'; }
+    if (isManualSearch) {
+      shareResultBtn.style.display = 'inline-flex';
+      dataSourceInfo.style.display = 'none';
+    } else {
+      shareResultBtn.style.display = 'none';
+      dataSourceInfo.style.display = 'block';
+    }
 
-  const sortedStations = findNearbyStationsSorted(lat, lon);
- // 1) 역지오코딩은 '비대기'로 시작 (await 하지 않음)
-  const regionTask = updateRegionText(lat, lon);
+    const sortedStations = findNearbyStationsSorted(lat, lon);
+    const regionTask = updateRegionText(lat, lon);
+    const airTask = findFirstHealthyData(sortedStations, 4, 3500);
 
-  // 2) 즉시 게이지를 채우기 위한 실시간 데이터 '선도착 우선' 요청
-  const airTask = findFirstHealthyData(sortedStations, /*N*/ 4, /*timeoutMs*/ 3500);
+    document.getElementById('forecast-section').style.display = 'block';
+    const causeEl = document.getElementById('forecastCause');
+    const tagsEl  = document.getElementById('whyTags');
+    if (causeEl) causeEl.textContent = '오늘의 공기질을 분석하고 있어요... 🧐';
+    if (tagsEl) tagsEl.innerHTML = '';
 
-  // 3) 예보/기상은 병렬
-  document.getElementById('forecast-section').style.display = 'block';
-  const causeEl = document.getElementById('forecastCause');
-  const tagsEl  = document.getElementById('whyTags');
-  if (causeEl) causeEl.textContent = '오늘의 공기질을 분석하고 있어요... 🧐';
-  if (tagsEl) tagsEl.innerHTML = '';
+    const f10P = fetchForecast('PM10');
+    const f25P = fetchForecast('PM25');
+    const meteoP = fetchMeteo(lat, lon); // 오류 발생 지점
 
-  const f10P = fetchForecast('PM10');
-  const f25P = fetchForecast('PM25');
-  const meteoP = fetchMeteo(lat, lon);
+    const airData = await airTask;
+    if (airData) {
+      drawGauge('PM10', airData.pm10, airData.station);
+      drawGauge('PM25', airData.pm25, airData.station);
+    } else {
+      const stationName = sortedStations[0]?.name || '정보 없음';
+      drawGauge('PM10', null, stationName);
+      drawGauge('PM25', null, stationName);
+    }
 
-
-  // 4) 실시간 먼저 도착하면 바로 게이지 그리기
-  const airData = await airTask;
-  if (airData) {
-    drawGauge('PM10', airData.pm10, airData.station);
-    drawGauge('PM25', airData.pm25, airData.station);
-  } else {
-    const stationName = sortedStations[0]?.name || '정보 없음';
-    drawGauge('PM10', null, stationName);
-    drawGauge('PM25', null, stationName);
-  }
-
-   // 깜빡이 효과는 비동기 후처리
-  ['statusTextPM10','valueTextPM10','statusTextPM25','valueTextPM25'].forEach(id=>{
-    const el = document.getElementById(id);
-    if (el) { el.classList.add('blink-effect'); setTimeout(()=>el.classList.remove('blink-effect'), 500); }
-  });
+    ['statusTextPM10','valueTextPM10','statusTextPM25','valueTextPM25'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) { el.classList.add('blink-effect'); setTimeout(()=>el.classList.remove('blink-effect'), 500); }
+    });
     
-      // 5) 나머지 도착 결과로 해설/태그 렌더
-  const [f10R, f25R, meteoR] = await Promise.allSettled([f10P, f25P, meteoP]);
-  const f10 = f10R.status === 'fulfilled' ? f10R.value : null;
-  const f25 = f25R.status === 'fulfilled' ? f25R.value : null;
-  const meteo = meteoR.status === 'fulfilled' ? meteoR.value : null;
+    const [f10R, f25R, meteoR] = await Promise.allSettled([f10P, f25P, meteoP]);
+    const f10 = f10R.status === 'fulfilled' ? f10R.value : null;
+    const f25 = f25R.status === 'fulfilled' ? f25R.value : null;
+    const meteo = meteoR.status === 'fulfilled' ? meteoR.value : null;
 
-  const meas = {
-    pm10: toNum(airData?.pm10),
-    pm25: toNum(airData?.pm25),
-    o3:   toNum(airData?.item?.o3Value),
-    no2:  toNum(airData?.item?.no2Value)
-  };
-  const hints = {
-    cause10:   cleanCause(f10?.cause)   || '',
-    overall10: cleanCause(f10?.overall) || '',
-    cause25:   cleanCause(f25?.cause)   || '',
-    overall25: cleanCause(f25?.overall) || ''
-  };
-  const exp = buildForecastExplanation(meas, meteo, hints);
-  if (causeEl) causeEl.textContent = exp.text;
-  if (tagsEl)  tagsEl.innerHTML = (exp.tags?.length ? exp.tags.map(t=>`<span class="chip">${t}</span>`).join('') : '<span class="chip">분석 완료</span>');
+    const meas = {
+      pm10: toNum(airData?.pm10),
+      pm25: toNum(airData?.pm25),
+      o3:   toNum(airData?.item?.o3Value),
+      no2:  toNum(airData?.item?.no2Value)
+    };
+    const hints = {
+      cause10:   cleanCause(f10?.cause)   || '',
+      overall10: cleanCause(f10?.overall) || '',
+      cause25:   cleanCause(f25?.cause)   || '',
+      overall25: cleanCause(f25?.overall) || ''
+    };
+    const exp = buildForecastExplanation(meas, meteo, hints);
+    if (causeEl) causeEl.textContent = exp.text;
+    if (tagsEl)  tagsEl.innerHTML = (exp.tags?.length ? exp.tags.map(t=>`<span class="chip">${t}</span>`).join('') : '<span class="chip">분석 완료</span>');
+    
+    // ✅ (수정) 불필요한 로딩 모달 종료 코드 제거
+    // loadingModal.style.display = 'none';
   
-  loadingModal.style.display = 'none'; // 로딩 종료
+    regionTask.catch(()=>{});
+    updateDateTime();
+  }
     
+  let debounceTimer;
+  let currentCtrl = null;
+  let qSeq = 0;
 
-    // 6) 지역명은 백그라운드로 이미 진행 중
-  regionTask.catch(()=>{}); // 오류 무시
-  updateDateTime();
-}
-    
-let debounceTimer;
-let currentCtrl = null;
-let qSeq = 0;
+  inputEl.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const query = inputEl.value.trim();
+      if (!query) {
+        suggestionsEl.innerHTML = '';
+        if (currentCtrl) currentCtrl.abort();
+        return;
+      }
 
-inputEl.addEventListener('input', () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(async () => {
-    const query = inputEl.value.trim();
-    if (!query) {
-      suggestionsEl.innerHTML = '';
       if (currentCtrl) currentCtrl.abort();
-      return;
-    }
+      currentCtrl = new AbortController();
+      const seq = ++qSeq;
 
-    // 새 요청 준비: 이전 요청 중단 + 시퀀스 증가
-    if (currentCtrl) currentCtrl.abort();
-    currentCtrl = new AbortController();
-    const seq = ++qSeq;
+      try {
+        const res = await fetch(
+          `${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`,
+          { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` }, signal: currentCtrl.signal }
+        );
+        if (!res.ok) return;
+        const { documents } = await res.json();
+        if (seq !== qSeq) return;
 
-    try {
-      const res = await fetch(
-        `${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`,
-        { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` }, signal: currentCtrl.signal }
-      );
-      if (!res.ok) return;
-      const { documents } = await res.json();
-
-      // 오래된 응답 무시
-      if (seq !== qSeq) return;
-
-      suggestionsEl.innerHTML = '';
-      documents.slice(0, 5).forEach(d => {
-        const li = document.createElement('li');
-        li.textContent = d.address_name;
-        li.onclick = () => {
-          inputEl.value = d.address_name;
-          suggestionsEl.innerHTML = '';
-          // Kakao: y=lat, x=lon 주의
-          updateAll(d.y, d.x, true);
-        };
-        suggestionsEl.appendChild(li);
-      });
-    } catch (e) {
-      if (e.name !== 'AbortError') console.error('카카오 검색 오류:', e);
-    }
-  }, 300);
-});
+        suggestionsEl.innerHTML = '';
+        documents.slice(0, 5).forEach(d => {
+          const li = document.createElement('li');
+          li.textContent = d.address_name;
+          li.onclick = () => {
+            inputEl.value = d.address_name;
+            suggestionsEl.innerHTML = '';
+            updateAll(d.y, d.x, true);
+          };
+          suggestionsEl.appendChild(li);
+        });
+      } catch (e) {
+        if (e.name !== 'AbortError') console.error('카카오 검색 오류:', e);
+      }
+    }, 300);
+  });
 
   document.getElementById('searchBtn').onclick = async () => {
     const query = inputEl.value.trim();
@@ -515,31 +494,30 @@ inputEl.addEventListener('input', () => {
     if(timeEl) timeEl.textContent = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
   }
   
-async function updateRegionText(lat, lon) {
-  const regionEl = document.getElementById('region');
-  if (!regionEl) return null;
+  async function updateRegionText(lat, lon) {
+    const regionEl = document.getElementById('region');
+    if (!regionEl) return null;
 
-  const qLat = Math.round(lat * 1000) / 1000;   // ~100m 격자
-  const qLon = Math.round(lon * 1000) / 1000;
-  const cacheKey = `rev_${qLat}_${qLon}`;
-  const cached = loadCache(cacheKey, 24 * 60 * 60 * 1000); // 24h
-  if (cached) { regionEl.textContent = cached; return cached; }
+    const qLat = Math.round(lat * 1000) / 1000;
+    const qLon = Math.round(lon * 1000) / 1000;
+    const cacheKey = `rev_${qLat}_${qLon}`;
+    const cached = loadCache(cacheKey, 24 * 60 * 60 * 1000);
+    if (cached) { regionEl.textContent = cached; return cached; }
 
-  try {
-    const res = await fetch(`${KAKAO_COORD_API}?x=${lon}&y=${lat}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
-    if (!res.ok) throw new Error();
-    const { documents } = await res.json();
-    const address = documents[0]?.address?.address_name || '주소 조회 실패';
-    regionEl.textContent = address;
-    saveCache(cacheKey, address);
-    return address;
-  } catch {
-    regionEl.textContent = '주소 조회 실패';
-    return null;
+    try {
+      const res = await fetch(`${KAKAO_COORD_API}?x=${lon}&y=${lat}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
+      if (!res.ok) throw new Error();
+      const { documents } = await res.json();
+      const address = documents[0]?.address?.address_name || '주소 조회 실패';
+      regionEl.textContent = address;
+      saveCache(cacheKey, address);
+      return address;
+    } catch {
+      regionEl.textContent = '주소 조회 실패';
+      return null;
+    }
   }
-}
 
-  
   function initializeApp() {
     const urlParams = new URLSearchParams(window.location.search);
     const lat = urlParams.get('lat');
