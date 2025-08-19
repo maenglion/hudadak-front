@@ -2,28 +2,28 @@
   // (수정) ─ 변수명을 SCALE로 통일
   const SCALE = {
     PM10: [
-      { name:'좋음',   max: 30,  color:'#1E88E5' },
-      { name:'보통',   max: 80,  color:'#43A047' },
-      { name:'나쁨',   max: 150, color:'#F57C00' },
-      { name:'매우나쁨', max: 1000, color:'#D32F2F' }
+      { name: '좋음',   max: 30,  color: { light: ['#367BB8', '#7C9CC5'], dark: ['#1e88e5', '#69AAFF'] } },
+      { name: '보통',   max: 80,  color: { light: ['#43A047', '#3BD497'], dark: ['#629473', '#9ACEB9'] } },
+      { name: '나쁨',   max: 150, color: { light: ['#F57C00', '#FFB20B'], dark: ['#F6AA5C', '#DDC472'] } },
+      { name: '매우나쁨', max: 1000,color: { light: ['#D32F2F', '#FF886B'], dark: ['#C75959', '#BF8779'] } }
     ],
     PM25: [
-      { name:'좋음',   max: 15,  color:'#1E88E5' },
-      { name:'보통',   max: 35,  color:'#43A047' },
-      { name:'나쁨',   max: 75,  color:'#F57C00' },
-      { name:'매우나쁨', max: 1000, color:'#D32F2F' }
+      { name: '좋음',   max: 15,  color: { light: ['#367BB8', '#7C9CC5'], dark: ['#1e88e5', '#69AAFF'] } },
+      { name: '보통',   max: 35,  color: { light: ['#43A047', '#3BD497'], dark: ['#629473', '#9ACEB9'] } },
+      { name: '나쁨',   max: 75,  color: { light: ['#F57C00', '#FFB20B'], dark: ['#F6AA5C', '#DDC472'] } },
+      { name: '매우나쁨', max: 1000,color: { light: ['#D32F2F', '#FF886B'], dark: ['#C75959', '#BF8779'] } }
     ]
   };
 
-  const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D';
+const AIRKOREA_KEY = window.env?.AIRKOREA_KEY || 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D';
   const KAKAO_KEY = window.env?.KAKAO_KEY || 'be29697319e13590895593f5f5508348';
-  
+
   const AIRKOREA_API = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName={station}&dataTerm=DAILY&ver=1.3`;
   const KAKAO_ADDRESS_API = `https://dapi.kakao.com/v2/local/search/address.json`;
   const KAKAO_COORD_API = `https://dapi.kakao.com/v2/local/geo/coord2address.json`;
   const FORECAST_API = (code) => `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth?serviceKey=${AIRKOREA_KEY}&returnType=json&numOfRows=100&pageNo=1&searchDate={date}&informCode=${code}`;
   const METEO_API = `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=wind_speed_10m,wind_direction_10m,shortwave_radiation,cloud_cover,temperature_2m&timezone=Asia%2FSeoul`;
-  
+
   const inputEl = document.getElementById('place');
   const suggestionsEl = document.getElementById('suggestions');
   const errorEl = document.getElementById('error-message');
@@ -31,6 +31,7 @@
   const shareResultContainer = document.getElementById('share-result-container');
   const shareResultBtn = document.getElementById('shareResultBtn');
   const dataSourceInfo = document.getElementById('data-source-info');
+  const loadingModal = document.getElementById('loading-modal'); // (추가) 로딩 모달 엘리먼트
 
   let currentCoords = null;
 
@@ -97,6 +98,7 @@
     return arr.find(c => v <= c.max) || arr[arr.length - 1];
   }
     
+   // (수정) drawGauge 함수 - 그라데이션 및 다크모드 대응 로직 적용
   function drawGauge(pmType, value, station) {
     const wheelEl = document.getElementById(`gauge${pmType}`);
     const statusTextEl = document.getElementById(`statusText${pmType}`);
@@ -104,8 +106,11 @@
     const stationEl = document.getElementById(`station${pmType}`);
     if (!wheelEl || !statusTextEl || !valueTextEl || !stationEl) return;
 
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
     if (value === null || value === undefined) {
-      wheelEl.style.setProperty('--gauge-color', '#cccccc');
+      wheelEl.style.setProperty('--gauge-color-start', '#cccccc');
+      wheelEl.style.setProperty('--gauge-color-end', '#cccccc');
       wheelEl.style.setProperty('--angle', '0deg');
       statusTextEl.textContent = '--';
       statusTextEl.style.color = 'var(--light-text-color)';
@@ -113,18 +118,42 @@
       stationEl.textContent = `측정소: ${station || '정보 없음'}`;
       return;
     }
-    
-    const status = getStatus(pmType, Number(value));
-    const ratio  = Math.min(Number(value) / (status?.max || 1), 1);
-    const deg    = 360 * ratio;
 
-    wheelEl.style.setProperty('--gauge-color', status.color);
+    const status = getStatus(pmType, Number(value));
+    const colorSet = isDarkMode ? status.color.dark : status.color.light;
+    const ratio = Math.min(Number(value) / (status?.max || 1), 1);
+    const deg = 360 * ratio;
+
+    wheelEl.style.setProperty('--gauge-color-start', colorSet[0]);
+    wheelEl.style.setProperty('--gauge-color-end', colorSet[1]);
     wheelEl.style.setProperty('--angle', `${deg}deg`);
     statusTextEl.textContent = status.name;
-    statusTextEl.style.color = status.color;
+    statusTextEl.style.color = colorSet[0];
     valueTextEl.textContent = `${value} µg/m³`;
     stationEl.textContent = `측정소: ${station}`;
   }
+
+// ✅ 최상위 레벨에 위치해야 함(다른 함수 바깥)
+async function fetchMeteo(lat, lon) {
+  try {
+    const url = METEO_API.replace('{lat}', lat).replace('{lon}', lon);
+    const res = await fetch(url);
+    const data = await res.json();
+    const idx = nearestHourIndex(data.hourly?.time || []);
+    return {
+      temp: data.hourly?.temperature_2m?.[idx] ?? null,
+      windSpeed: data.hourly?.wind_speed_10m?.[idx] ?? null,
+      windDir: data.hourly?.wind_direction_10m?.[idx] ?? null,
+      rad: data.hourly?.shortwave_radiation?.[idx] ?? null,
+      cloud: data.hourly?.cloud_cover?.[idx] ?? null,
+    };
+  } catch (e) {
+    console.error("Meteo fetch error:", e);
+    return null;
+  }
+}
+
+
 
 async function fetchByStation(stationName, fetchOpts = {}) {
   const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
@@ -142,18 +171,17 @@ async function fetchByStation(stationName, fetchOpts = {}) {
   }
 
 async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
-  // 네트워크 상태에 따라 병렬 폭 조절(3g면 2개만)
   const slowNet = navigator.connection?.effectiveType?.includes('3g');
   const take = slowNet ? Math.min(2, N) : N;
 
   const controllers = [];
   const tasks = sortedStations.slice(0, take).map(st => new Promise(async (resolve, reject) => {
-    // 1) 캐시 먼저 (3분 이내면 즉시 사용 + 백그라운드 갱신)
     const cacheKey = `air_${st.name}`;
     const cached = loadCache(cacheKey, 3 * 60 * 1000);
+
+    // 1) 캐시 먼저 반환 (+ 백그라운드 갱신)
     if (cached) {
       resolve({ ...cached, station: st.name, fromCache: true });
-      // 백그라운드 갱신 시도(결과 오면 캐시 교체)
       fetchByStation(st.name).then(resp => {
         const item = resp?.response?.body?.items?.[0];
         if (item) {
@@ -163,32 +191,13 @@ async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
           }
         }
       }).catch(()=>{});
-      return;
-    }
-  
-  async function fetchMeteo(lat, lon) {
-    try {
-      const url = METEO_API.replace('{lat}', lat).replace('{lon}', lon);
-      const res = await fetch(url);
-      const data = await res.json();
-      const idx = nearestHourIndex(data.hourly?.time || []);
-      return {
-        temp: data.hourly?.temperature_2m?.[idx] ?? null,
-        windSpeed: data.hourly?.wind_speed_10m?.[idx] ?? null,
-        windDir: data.hourly?.wind_direction_10m?.[idx] ?? null,
-        rad: data.hourly?.shortwave_radiation?.[idx] ?? null,
-        cloud: data.hourly?.cloud_cover?.[idx] ?? null,
-      };
-    } catch (e) {
-      console.error("Meteo fetch error:", e);
-      return null;
-    }
-  }
+      return;                   // ← 여기서 Promise 콜백 조기 종료
+    }                           // ← ✅ 이 중괄호로 캐시 분기 닫아야 함
 
-  // 2) 네트워크(타임아웃+abort)
+    // 2) 네트워크(타임아웃 + abort)
     const ac = new AbortController();
     controllers.push(ac);
-    const t = setTimeout(()=>{ ac.abort(); reject(new Error('timeout')); }, timeoutMs);
+    const t = setTimeout(() => { ac.abort(); reject(new Error('timeout')); }, timeoutMs);
 
     try {
       const resp = await fetchByStation(st.name, { signal: ac.signal });
@@ -210,16 +219,15 @@ async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
 
   try {
     const first = await Promise.any(tasks);
-    // 남은 요청은 중단
     controllers.forEach(c => c.abort());
     return first;
   } catch {
-    // 다 실패하면, 가장 가까운 측정소 캐시라도 반환
     const nearest = sortedStations[0]?.name;
     const fallback = nearest ? loadCache(`air_${nearest}`, 3 * 60 * 1000) : null;
     return fallback || null;
   }
 }
+
 
   function nearestHourIndex(times){
     if (!Array.isArray(times) || !times.length) return 0;
@@ -394,6 +402,9 @@ async function findFirstHealthyData(sortedStations, N = 4, timeoutMs = 3500) {
   if (causeEl) causeEl.textContent = exp.text;
   if (tagsEl)  tagsEl.innerHTML = (exp.tags?.length ? exp.tags.map(t=>`<span class="chip">${t}</span>`).join('') : '<span class="chip">분석 완료</span>');
   
+  loadingModal.style.display = 'none'; // 로딩 종료
+    
+
     // 6) 지역명은 백그라운드로 이미 진행 중
   regionTask.catch(()=>{}); // 오류 무시
   updateDateTime();
