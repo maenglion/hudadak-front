@@ -135,5 +135,29 @@
 
   <script src="gps.js"></script>
   <script src="/app.js?v=20250820" defer></script>
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    reg.update(); // 진입 때마다 최신 확인함
+
+    // 새 SW가 waiting 상태면 즉시 교체 지시함
+    const trigger = (r) => r.waiting && r.waiting.postMessage({ type: 'SKIP_WAITING' });
+    reg.addEventListener('updatefound', () => {
+      reg.installing?.addEventListener('statechange', () => trigger(reg));
+    });
+    trigger(reg);
+
+    // 컨트롤러 교체되면 자동 새로고침함
+    navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+
+    // 앱이 포그라운드로 올 때마다 업데이트 확인함
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') reg.update();
+    });
+  });
+}
+</script>
+
 </body>
 </html>

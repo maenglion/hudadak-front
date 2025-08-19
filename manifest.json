@@ -5,13 +5,13 @@
   "lang": "ko-KR",
   "dir": "auto",
   "id": "/?source=pwa",
-  "start_url": ".",
+  "start_url": "/?v=2025-08-20-0645",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "version": "4.1.0",
+  "version": "8.1.0",
   "categories": [
     "weather",
     "lifestyle"
