@@ -544,23 +544,3 @@ footer p {
   /* 기존 transform 속성에 rotate(-90deg)를 추가하여 시작점을 12시 방향으로 변경 */
   transform: translate(-50%, -50%) rotate(-90deg);
 }
-
-/* --- App-controlled dark override (wins over media) --- */
-html.dark {
-  /* 네가 원하는 다크 배경 #121212 포함 */
-  --background-color: #121212;
-  --card-color: #292929;
-  --text-color: #e0e0e0;
-  --light-text-color: #9e9e9e;
-  --border-color: #424242;
-  --primary-color: #4dabf7;
-  --shadow: 0 4px 8px rgba(0,0,0,0.2);
-  --gauge-wheel-bg: #3a3a3a;
-  --subtle-bg-color: #3a3a3a;
-  --search-input-bg: #313b46;
-}
-/* 다크에서 검색창 추가 스타일 */
-html.dark #place {
-  background-color: var(--search-input-bg);
-  border-color: #555;
-}
