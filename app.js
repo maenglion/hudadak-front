@@ -33,6 +33,37 @@
   let currentCoords = null;
 
   // --- 유틸 함수 ---
+
+// ===== 공용 유틸/캐시 =====
+const TTL_MS = 10 * 60 * 1000; // 10분
+const inFlight = new Map();
+function cacheGet(key){
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const {t, v} = JSON.parse(raw);
+    if (Date.now() - t > TTL_MS) return null;
+    return v;
+  } catch { return null; }
+}
+function cacheSet(key, v){
+  try { localStorage.setItem(key, JSON.stringify({t: Date.now(), v})); } catch {}
+}
+async function dedupFetch(url, opts={}) {
+  const k = url + '|' + (opts.method||'GET');
+  if (inFlight.has(k)) return inFlight.get(k);
+  const p = fetch(url, opts).finally(()=> inFlight.delete(k));
+  inFlight.set(k, p);
+  return p;
+}
+function isAirLimitPayload(json){
+  try {
+    const h = json?.cmmMsgHeader;
+    return h?.returnReasonCode === '22' || /LIMITED_NUMBER_OF_SERVICE/i.test(h?.returnAuthMsg||'');
+  } catch { return false; }
+}
+
+
   function toNum(x) { const n = Number(x); return (x != null && x !== '-' && Number.isFinite(n)) ? n : null; }
   function cleanCause(txt) { return txt ? txt.replace(/^\s*○\s*/, '').replace(/^\s*\[[^\]]+\]\s*/, '').trim() : ''; }
   function degToCompass(d) {
@@ -78,18 +109,26 @@
   }
   
   async function fetchByStation(stationName, fetchOpts = {}) {
-    const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
-    const res = await fetch(url, fetchOpts);
-    if (!res.ok) throw new Error(`airkorea fetch failed for ${stationName}`);
-    return res.json();
-  }
+  const url = AIRKOREA_API.replace('{station}', encodeURIComponent(stationName));
+  const hit = cacheGet(url);
+  if (hit) return hit;
 
-  function pickPM(item) {
-    return {
-        pm10: toNum(item?.pm10Value) ?? toNum(item?.pm10Value24),
-        pm25: toNum(item?.pm25Value) ?? toNum(item?.pm25Value24),
-    };
+  let delay = 500; // 0.5s → 1s → 2s → 4s → 8s
+  for (let i=0; i<5; i++){
+    const res = await dedupFetch(url, fetchOpts);
+    if (res.ok) {
+      const json = await res.json();
+      if (!isAirLimitPayload(json)) {
+        cacheSet(url, json);
+        return json;
+      }
+    }
+    await new Promise(r=>setTimeout(r, delay));
+    delay = Math.min(delay*2, 8000);
   }
+  throw new Error(`airkorea limited or failed: ${stationName}`);
+}
+
 
   // ✅ 데이터 조회 함수를 하나로 통합하고 안정성을 높였습니다.
   async function findFirstHealthyData(sortedStations, N = 5) {
@@ -195,18 +234,19 @@
   }
 
   // --- 이벤트 핸들러 및 초기화 ---
-  let debounceTimer;
-  inputEl.addEventListener('input', () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
-      const query = inputEl.value.trim();
-      if (!query) {
-        suggestionsEl.style.display = 'none';
-        return;
-      }
-      try {
-        const res = await fetch(`${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
-        const { documents } = await res.json();
+  let lastQuery = '';
+inputEl.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(async () => {
+    const query = inputEl.value.trim();
+    if (!query || query === lastQuery) { suggestionsEl.style.display = 'none'; return; }
+    lastQuery = query;
+    try {
+      const url = `${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`;
+      const res = await dedupFetch(url, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
+      const { documents } = await res.json();
+      // ... 이하 동일
+
         suggestionsEl.innerHTML = '';
         if (documents.length > 0) {
           documents.slice(0, 5).forEach(d => {
@@ -255,6 +295,15 @@
       );
     }
   }
+
+  function showError(msg){
+  if (!errorEl) return;
+  errorEl.textContent = msg;
+  errorEl.style.display = 'block';
+}
+
+showError('에어코리아 요청이 많아 잠시 데이터를 불러올 수 없음. 잠시 후 다시 시도 바람.');
+
 
   initializeApp();
 })();
