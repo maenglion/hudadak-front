@@ -23,13 +23,19 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // HTML/문서는 항상 네트워크 우선 + 실패 시 캐시 폴백함
+  // 0) HTTP(S) GET만 처리. 그 외(chrome-extension:, data:, blob:, file:, POST 등)는 패스
+  const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
+  if (!isHttp || req.method !== 'GET') {
+    return; // 브라우저 기본 처리
+  }
+
+  // 1) HTML은 네트워크 우선(no-store) + 오프라인 폴백
   const isHTML = req.destination === 'document' || url.pathname.endsWith('.html');
   if (isHTML) {
     event.respondWith((async () => {
       try {
         return await fetch(req, { cache: 'no-store' });
-      } catch (e) {
+      } catch {
         const cached = await caches.match(req);
         return cached || new Response('offline', { status: 503 });
       }
@@ -37,25 +43,35 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 파일명에 해시가 있으면 Cache First
+  // 2) 파일명에 해시가 있으면 Cache First
   const hasHash = /\.[0-9a-f]{8,}\./i.test(url.pathname);
   if (hasHash) {
     event.respondWith((async () => {
       const cached = await caches.match(req);
       if (cached) return cached;
       const res = await fetch(req);
-      const cache = await caches.open(APP_CACHE);
-      cache.put(req, res.clone());
+      try {
+        const cache = await caches.open(APP_CACHE);
+        await cache.put(req, res.clone());
+      } catch (e) {
+        // put 실패(opaque 등)는 무시
+        console.warn('[SW] cache.put skipped:', e);
+      }
       return res;
     })());
     return;
   }
 
-  // 그 외는 Stale-While-Revalidate
+  // 3) 그 외는 Stale-While-Revalidate
   event.respondWith((async () => {
     const cache = await caches.open(APP_CACHE);
     const cached = await caches.match(req);
-    const net = fetch(req).then(res => { cache.put(req, res.clone()); return res; }).catch(() => cached);
-    return cached || net;
+    try {
+      const res = await fetch(req);
+      try { await cache.put(req, res.clone()); } catch (e) { /* skip */ }
+      return res;
+    } catch {
+      return cached || fetch(req); // 마지막 시도
+    }
   })());
 });
