@@ -304,17 +304,34 @@ inputEl.addEventListener('input', () => {
 
 showError('에어코리아 요청이 많아 잠시 데이터를 불러올 수 없음. 잠시 후 다시 시도 바람.');
 
+  // ▼▼▼ 테마 토글 로직 수정 ▼▼▼
+  const themeToggle = document.getElementById('theme-toggle');
+  const body = document.body;
 
-  // 앱 시작 시 저장된 테마 또는 시스템 설정에 따라 테마 적용
+  const applyTheme = (theme) => {
+    if (theme === 'dark') {
+      body.classList.add('dark-mode');
+    } else {
+      body.classList.remove('dark-mode');
+    }
+  };
+
+  themeToggle.addEventListener('click', () => {
+    const isDarkMode = body.classList.contains('dark-mode');
+    const newTheme = isDarkMode ? 'light' : 'dark';
+    localStorage.setItem('theme', newTheme);
+    applyTheme(newTheme);
+  });
+
+  // 앱 시작 시 저장된 테마가 있으면 적용하고, 없으면 라이트 모드로 시작
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {
-    applyTheme(savedTheme);
+    applyTheme(savedTheme); // 이전 방문 기록이 있으면 그걸 따름
   } else {
-    // 시스템 설정 확인 (최초 방문 시)
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
+    applyTheme('light'); // 첫 방문 시 무조건 라이트 모드
   }
-  // ▲▲▲ 테마 토글 로직 추가 ▲▲▲
+  // ▲▲▲ 테마 토글 로직 수정 ▲▲▲
+
 
   initializeApp();
 })();

@@ -33,22 +33,28 @@
   </script>
 </head>
 <body>
- <header>
-    <h1>후다닥<br>미세먼지 피하기</h1>
-    <!-- ▼▼▼ 테마 토글 버튼 추가 ▼▼▼ -->
-    <div id="theme-toggle" class="theme-toggle">
-      <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-      <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+ <!-- ▼▼▼ 상단 토글 버튼 영역 추가 ▼▼▼ -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <button id="theme-toggle" class="btn-theme" type="button" aria-label="테마 전환">
+        <span class="btn-theme-icon"></span>
+      </button>
     </div>
-    <!-- ▲▲▲ 테마 토글 버튼 추가 ▲▲▲ -->
-    <div class="header-meta">
-      <div class="version-info">ver.1</div>
-    </div>
-    <div class="info-row">
-      <p><strong>기준위치:</strong> <span id="region">--</span></p>
-      <p><strong>검색일시:</strong> <span id="time">--</span></p>
-    </div>
-  </header>
+  </div>
+  <!-- ▲▲▲ 상단 토글 버튼 영역 추가 ▲▲▲ -->
+
+<!-- ▼ 기존 페이지 헤더 -->
+<header>
+  <h1>후다닥<br>미세먼지 피하기</h1>
+  <div class="header-meta">
+    <div class="version-info">ver.1</div>
+    <!-- 기존 아이콘형 토글은 제거 권장 -->
+  </div>
+  <div class="info-row">
+    <p><strong>기준위치:</strong> <span id="region">--</span></p>
+    <p><strong>검색일시:</strong> <span id="time">--</span></p>
+  </div>
+</header>
 
   <section id="gauges">
     <div class="gauge-container">

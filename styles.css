@@ -26,7 +26,6 @@
   --subtle-bg-color: #e9ecef;
 }
 
-/* ▼▼▼ JS로 body에 .dark-mode 클래스를 추가/제거하여 테마를 제어합니다 ▼▼▼ */
 body.dark-mode {
   --background-color: #121212;
   --card-color: #282828;
@@ -38,6 +37,7 @@ body.dark-mode {
   --gauge-wheel-bg: #474646;
   --subtle-bg-color: #3a3a3a;
 }
+
 
 body {
   font-family: 'Noto Sans KR', sans-serif;
@@ -53,6 +53,60 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
+/* ▼▼▼ 상단바 및 테마 토글 스위치 스타일 ▼▼▼ */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+}
+.topbar-inner {
+  width: 100%;
+  max-width: 800px;
+  padding: 0 20px;
+  display: flex;
+  justify-content: flex-end; /* 오른쪽 정렬 */
+  align-items: center;
+  height: 100%;
+}
+.btn-theme {
+  width: 50px;
+  height: 26px;
+  background-color: var(--subtle-bg-color);
+  border-radius: 13px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+.btn-theme-icon {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%23f5c13b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+}
+body.dark-mode .btn-theme {
+  background-color: var(--primary-color);
+}
+body.dark-mode .btn-theme-icon {
+  transform: translateX(24px);
+  background-color: var(--card-color);
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%23fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>');
+}
+/* ▲▲▲ 상단바 및 테마 토글 스위치 스타일 ▲▲▲ */
+
 header {
   position: relative; /* 토글 버튼 위치의 기준점 */
   text-align: center;
@@ -61,30 +115,7 @@ header {
   margin-bottom: 2rem;
 }
 
-/* ▼▼▼ 테마 토글 버튼 스타일 추가 ▼▼▼ */
-.theme-toggle {
-  position: absolute;
-  top: 0;
-  right: 0;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-color);
-}
-.theme-toggle:hover {
-  background-color: var(--subtle-bg-color);
-}
-.theme-toggle svg {
-  width: 20px;
-  height: 20px;
-}
-#theme-icon-dark { display: none; } /* 다크모드 아이콘 기본 숨김 */
-body.dark-mode #theme-icon-dark { display: block; } /* 다크모드일 때 보여주기 */
-body.dark-mode #theme-icon-light { display: none; } /* 다크모드일 때 라이트 아이콘 숨기기 */
-/* ▲▲▲ 테마 토글 버튼 스타일 추가 ▲▲▲ */
+
 
 
 /* 다크 모드 색상 변수 정의 */
