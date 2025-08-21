@@ -305,5 +305,16 @@ inputEl.addEventListener('input', () => {
 showError('에어코리아 요청이 많아 잠시 데이터를 불러올 수 없음. 잠시 후 다시 시도 바람.');
 
 
+  // 앱 시작 시 저장된 테마 또는 시스템 설정에 따라 테마 적용
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    applyTheme(savedTheme);
+  } else {
+    // 시스템 설정 확인 (최초 방문 시)
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDark ? 'dark' : 'light');
+  }
+  // ▲▲▲ 테마 토글 로직 추가 ▲▲▲
+
   initializeApp();
 })();
