@@ -131,23 +131,21 @@ function isAirLimitPayload(json){
 
 
   // ✅ 데이터 조회 함수를 하나로 통합하고 안정성을 높였습니다.
-  async function findFirstHealthyData(sortedStations, N = 5) {
-    const promises = sortedStations.slice(0, N).map(st =>
-      fetchByStation(st.name)
-        .then(resp => ({ station: st.name, item: resp?.response?.body?.items?.[0] }))
-        .catch(() => null)
-    );
+async function findFirstHealthyData(sortedStations, N = 3) { // N도 3 이하 권장
+  for (const st of sortedStations.slice(0, N)) {
+    try {
+      const resp = await fetchByStation(st.name);
+      const item = resp?.response?.body?.items?.[0];
+      if (!item) continue;
+      const { pm10, pm25 } = pickPM(item);
+      if (pm10 !== null || pm25 !== null) {
+        return { station: st.name, pm10, pm25, item };
+      }
+    } catch (_) { /* 다음 측정소 계속 */ }
+  }
+  return null;
+}
 
-    const results = await Promise.all(promises);
-    const validResults = results.filter(r => r && r.item);
-
-    if (validResults.length === 0) return null;
-    
-    // 1순위: PM10과 PM2.5가 모두 있는 측정소
-    let bestResult = validResults.find(r => {
-        const { pm10, pm25 } = pickPM(r.item);
-        return pm10 !== null && pm25 !== null;
-    });
 
     // 2순위: 하나라도 있는 측정소 (1순위가 없을 경우)
     if (!bestResult) {
@@ -308,13 +306,13 @@ showError('에어코리아 요청이 많아 잠시 데이터를 불러올 수 �
   const themeToggle = document.getElementById('theme-toggle');
   const body = document.body;
 
-  const applyTheme = (theme) => {
-    if (theme === 'dark') {
-      body.classList.add('dark-mode');
-    } else {
-      body.classList.remove('dark-mode');
-    }
-  };
+
+ const applyTheme = (theme) => {
+  const isDark = theme === 'dark';
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'; // ★ 중요
+  document.body.classList.toggle('dark-mode', isDark);                     // 네가 쓰는 체계
+};
+
 
   themeToggle.addEventListener('click', () => {
     const isDarkMode = body.classList.contains('dark-mode');
