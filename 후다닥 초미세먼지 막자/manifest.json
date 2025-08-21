@@ -1,0 +1,53 @@
+{
+  "short_name": "미세먼지",
+  "name": "후다닥 미세먼지 피하기",
+  "description": "내 주변 가장 가까운 곳의 미세먼지 정보를 확인하는 앱",
+  "lang": "ko-KR",
+  "dir": "auto",
+  "id": "/?source=pwa",
+  "start_url": ".",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "version": "4.1.0",
+  "categories": [
+    "weather",
+    "lifestyle"
+  ],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "type": "image/png",
+      "sizes": "1080x1920",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "screenshot2.png",
+      "type": "image/png",
+      "sizes": "1080x1920",
+      "form_factor": "narrow"
+    }
+  ],
+  "iarc_rating_id": "YOUR_IARC_ID_HERE",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ]
+}
