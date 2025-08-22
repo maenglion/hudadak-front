@@ -8,9 +8,9 @@
       { name:'매우나쁨', max: 1000, color:'#D32F2F' }
     ],
     PM25: [
-      { name:'좋음',   max: 14,  color:'#1E88E5' },
-      { name:'보통',   max: 34,  color:'#43A047' },
-      { name:'나쁨',   max: 74,  color:'#F57C00' },
+      { name:'좋음',   max: 11,  color:'#1E88E5' },
+      { name:'보통',   max: 31,  color:'#43A047' },
+      { name:'나쁨',   max: 71,  color:'#F57C00' },
       { name:'매우나쁨', max: 1000, color:'#D32F2F' }
     ]
   };
