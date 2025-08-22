@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>후다닥 미세먼지 피하기</title>
+<!-- index.html <head> -->
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff">
 
-  <meta name="supported-color-schemes" content="light">
   <meta property="og:title" content="후다닥 미세먼지 피하기">
   <meta property="og:description" content="내 주변 가장 가까운 곳의 미세먼지 정보를 확인하세요!">
   <meta property="og:image" content="https://placehold.co/600x315/1E88E5/FFFFFF?text=후다닥!%0A미세먼지%0A피하기">
@@ -17,6 +19,13 @@
   <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
+  <link rel="dns-prefetch" href="https://apis.data.go.kr">
+<link rel="preconnect" href="https://apis.data.go.kr" crossorigin>
+<link rel="dns-prefetch" href="https://dapi.kakao.com">
+<link rel="preconnect" href="https://dapi.kakao.com" crossorigin>
+<link rel="dns-prefetch" href="https://api.open-meteo.com">
+<link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+
 
   <script>
     window.env = {
@@ -26,16 +35,28 @@
   </script>
 </head>
 <body>
-  <header>
-    <h1>후다닥<br>미세먼지 피하기</h1>
-    <div class="header-meta">
-      <div class="version-info">ver.4</div>
+ <!-- ▼▼▼ 상단 토글 버튼 영역 추가 ▼▼▼ -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <button id="theme-toggle" class="btn-theme" type="button" aria-label="테마 전환">
+        <span class="btn-theme-icon"></span>
+      </button>
     </div>
-    <div class="info-row">
-      <p><strong>기준위치:</strong> <span id="region">--</span></p>
-      <p><strong>검색일시:</strong> <span id="time">--</span></p>
-    </div>
-  </header>
+  </div>
+  <!-- ▲▲▲ 상단 토글 버튼 영역 추가 ▲▲▲ -->
+
+<!-- ▼ 기존 페이지 헤더 -->
+<header>
+  <h1>후다닥<br>미세먼지 피하기</h1>
+  <div class="header-meta">
+    <div class="version-info">ver.3.1</div>
+    <!-- 기존 아이콘형 토글은 제거 권장 -->
+  </div>
+  <div class="info-row">
+    <p><strong>기준위치:</strong> <span id="region">--</span></p>
+    <p><strong>검색일시:</strong> <span id="time">--</span></p>
+  </div>
+</header>
 
   <section id="gauges">
     <div class="gauge-container">
@@ -124,6 +145,6 @@
   </footer>
 
   <script src="gps.js"></script>
-  <script src="app.js"></script>
+  <script src="/app.js?v=20250820" defer></script>
 </body>
 </html>
