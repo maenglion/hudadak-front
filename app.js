@@ -2,13 +2,13 @@
 (() => {
   const SCALE = {
     PM10: [
-      { name: '좋음',   max: 30,  color: { light: ['#367BB8', '#7C9CC5'], dark: ['#1e88e5', '#69AAFF'] } },
+      { name: '좋음',   max: 30,  color: { dark: ['#367BB8', '#7C9CC5'], light: ['#1e88e5', '#69AAFF'] } },
       { name: '보통',   max: 80,  color: { light: ['#43A047', '#3BD497'], dark: ['#629473', '#9ACEB9'] } },
       { name: '나쁨',   max: 150, color: { light: ['#F57C00', '#FFB20B'], dark: ['#F6AA5C', '#DDC472'] } },
       { name: '매우나쁨', max: 1000,color: { light: ['#D32F2F', '#FF886B'], dark: ['#C75959', '#BF8779'] } }
     ],
     PM25: [
-      { name: '좋음',   max: 15,  color: { light: ['#367BB8', '#7C9CC5'], dark: ['#1e88e5', '#69AAFF'] } },
+      { name: '좋음',   max: 15,  color: { dark: ['#367BB8', '#7C9CC5'], light: ['#1e88e5', '#69AAFF'] } },
       { name: '보통',   max: 35,  color: { light: ['#43A047', '#3BD497'], dark: ['#629473', '#9ACEB9'] } },
       { name: '나쁨',   max: 75,  color: { light: ['#F57C00', '#FFB20B'], dark: ['#F6AA5C', '#DDC472'] } },
       { name: '매우나쁨', max: 1000,color: { light: ['#D32F2F', '#FF886B'], dark: ['#C75959', '#BF8779'] } }

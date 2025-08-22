@@ -227,6 +227,7 @@ header h1 {
   flex-wrap: wrap;
   flex-direction: column; /* 모바일용 스타일 적용 */
   gap: 1.5rem; /* 모바일용 스타일 적용 */
+  margin-bottom: 2rem; /* ← 이 코드를 추가! */
 }
 
 .gauge-container {
