@@ -1,3 +1,6 @@
+console.log("app.js 로드 및 실행!");
+import { Geolocation } from '@capacitor/geolocation';
+
 // app.js (최종 수정 및 오류 해결 버전)
 (() => {
   const SCALE = {
@@ -97,6 +100,7 @@
   
   async function findFirstHealthyData(sortedStations, N = 3) {
     for (const st of sortedStations.slice(0, N)) {
+      console.log(`데이터 요청 시도 중인 측정소: ${st.name}`);
       try {
         const resp = await fetchByStation(st.name);
         const item = resp?.response?.body?.items?.[0];
@@ -105,6 +109,7 @@
         if (pm10 !== null || pm25 !== null) {
           return { station: st.name, pm10, pm25, item };
         }
+      
       } catch (err) {
         if (err.message === 'API limit exceeded') {
           throw err; // API 한도 초과 에러는 상위로 다시 던져서 특별 처리
@@ -114,6 +119,8 @@
     }
     return null;
   }
+
+
   
   // --- UI 업데이트 함수 ---
   function getStatus(type, v) {
@@ -244,22 +251,33 @@
     }
   };
 
-  function initializeApp() {
+  async function initializeApp() { // Add "async" here
     const urlParams = new URLSearchParams(window.location.search);
     const lat = urlParams.get('lat');
     const lon = urlParams.get('lon');
-    if (lat && lon) {
-      updateAll(parseFloat(lat), parseFloat(lon), true);
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        p => updateAll(p.coords.latitude, p.coords.longitude, false),
-        () => {
-          alert('위치 정보를 가져올 수 없습니다. 기본 위치(서울 종로구)로 조회합니다.');
-          updateAll(37.572016, 126.975319, false);
-        }
-      );
+   if (lat && lon) {
+    updateAll(parseFloat(lat), parseFloat(lon), true);
+  } else {
+    try {
+      // 1번 로그 추가
+      console.log('로그 1: 위치 정보 요청 시작');
+
+      const position = await Geolocation.getCurrentPosition();
+
+      // 2번 로그 추가
+      console.log('로그 2: 위치 정보 얻기 성공!', position);
+      updateAll(position.coords.latitude, position.coords.longitude, false);
+
+    } catch (error) {
+      // 3번 로그 추가
+      console.error('로그 3: 위치 정보 얻기 실패!', error);
+      alert('위치 권한이 없거나 정보를 가져올 수 없습니다. 기본 위치(서울 종로구)로 조회합니다.');
+      updateAll(37.572016, 126.975319, false); // 기본 위치로 대체
     }
   }
+} 
+      
+  
 
   // --- 테마 토글 로직 ---
   const themeToggle = document.getElementById('theme-toggle');

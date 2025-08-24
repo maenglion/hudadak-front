@@ -1,0 +1,10 @@
+{
+  "appId": "app.netlify.app_hudadak.twa",
+  "appName": "후다닥 미세먼지 피하기",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorAssets": {
+      "webDir": "dist"
+    }
+  }
+}
