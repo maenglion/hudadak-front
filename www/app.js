@@ -1,5 +1,4 @@
 console.log("app.js 로드 및 실행!");
-import { Geolocation } from '@capacitor/geolocation';
 
 // app.js (최종 수정 및 오류 해결 버전)
 (() => {
@@ -251,31 +250,41 @@ import { Geolocation } from '@capacitor/geolocation';
     }
   };
 
-  async function initializeApp() { // Add "async" here
-    const urlParams = new URLSearchParams(window.location.search);
-    const lat = urlParams.get('lat');
-    const lon = urlParams.get('lon');
-   if (lat && lon) {
+ async function initializeApp() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const lat = urlParams.get('lat');
+  const lon = urlParams.get('lon');
+
+  if (lat && lon) {
     updateAll(parseFloat(lat), parseFloat(lon), true);
   } else {
-    try {
-      // 1번 로그 추가
-      console.log('로그 1: 위치 정보 요청 시작');
-
-      const position = await Geolocation.getCurrentPosition();
-
-      // 2번 로그 추가
-      console.log('로그 2: 위치 정보 얻기 성공!', position);
-      updateAll(position.coords.latitude, position.coords.longitude, false);
-
-    } catch (error) {
-      // 3번 로그 추가
-      console.error('로그 3: 위치 정보 얻기 실패!', error);
-      alert('위치 권한이 없거나 정보를 가져올 수 없습니다. 기본 위치(서울 종로구)로 조회합니다.');
-      updateAll(37.572016, 126.975319, false); // 기본 위치로 대체
+    // Capacitor 앱 환경인지 확인
+    if (window.Capacitor?.isNativePlatform()) {
+      // --- 앱(안드로이드/iOS)을 위한 코드 ---
+      try {
+        const { Geolocation } = Capacitor.Plugins;
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        updateAll(position.coords.latitude, position.coords.longitude, false);
+      } catch (error) {
+        console.error("Capacitor 위치 정보 오류", error);
+        alert('위치 권한이 없거나 정보를 가져올 수 없습니다. 기본 위치로 조회합니다.');
+        updateAll(37.572016, 126.975319, false);
+      }
+    } else {
+      // --- 일반 웹사이트를 위한 코드 ---
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          updateAll(position.coords.latitude, position.coords.longitude, false);
+        },
+        (error) => {
+          console.error("웹 위치 정보 오류", error);
+          alert('위치 정보를 가져올 수 없습니다. 기본 위치로 조회합니다.');
+          updateAll(37.572016, 126.975319, false);
+        }
+      );
     }
   }
-} 
+};
       
   
 
