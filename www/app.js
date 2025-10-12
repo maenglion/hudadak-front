@@ -1,4 +1,8 @@
 import { renderForecast } from './js/forecast.js';
+import { API_BASE } from './js/constants.js';
+import { fetchForecast, fetchNearestAir } from './js/apiClient.js';
+
+
 console.log("app.js 로드 및 실행!");
 
 // app.js (최종 수정 및 오류 해결 버전)
@@ -186,28 +190,41 @@ console.log("app.js 로드 및 실행!");
     updateRegionText(lat, lon);
     updateDateTime();
 
-    try {
-      const sortedStations = findNearbyStationsSorted(lat, lon);
-      const airData = await findFirstHealthyData(sortedStations);
+    async function updateAll(lat, lon, isManualSearch = false) {
+  // ...기존 UI 가리기/시간 업데이트 등 그대로 유지...
 
-      if (airData) {
-        drawGauge('PM10', airData.pm10, airData.station);
-        drawGauge('PM25', airData.pm25, airData.station);
-      } else {
-        drawGauge('PM10', null, sortedStations[0]?.name);
-        drawGauge('PM25', null, sortedStations[0]?.name);
-        showError('가까운 측정소에서 데이터를 가져올 수 없습니다.');
-      }
-    } catch (err) {
-      if (err.message === 'API limit exceeded') {
-        showError('API 요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.');
-      } else {
-        showError('데이터를 불러오는 중 오류가 발생했습니다.');
-      }
-      drawGauge('PM10', null, '오류');
-      drawGauge('PM25', null, '오류');
+  try {
+    // 1) 예보
+    try {
+      const fc = await fetchForecast(lat, lon);
+      // 우리가 이미 만든 모듈
+      renderForecast(fc, { lat, lon });
+    } catch (e) {
+      // 예보 실패는 치명적이지 않음 → 섹션만 숨김
+      const sec = document.getElementById('forecast-section');
+      if (sec) sec.style.display = 'none';
+      console.warn('forecast fail', e);
     }
+
+    // 2) 게이지 (서버 값 → 렌더러 입력으로 매핑)
+    const air = await fetchNearestAir(lat, lon);
+    // 예: pick 값
+    const pm10  = air.pm10 ?? null;
+    const pm25  = air.pm25 ?? null;
+    const g10   = air.cai_grade ?? air.grade_pm10 ?? '';
+    const g25   = air.cai_grade ?? air.grade_pm25 ?? '';
+    const sname = air.station?.name ?? air.name ?? '—';
+
+    drawGauge('PM10', pm10, g10, { station: sname, ts: air.display_ts });
+    drawGauge('PM25', pm25, g25, { station: sname, ts: air.display_ts });
+  } catch (err) {
+    showError('데이터를 불러오는 중 오류가 발생했습니다.');
+    drawGauge('PM10', null, '오류');
+    drawGauge('PM25', null, '오류');
+    console.error(err);
   }
+}
+
 
   // --- 이벤트 핸들러 및 초기화 ---
   inputEl.addEventListener('input', () => {
