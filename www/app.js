@@ -286,7 +286,6 @@ console.log("app.js 로드 및 실행!");
   }
 };
       
- // 프론트 js 패치 
 const API_BASE = 'https://air-api-350359872967.asia-northeast3.run.app';
 
 async function searchByAddress(q) {
@@ -294,29 +293,41 @@ async function searchByAddress(q) {
     alert('검색어를 두 글자 이상 입력하세요'); return;
   }
   try {
-    // 1) 주소 → 좌표
-    const geo = await fetch(`${API_BASE}/geo/address?q=${encodeURIComponent(q)}`)
-      .then(r => { if(!r.ok) throw new Error('geo failed'); return r.json(); });
+    // 주소 → 좌표
+    const geoRes = await fetch(`${API_BASE}/geo/address?q=${encodeURIComponent(q)}`);
+    if (!geoRes.ok) throw new Error('geo failed');
+    const geo = await geoRes.json();
 
-    // 2) 좌표 → 예보(목업)
-    const fc = await fetch(`${API_BASE}/forecast?lat=${geo.lat}&lon=${geo.lon}`)
-      .then(r => { if(!r.ok) throw new Error('forecast failed'); return r.json(); });
+    // 좌표 → 예보(목업)
+    const fcRes = await fetch(`${API_BASE}/forecast?lat=${geo.lat}&lon=${geo.lon}`);
+    if (!fcRes.ok) throw new Error('forecast failed');
+    const fc = await fcRes.json();
 
-    // 3) 화면 반영
-    // 위치 문구 업데이트 (필요한 요소 id에 맞춰 수정)
+    // 화면 반영 (이미 만들어둔 함수/요소 재사용)
     const regionEl = document.getElementById('forecastRegion');
     if (regionEl) regionEl.textContent = `${geo.address} 기준 · ${fc.horizon}`;
+    if (typeof renderForecast === 'function') renderForecast(fc);
 
-    renderForecast(fc); // 앞서 만든 renderForecast 재사용
-  } catch (e) {
-    console.warn(e);
+    // 선택: 검색창에 정규화된 주소 반영
+    const placeInput = document.getElementById('place');
+    if (placeInput) placeInput.value = geo.address;
+
+  } catch (err) {
+    console.warn(err);
     alert('주소 검색/예보 조회에 실패했습니다.');
   }
 }
 
-document.getElementById('addrInput')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') searchByAddress(e.target.value);
-});
+// 이벤트 연결 (버튼 + Enter)
+(function wireSearch() {
+  const input = document.getElementById('place');
+  const btn   = document.getElementById('searchBtn');
+  if (btn) btn.addEventListener('click', () => searchByAddress(input.value));
+  if (input) input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchByAddress(input.value);
+  });
+})();
+
 
 // (선택) 현재 좌표를 주소로 표시하고 싶을 때
 async function reverseToAddress(lat, lon) {
