@@ -286,7 +286,46 @@ console.log("app.js 로드 및 실행!");
   }
 };
       
-  
+ // 프론트 js 패치 
+const API_BASE = 'https://air-api-350359872967.asia-northeast3.run.app';
+
+async function searchByAddress(q) {
+  if (!q || q.trim().length < 2) {
+    alert('검색어를 두 글자 이상 입력하세요'); return;
+  }
+  try {
+    // 1) 주소 → 좌표
+    const geo = await fetch(`${API_BASE}/geo/address?q=${encodeURIComponent(q)}`)
+      .then(r => { if(!r.ok) throw new Error('geo failed'); return r.json(); });
+
+    // 2) 좌표 → 예보(목업)
+    const fc = await fetch(`${API_BASE}/forecast?lat=${geo.lat}&lon=${geo.lon}`)
+      .then(r => { if(!r.ok) throw new Error('forecast failed'); return r.json(); });
+
+    // 3) 화면 반영
+    // 위치 문구 업데이트 (필요한 요소 id에 맞춰 수정)
+    const regionEl = document.getElementById('forecastRegion');
+    if (regionEl) regionEl.textContent = `${geo.address} 기준 · ${fc.horizon}`;
+
+    renderForecast(fc); // 앞서 만든 renderForecast 재사용
+  } catch (e) {
+    console.warn(e);
+    alert('주소 검색/예보 조회에 실패했습니다.');
+  }
+}
+
+document.getElementById('addrInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchByAddress(e.target.value);
+});
+
+// (선택) 현재 좌표를 주소로 표시하고 싶을 때
+async function reverseToAddress(lat, lon) {
+  const res = await fetch(`${API_BASE}/geo/reverse?lat=${lat}&lon=${lon}`);
+  if (!res.ok) return null;
+  return res.json(); // {lat, lon, address, source}
+}
+
+
 
   // --- 테마 토글 로직 ---
   const themeToggle = document.getElementById('theme-toggle');
