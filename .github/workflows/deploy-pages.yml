@@ -1,24 +1,42 @@
 ﻿name: Deploy to GitHub Pages
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: pages
   cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # (옵션) Jekyll 무력화를 위해 .nojekyll 추가
+      - name: Ensure .nojekyll in www
+        run: |
+          mkdir -p www
+          touch www/.nojekyll
+
+      # GitHub Pages 설정(필수)
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      # 정적 산출물 업로드
       - name: Upload artifact (www)
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./www
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -26,6 +44,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
