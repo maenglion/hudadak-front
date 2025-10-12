@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">후다닥 미세먼지 피하기</string>
+    <string name="title_activity_main">후다닥 미세먼지 피하기</string>
+    <string name="package_name">app.netlify.app_hudadak.twa</string>
+    <string name="custom_url_scheme">app.netlify.app_hudadak.twa</string>
+</resources>
