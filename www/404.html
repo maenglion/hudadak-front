@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>후다닥 미세먼지 피하기</title>
+<!-- index.html <head> -->
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff">
+
+  <meta property="og:title" content="후다닥 미세먼지 피하기">
+  <meta property="og:description" content="내 주변 가장 가까운 곳의 미세먼지 정보를 확인하세요!">
+  <meta property="og:image" content="https://placehold.co/600x315/1E88E5/FFFFFF?text=후다닥!%0A미세먼지%0A피하기">
+  
+  <link rel="stylesheet" href="styles.css">
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="dns-prefetch" href="https://apis.data.go.kr">
+<link rel="preconnect" href="https://apis.data.go.kr" crossorigin>
+<link rel="dns-prefetch" href="https://dapi.kakao.com">
+<link rel="preconnect" href="https://dapi.kakao.com" crossorigin>
+<link rel="dns-prefetch" href="https://api.open-meteo.com">
+<link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+
+
+  <script>
+    window.env = {
+      AIRKOREA_KEY: 'I2wDgBTJutEeubWmNzwVS1jlGSGPvjidKMb5DwhKkjM2MMUst8KGPB2D03mQv8GHu%2BRc8%2BySKeHrYO6qaS19Sg%3D%3D',
+      KAKAO_KEY: 'be29697319e13590895593f5f5508348'
+    };
+  </script>
+</head>
+<body>
+ <!-- ▼▼▼ 상단 토글 버튼 영역 추가 ▼▼▼ -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <button id="theme-toggle" class="btn-theme" type="button" aria-label="테마 전환">
+        <span class="btn-theme-icon"></span>
+      </button>
+    </div>
+  </div>
+  <!-- ▲▲▲ 상단 토글 버튼 영역 추가 ▲▲▲ -->
+
+<!-- ▼ 기존 페이지 헤더 -->
+<header>
+  <h1>후다닥<br>미세먼지 피하기</h1>
+  <div class="header-meta">
+    <div class="version-info">ver.3.1</div>
+    <!-- 기존 아이콘형 토글은 제거 권장 -->
+  </div>
+  <div class="info-row">
+    <p><strong>기준위치:</strong> <span id="region">--</span></p>
+    <p><strong>검색일시:</strong> <span id="time">--</span></p>
+  </div>
+</header>
+
+  <section id="gauges">
+    <div class="gauge-container">
+      <h2>미세먼지</h2>
+      <div class="gauge-wrapper">
+        <div class="gauge-wheel" id="gaugePM10"></div>
+        <div class="gauge-hole">
+          <div class="gauge-status" id="statusTextPM10">--</div>
+          <div class="gauge-value" id="valueTextPM10">-- µg/m³</div>
+        </div>
+      </div>
+      <p id="stationPM10" class="station-info">--</p>
+    </div>
+    <div class="gauge-container">
+      <h2>초미세먼지</h2>
+      <div class="gauge-wrapper">
+        <div class="gauge-wheel" id="gaugePM25"></div>
+        <div class="gauge-hole">
+          <div class="gauge-status" id="statusTextPM25">--</div>
+          <div class="gauge-value" id="valueTextPM25">-- µg/m³</div>
+        </div>
+      </div>
+      <p id="stationPM25" class="station-info">--</p>
+    </div>
+  </section>
+
+  <!-- 예보 정보 UI 수정 -->
+  <section id="forecast-section" class="criteria-card" style="display: none;">
+    <h3>오늘의 예보 <span id="forecast-region" class="forecast-region-text"></span></h3>
+    <div id="whyTags" class="tag-container"></div>
+    <p id="forecastCause" class="inform-cause-text"></p>
+  </section>
+
+  <div id="error-message" class="error-message"></div>
+
+  <section id="search">
+    <input type="text" id="place" placeholder="지역 검색 (예: 송도동, 가평군)">
+    <ul id="suggestions"></ul>
+    <button id="searchBtn">검색</button>
+  </section>
+
+  <div id="post-search-area" class="post-search-area">
+    <p id="data-source-info" class="data-source-info">미세먼지 데이터는 한국환경공단(에어코리아)에서 제공됩니다.</p>
+    <button id="shareResultBtn" class="share-result-btn" style="display: none;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+      <span>현재 검색 결과 공유하기</span>
+    </button>
+  </div>
+
+  <section id="criteria">
+    <div class="criteria-card">
+      <h3>미세먼지 (PM10) 기준</h3>
+      <ul>
+        <li><span class="color-indicator good"></span>좋음 (0~30 µg/m³)</li>
+        <li><span class="color-indicator normal"></span>보통 (31~80 µg/m³)</li>
+        <li><span class="color-indicator bad"></span>나쁨 (81~150 µg/m³)</li>
+        <li><span class="color-indicator very-bad"></span>매우나쁨 (151 µg/m³ 이상)</li>
+      </ul>
+    </div>
+    <div class="criteria-card">
+      <h3>초미세먼지 (PM2.5) 기준</h3>
+      <ul>
+        <li><span class="color-indicator good"></span>좋음 (0~15 µg/m³)</li>
+        <li><span class="color-indicator normal"></span>보통 (16~35 µg/m³)</li>
+        <li><span class="color-indicator bad"></span>나쁨 (36~75 µg/m³)</li>
+        <li><span class="color-indicator very-bad"></span>매우나쁨 (76 µg/m³ 이상)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="link-boxes-container">
+    <a href="about.html" class="link-box">
+      이 앱의 특별한 이야기
+    </a>
+    <a href="https://www.youtube.com/@soulspectrum17" target="_blank" class="link-box">
+      <svg class="youtube-logo" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M27.4297 3.1211C27.123 1.89844 26.1035 0.917969 24.8477 0.621094C22.6797 0 14 0 14 0C14 0 5.32031 0 3.15234 0.621094C1.89648 0.917969 0.876953 1.89844 0.570312 3.12109C0 5.33594 0 10 0 10C0 10 0 14.6641 0.570312 16.8789C0.876953 18.1016 1.89648 19.082 3.15234 19.3789C5.32031 20 14 20 14 20C14 20 22.6797 20 24.8477 19.3789C26.1035 19.082 27.123 18.1016 27.4297 16.8789C28 14.6641 28 10 28 10C28 10 28 5.33594 27.4297 3.1211Z" fill="#FF0000"/><path d="M11.2 14.2857V5.71429L18.4 10L11.2 14.2857Z" fill="white"/></svg>
+      <span>@soulspectrum17</span>
+    </a>
+  </section>
+
+  <footer>
+    <p>© 2025년 08월 07일 minhoolee</p>
+    <p class="footer-links">
+      <a href="termsofuse.html">개인정보처리방침</a>
+    </p>
+  </footer>
+
+  <script src="gps.js"></script>
+  <script type="module" src="/app.js?v=20250820" defer></script>
+</body>
+</html>
