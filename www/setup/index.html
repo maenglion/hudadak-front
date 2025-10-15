@@ -5,32 +5,73 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>설정 · HUDADAK 미세먼지 피하기</title>
 
-  <!-- 상태표시줄/노치 -->
+  <!-- PWA / 상태표시줄 -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#111111" />
+  <meta name="theme-color" content="#ffffff" id="meta-theme-color" />
 
-  <!-- 초기 포인트 컬러 적용(깜빡임 방지) -->
+  <!-- 초기 테마/포인트 컬러 적용(깜빡임 방지) -->
   <script>
   (function(){
     try{
-      const accent = localStorage.getItem('app-accent') || '#1e88e5';
+      // 1) 테마 부트: data-theme = 'light' | 'dark' | (없음=system)
+      const THEME_KEY='app-theme';
+      const t = localStorage.getItem(THEME_KEY) || 'system';
+      if (t === 'light' || t === 'dark') {
+        document.documentElement.setAttribute('data-theme', t);
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      // 2) 포인트 컬러(버튼·게이지 등). theme-color 메타는 "배경"과 동기화하므로 여기선 건드리지 않음
+      const ACCENT_KEY='app-accent';
+      const accent = localStorage.getItem(ACCENT_KEY) || '#1e88e5';
       document.documentElement.style.setProperty('--primary-color', accent);
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', accent);
+      // 3) meta theme-color를 현재 테마 배경색으로 동기화
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = (t==='dark') || (t==='system' && prefersDark);
+      const meta = document.querySelector('#meta-theme-color');
+      if (meta) meta.setAttribute('content', isDark ? '#0b0d12' : '#ffffff');
     }catch(_){}
   })();
   </script>
 
   <link rel="stylesheet" href="../styles.css" />
   <style>
-    main{padding:16px}
-    .card{background:#fff;border:1px solid #eee;border-radius:16px;padding:16px;margin:12px 0}
-    .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    .muted{opacity:.7}
-    .explain{font-size:.92rem;opacity:.9}
-    .swatch{width:28px;height:28px;border-radius:8px;border:1px solid #ddd;background:var(--c);cursor:pointer}
-    .swatch.selected{outline:3px solid color-mix(in srgb, var(--c), #000 25%)}
+    /* 안전영역 변수 */
+    :root{
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+      /* 라이트 기본 토큰 */
+      --bg:#ffffff; --fg:#111111; --card:#f6f7f9; --muted:#6b7280; --border:#e5e7eb;
+      --primary-color:#1e88e5;
+    }
+    /* 시스템 다크(사용자가 system 선택 시 @media가 적용) */
+    @media (prefers-color-scheme: dark){
+      :root:not([data-theme="light"]){
+        --bg:#0b0d12; --fg:#f5f6f8; --card:#10141b; --muted:#9aa3b2; --border:#1e2530;
+      }
+    }
+    /* 강제 라이트/다크 */
+    html[data-theme="light"]{
+      --bg:#ffffff; --fg:#111111; --card:#f6f7f9; --muted:#6b7280; --border:#e5e7eb;
+    }
+    html[data-theme="dark"]{
+      --bg:#0b0d12; --fg:#f5f6f8; --card:#10141b; --muted:#9aa3b2; --border:#1e2530;
+    }
+
+    body{ background:var(--bg); color:var(--fg); padding-top:var(--safe-top); }
+    .topbar{ height:56px; display:flex; align-items:center; padding:0 12px; }
+    main{ padding:16px; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; margin:12px 0; }
+    .row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .muted{ color:var(--muted); }
+    .explain{ font-size:.92rem; opacity:.9; }
+    .site-footer{ padding:16px; padding-bottom:calc(16px + var(--safe-bottom)); }
+
+    .swatch{ width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--c);cursor:pointer }
+    .swatch.selected{ outline:3px solid color-mix(in srgb, var(--c), #000 25%) }
+    .icon-btn{ cursor:pointer; background:none; border:0; color:var(--fg); }
   </style>
 </head>
 <body>
@@ -52,17 +93,17 @@
       </ul>
     </section>
 
-    <!-- 2) 평가 기준 -->
+    <!-- 2) 평가 기준 (하나로 통합) -->
     <section class="card">
       <h2>미세먼지 평가 기준</h2>
       <div class="row">
-        <label><input type="radio" name="std" value="MOE"> 환경부</label>
-        <label><input type="radio" name="std" value="WHO"> WHO</label>
+        <label><input type="radio" name="aq_standard" value="KOR"> 대한민국 CAI</label>
+        <label><input type="radio" name="aq_standard" value="WHO24"> WHO 2021 (24h)</label>
       </div>
       <div id="std-explain" class="explain" style="margin-top:8px"></div>
     </section>
 
-    <!-- 3) 테마(라이트/다크) -->
+    <!-- 3) 테마(라이트/다크/시스템) -->
     <section class="card">
       <h2>테마</h2>
       <div class="row">
@@ -73,21 +114,19 @@
       <p class="muted" style="margin-top:8px">시스템 기본은 기기 설정(라이트/다크)에 따라 자동 전환됩니다.</p>
     </section>
 
-    <!-- (옵션) 포인트 컬러 선택 -->
+    <!-- 4) (옵션) 포인트 컬러 -->
     <section class="card">
-      <h2>테마 색상</h2>
+      <h2>포인트 컬러</h2>
       <div class="row">
         <button class="swatch" data-color="#1e88e5" style="--c:#1e88e5" aria-label="파랑"></button>
         <button class="swatch" data-color="#ff6b6b" style="--c:#ff6b6b" aria-label="코랄"></button>
         <button class="swatch" data-color="#22c55e" style="--c:#22c55e" aria-label="그린"></button>
         <button class="swatch" data-color="#8b5cf6" style="--c:#8b5cf6" aria-label="퍼플"></button>
         <button class="swatch" data-color="#f59e0b" style="--c:#f59e0b" aria-label="옐로"></button>
-        <label style="display:flex;align-items:center;gap:6px">
-          직접 선택 <input id="accentPicker" type="color" value="#1e88e5">
-        </label>
+        <label style="display:flex;align-items:center;gap:6px">직접 선택 <input id="accentPicker" type="color" value="#1e88e5"></label>
         <button id="accentReset" class="icon-btn" style="margin-left:auto">기본값</button>
       </div>
-      <p class="muted" style="margin-top:8px">포인트 컬러는 버튼·게이지·막대 색 등에 적용됩니다.</p>
+      <p class="muted" style="margin-top:8px">포인트 컬러는 버튼·게이지·막대 등에만 적용됩니다.</p>
     </section>
 
     <footer class="site-footer">
@@ -96,46 +135,54 @@
   </main>
 
   <!-- 설정 로직 -->
-  <script>
-    // --- 평가 기준 ---
-    const KEY_STD='aqi-standard';
-    const explain = {
-      MOE: "환경부(국가 기준): 국내 대기환경기준을 따릅니다. 일상생활 안내에 익숙한 등급 체계입니다.",
-      WHO: "WHO 권고: 건강 보호에 더 엄격한 가이드라인입니다. 같은 농도에서도 더 높은 위험도를 나타낼 수 있습니다."
+  <script type="module">
+    // ===== 평가 기준 =====
+    const STD_KEY='aq_standard';
+    const stdExplain = {
+      KOR:  "대한민국 CAI 등급(좋음/보통/나쁨/매우나쁨) 기준으로 표시합니다.",
+      WHO24:"WHO 2021 24시간 권고 기준으로 표시합니다. 권고 초과 여부를 더 엄격히 보여줍니다."
     };
-    const radios = document.querySelectorAll('input[name=std]');
+    const stdRadios = document.querySelectorAll('input[name="aq_standard"]');
     const stdBox = document.getElementById('std-explain');
-    function applyStd(v){ localStorage.setItem(KEY_STD,v); stdBox.textContent = explain[v] || ""; }
-    const savedStd = localStorage.getItem(KEY_STD) || 'MOE';
-    radios.forEach(r => { r.checked = (r.value===savedStd); r.addEventListener('change', e=>applyStd(e.target.value)); });
+    function applyStd(v){
+      localStorage.setItem(STD_KEY, v);
+      stdBox.textContent = stdExplain[v] || '';
+      // 현재 화면 내 미터/배지 재도색 훅 (있다면 호출)
+      window.repaintByStandard?.(v);
+    }
+    const savedStd = localStorage.getItem(STD_KEY) || 'KOR';
+    stdRadios.forEach(r => { r.checked = (r.value===savedStd); r.addEventListener('change', e=>applyStd(e.target.value)); });
     applyStd(savedStd);
 
-    // --- 테마(라이트/다크/시스템) ---
+    // ===== 테마 =====
     const THEME_KEY = 'app-theme';
-    const themeRadios = document.querySelectorAll('input[name=theme]');
+    const themeRadios = document.querySelectorAll('input[name="theme"]');
+    function syncMetaTheme(){
+      const isDark = document.documentElement.getAttribute('data-theme')==='dark'
+        || (!document.documentElement.hasAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      const meta = document.querySelector('#meta-theme-color');
+      meta?.setAttribute('content', isDark ? '#0b0d12' : '#ffffff');
+    }
     function applyTheme(v){
-      const root = document.documentElement;
-      root.dataset.theme = (v==='system') ? '' : v;
-      const meta = document.querySelector('meta[name="theme-color"]');
-      const isDark = (v==='dark') || (v==='system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      if (meta) meta.setAttribute('content', isDark ? '#111111' : '#ffffff');
+      if (v==='light' || v==='dark') document.documentElement.setAttribute('data-theme', v);
+      else document.documentElement.removeAttribute('data-theme'); // system
       localStorage.setItem(THEME_KEY, v);
+      syncMetaTheme();
     }
     const savedTheme = localStorage.getItem(THEME_KEY) || 'system';
     themeRadios.forEach(r => { r.checked=(r.value===savedTheme); r.addEventListener('change', e=>applyTheme(e.target.value)); });
     applyTheme(savedTheme);
+    // system일 때 OS 변경 반영
     const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(THEME_KEY)||'system')==='system') applyTheme('system'); });
+    mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(THEME_KEY)||'system')==='system') syncMetaTheme(); });
 
-    // --- 포인트 컬러 ---
+    // ===== 포인트 컬러 =====
     const ACCENT_KEY='app-accent', DEFAULT_ACCENT='#1e88e5';
     const swatches = document.querySelectorAll('.swatch');
     const picker   = document.getElementById('accentPicker');
     const resetBtn = document.getElementById('accentReset');
     function applyAccent(hex){
       document.documentElement.style.setProperty('--primary-color', hex);
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', hex);
       localStorage.setItem(ACCENT_KEY, hex);
       swatches.forEach(s => s.classList.toggle('selected', (s.dataset.color||'').toLowerCase()===hex.toLowerCase()));
       if (picker) picker.value = hex;

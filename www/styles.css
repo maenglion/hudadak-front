@@ -1,7 +1,38 @@
 /* ===== New layout styles (keep primary color) ===== */
-:root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
-body { padding-top: max(0px, var(--safe-top)); }
-.site-footer { padding-bottom: max(16px, var(--safe-bottom)); }
+/* 안전영역 변수 (폴백 0px) */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 상단 패딩: 안전영역만 반영 */
+body {
+  padding-top: var(--safe-top);
+}
+
+/* 하단 푸터: 기본 16px + 안전영역 */
+.site-footer {
+  padding-bottom: calc(16px + var(--safe-bottom));
+}
+
+/* 테마 변수 사용 파트 */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+
+html[data-theme="dark"] {
+  --bg: #0b0d12;
+  --fg: #f5f6f8;
+  --card: #10141b;
+  --muted: #9aa3b2;
+  --border: #1e2530;
+}
 
 /* Top bar */
 .topbar{ position:sticky; top:0; z-index:10; display:flex; align-items:center; height:44px; padding:0 8px; backdrop-filter:blur(6px); }
