@@ -12,6 +12,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+
+<div id="std-badge" class="text-muted"></div>
+<script type="module">
+  import { STANDARDS } from './standards.js';
+  const code = localStorage.getItem('aq_standard') || 'KOR';
+  const label = STANDARDS[code]?.label || 'KOR';
+  document.querySelector('#std-badge').textContent = `기준: ${label}`;
+</script>
+
+
+
   <!-- 초기 포인트 컬러 적용(깜빡임 방지) -->
   <script>
   (function(){
