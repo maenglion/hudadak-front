@@ -3,33 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>후다닥 미세먼지 피하기</title>
-  
-  <!-- SEO and PWA Meta Tags -->
+
+  <!-- 상태표시줄 / PWA -->
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#1e88e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- 초기 포인트 컬러 적용(깜빡임 방지) -->
+  <script>
+  (function(){
+    try{
+      const accent = localStorage.getItem('app-accent') || '#1e88e5';
+      document.documentElement.style.setProperty('--primary-color', accent);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', accent);
+    }catch(_){}
+  })();
+  </script>
+
+  <!-- SEO/OpenGraph -->
   <meta property="og:title" content="후다닥 미세먼지 피하기">
   <meta property="og:description" content="내 주변 가장 가까운 곳의 미세먼지 정보를 확인하세요!">
   <meta property="og:image" content="https://placehold.co/600x315/1E88E5/FFFFFF?text=후다닥!%0A미세먼지%0A피하기">
+
+  <!-- Icons & Manifest -->
   <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- Stylesheet -->
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css">
 
-  <!-- Preconnect for performance -->
+  <!-- Preconnect -->
   <link rel="preconnect" href="https://dapi.kakao.com" crossorigin>
   <link rel="preconnect" href="https://air-api-350359872967.asia-northeast3.run.app" crossorigin>
 </head>
 <body>
 
-  <!-- HEADER (상태표시줄 아래) -->
+  <!-- HEADER -->
   <header class="topbar">
-    <button id="btn-settings" class="icon-btn" aria-label="설정">⚙️</button>
+    <a class="icon-btn left" href="./setup/index.html" aria-label="설정">⚙️</a>
+    <button id="shareResultBtn" class="icon-btn right" aria-label="공유">🔗</button>
   </header>
 
-  <!-- HERO (최종 점수/장소/시간/메시지 + 그라데이션) -->
+  <!-- HERO (점수/장소/시간/문구) -->
   <section id="hero" class="hero">
     <div class="hero-meta">
       <div id="hero-location" class="hero-loc">—</div>
@@ -42,34 +62,31 @@
     </div>
   </section>
 
-  <!-- SEARCH -->
-  <section id="search">
-    <input type="text" id="place" placeholder="지역 검색 (예: 송도동, 가평군)">
-    <button id="searchBtn" aria-label="검색">검색</button>
+  <!-- FORECAST (상단 카드) -->
+  <section id="forecast-section" class="card" style="margin:8px;">
+    <div class="row" style="align-items:center; gap:8px;">
+      <!-- 검색창은 이 한 곳만 사용 -->
+      <input id="place" class="search" placeholder="지역 검색 (예: 송도동, 가평군)" autocomplete="off">
+      <button id="btn-current" class="icon-btn" title="현 위치">📍</button>
+    </div>
+    <small id="forecast-time" class="muted"></small>
+    <div class="muted" style="margin-top:4px;">기준 지역: <span id="forecast-region"></span></div>
+
+    <div id="whyTags" class="tag-container" style="margin-top:8px;"></div>
+    <p id="forecastCause" class="inform-cause-text"></p>
   </section>
 
-  <!-- ERROR MESSAGE -->
-  <div id="error-message" class="error-message"></div>
-
-  <!-- CARDS (가로 스와이프) -->
+  <!-- HORIZONTAL CARDS -->
   <section class="cards scroller" id="cards">
-    <!-- 카드 #1: 미니 게이지 그리드 -->
-    <article class="card">
+    <!-- 카드 #1: 미니 게이지 -->
+    <article class="card scroller-item">
       <h4>주요 지표</h4>
-      <div id="mini-gauges" class="mini-grid">
-        <!-- Javascript will fill this area -->
-      </div>
+      <div id="mini-gauges" class="mini-grid"></div>
     </article>
-    
-    <!-- 카드 #2: 예보 정보 -->
-    <article id="forecast-section" class="card" style="display: none;">
-      <h3>오늘의 예보 <span id="forecast-region" class="forecast-region-text"></span></h3>
-      <div id="whyTags" class="tag-container"></div>
-      <p id="forecastCause" class="inform-cause-text"></p>
-    </article>
+    <!-- 필요하면 카드 추가 -->
   </section>
-  
-  <!-- (선택) 기존 큰 게이지 섹션 - 기본적으로 숨김 -->
+
+  <!-- 기존 큰 게이지(숨김 유지) -->
   <section id="gauges" style="display:none;">
     <div class="gauge-container">
       <h2>미세먼지</h2>
@@ -95,29 +112,15 @@
     </div>
   </section>
 
+  <!-- 현 위치 FAB -->
+  <button id="btn-fab-current" class="fab" title="현 위치로 재로딩">📍</button>
 
-  <!-- SETTINGS MODAL -->
-  <dialog id="settings-modal">
-    <form method="dialog" class="settings">
-      <h3>설정</h3>
-      <label class="row">
-        <span>표준</span>
-        <select id="std-select">
-          <option value="MOE">환경부(국가 기준)</option>
-          <option value="WHO">WHO 권고</option>
-        </select>
-      </label>
-      <p class="hint">표준은 미니 게이지의 퍼센트/색상에만 적용됩니다. 메인 점수는 통합대기지수(CAI)를 사용합니다.</p>
-      <menu>
-        <button value="cancel">닫기</button>
-      </menu>
-    </form>
-  </dialog>
-
-  <footer>
-    <p>© 2025년 10월 13일 minhoolee</p>
+  <!-- Footer -->
+  <footer class="site-footer" style="text-align:center;margin:16px 0;">
+    <a href="./termsofuse.html">이용약관</a> · Owner: 2e-studio
   </footer>
 
-  <script type="module" src="/app.js?v=20251013" defer></script>
+  <!-- App -->
+  <script type="module" src="./app.js?v=20251013" defer></script>
 </body>
 </html>

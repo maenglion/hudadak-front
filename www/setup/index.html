@@ -1,28 +1,58 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>설정 · HUDADAK 미세먼지 피하기</title>
-  <meta name="theme-color" content="#111111">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="../styles.css">
+
+  <!-- 상태표시줄/노치 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#111111" />
+
+  <!-- 초기 포인트 컬러 적용(깜빡임 방지) -->
+  <script>
+  (function(){
+    try{
+      const accent = localStorage.getItem('app-accent') || '#1e88e5';
+      document.documentElement.style.setProperty('--primary-color', accent);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', accent);
+    }catch(_){}
+  })();
+  </script>
+
+  <link rel="stylesheet" href="../styles.css" />
   <style>
     main{padding:16px}
     .card{background:#fff;border:1px solid #eee;border-radius:16px;padding:16px;margin:12px 0}
-    .row{display:flex;align-items:center;gap:10px}
-    .explain{font-size:.92rem;opacity:.9}
+    .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
     .muted{opacity:.7}
+    .explain{font-size:.92rem;opacity:.9}
+    .swatch{width:28px;height:28px;border-radius:8px;border:1px solid #ddd;background:var(--c);cursor:pointer}
+    .swatch.selected{outline:3px solid color-mix(in srgb, var(--c), #000 25%)}
   </style>
 </head>
 <body>
   <header class="topbar">
     <a class="icon-btn left" href="../index.html" aria-label="뒤로">←</a>
   </header>
+
   <main>
     <h1>HUDADAK 미세먼지 피하기</h1>
 
+    <!-- 1) 앱 소개 -->
+    <section class="card">
+      <h2>앱 소개</h2>
+      <p class="muted">방대한 데이터로 평가하는 후다닥. 쉽고 간단하게 체크하는 미세먼지.</p>
+      <ul>
+        <li>실측: PM10/PM2.5/오존/NO₂/SO₂/CO, 통합대기지수(CAI)</li>
+        <li>예보: 등급(Level), 원인(Cause), 태그(Tags) → 화면의 뱃지로 표시</li>
+        <li>주소/현위치: 동 단위 표기, 검색/공유 지원</li>
+      </ul>
+    </section>
+
+    <!-- 2) 평가 기준 -->
     <section class="card">
       <h2>미세먼지 평가 기준</h2>
       <div class="row">
@@ -32,39 +62,88 @@
       <div id="std-explain" class="explain" style="margin-top:8px"></div>
     </section>
 
+    <!-- 3) 테마(라이트/다크) -->
     <section class="card">
-      <h2>앱 소개</h2>
-      <p class="muted">
-        이 앱은 2e-studio에서 제작한 “후다닥 미세먼지 피하기”의 웹 버전입니다.
-        실시간 관측(측정소 근접치)과 예측 데이터를 함께 평가하여 사용자에게 이해하기 쉬운 **뱃지(아이콘)** 와 권고 문구를 제공합니다.
-      </p>
-      <ul>
-        <li>실측: PM10/PM2.5/오존/NO₂/SO₂/CO, 통합대기지수(CAI)</li>
-        <li>예보: 등급(Level), 원인(Cause), 태그(Tags) → 화면의 뱃지로 표시</li>
-        <li>주소/현위치: 동 단위 표기, 검색/공유 지원</li>
-      </ul>
+      <h2>테마</h2>
+      <div class="row">
+        <label><input type="radio" name="theme" value="system"> 시스템 기본</label>
+        <label><input type="radio" name="theme" value="light"> 라이트</label>
+        <label><input type="radio" name="theme" value="dark"> 다크</label>
+      </div>
+      <p class="muted" style="margin-top:8px">시스템 기본은 기기 설정(라이트/다크)에 따라 자동 전환됩니다.</p>
+    </section>
+
+    <!-- (옵션) 포인트 컬러 선택 -->
+    <section class="card">
+      <h2>테마 색상</h2>
+      <div class="row">
+        <button class="swatch" data-color="#1e88e5" style="--c:#1e88e5" aria-label="파랑"></button>
+        <button class="swatch" data-color="#ff6b6b" style="--c:#ff6b6b" aria-label="코랄"></button>
+        <button class="swatch" data-color="#22c55e" style="--c:#22c55e" aria-label="그린"></button>
+        <button class="swatch" data-color="#8b5cf6" style="--c:#8b5cf6" aria-label="퍼플"></button>
+        <button class="swatch" data-color="#f59e0b" style="--c:#f59e0b" aria-label="옐로"></button>
+        <label style="display:flex;align-items:center;gap:6px">
+          직접 선택 <input id="accentPicker" type="color" value="#1e88e5">
+        </label>
+        <button id="accentReset" class="icon-btn" style="margin-left:auto">기본값</button>
+      </div>
+      <p class="muted" style="margin-top:8px">포인트 컬러는 버튼·게이지·막대 색 등에 적용됩니다.</p>
     </section>
 
     <footer class="site-footer">
-      <a href="../termsofuse.html">Terms of Use</a> · Owner: 2e-studio
+      <a href="../termsofuse.html">이용약관</a> · Owner: 2e-studio
     </footer>
   </main>
 
+  <!-- 설정 로직 -->
   <script>
-    const KEY='aqi-standard';
+    // --- 평가 기준 ---
+    const KEY_STD='aqi-standard';
     const explain = {
       MOE: "환경부(국가 기준): 국내 대기환경기준을 따릅니다. 일상생활 안내에 익숙한 등급 체계입니다.",
       WHO: "WHO 권고: 건강 보호에 더 엄격한 가이드라인입니다. 같은 농도에서도 더 높은 위험도를 나타낼 수 있습니다."
     };
     const radios = document.querySelectorAll('input[name=std]');
-    const box = document.getElementById('std-explain');
-    function apply(v){
-      localStorage.setItem(KEY, v);
-      box.textContent = explain[v] || '';
+    const stdBox = document.getElementById('std-explain');
+    function applyStd(v){ localStorage.setItem(KEY_STD,v); stdBox.textContent = explain[v] || ""; }
+    const savedStd = localStorage.getItem(KEY_STD) || 'MOE';
+    radios.forEach(r => { r.checked = (r.value===savedStd); r.addEventListener('change', e=>applyStd(e.target.value)); });
+    applyStd(savedStd);
+
+    // --- 테마(라이트/다크/시스템) ---
+    const THEME_KEY = 'app-theme';
+    const themeRadios = document.querySelectorAll('input[name=theme]');
+    function applyTheme(v){
+      const root = document.documentElement;
+      root.dataset.theme = (v==='system') ? '' : v;
+      const meta = document.querySelector('meta[name="theme-color"]');
+      const isDark = (v==='dark') || (v==='system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (meta) meta.setAttribute('content', isDark ? '#111111' : '#ffffff');
+      localStorage.setItem(THEME_KEY, v);
     }
-    const saved = localStorage.getItem(KEY) || 'MOE';
-    radios.forEach(r=>{ r.checked = (r.value===saved); r.addEventListener('change', e=>apply(e.target.value)); });
-    apply(saved);
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'system';
+    themeRadios.forEach(r => { r.checked=(r.value===savedTheme); r.addEventListener('change', e=>applyTheme(e.target.value)); });
+    applyTheme(savedTheme);
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(THEME_KEY)||'system')==='system') applyTheme('system'); });
+
+    // --- 포인트 컬러 ---
+    const ACCENT_KEY='app-accent', DEFAULT_ACCENT='#1e88e5';
+    const swatches = document.querySelectorAll('.swatch');
+    const picker   = document.getElementById('accentPicker');
+    const resetBtn = document.getElementById('accentReset');
+    function applyAccent(hex){
+      document.documentElement.style.setProperty('--primary-color', hex);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', hex);
+      localStorage.setItem(ACCENT_KEY, hex);
+      swatches.forEach(s => s.classList.toggle('selected', (s.dataset.color||'').toLowerCase()===hex.toLowerCase()));
+      if (picker) picker.value = hex;
+    }
+    swatches.forEach(s => s.addEventListener('click', () => applyAccent(s.dataset.color)));
+    picker?.addEventListener('input', e => applyAccent(e.target.value));
+    resetBtn?.addEventListener('click', () => applyAccent(DEFAULT_ACCENT));
+    applyAccent(localStorage.getItem(ACCENT_KEY) || DEFAULT_ACCENT);
   </script>
 </body>
 </html>

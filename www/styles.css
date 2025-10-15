@@ -1,252 +1,56 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+/* ===== New layout styles (keep primary color) ===== */
+:root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
+body { padding-top: max(0px, var(--safe-top)); }
+.site-footer { padding-bottom: max(16px, var(--safe-bottom)); }
 
-@font-face {
-    font-family: 'ONE-Mobile-Title';
-    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-Title.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-}
+/* Top bar */
+.topbar{ position:sticky; top:0; z-index:10; display:flex; align-items:center; height:44px; padding:0 8px; backdrop-filter:blur(6px); }
+.icon-btn{ display:inline-grid; place-items:center; width:36px; height:36px; border-radius:10px; border:1px solid #ddd; background:#fff; color:var(--text-primary); }
+.icon-btn.left{ margin-right:auto; }
+.icon-btn.right{ margin-left:auto; }
 
-:root {
-  --background-color: #f4f6f8;
-  --card-background-color: #ffffff;
-  --text-primary: #212529;
-  --text-secondary: #868e96;
-  --primary-color: #1e88e5;
-  --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); 
+/* Hero (배경은 메인컬러 계열 그라데이션) */
+.hero{
+  padding:16px; border-radius:16px; margin:8px; color:#fff;
+  background: linear-gradient(160deg, #1e88e5, #6ab7ff);
+}
+.hero .hero-meta{ opacity:.9; font-size:.9rem; }
+.hero .value{ font-size:56px; line-height:1; font-weight:700; }
+.hero .grade{ font-size:1.1rem; margin-top:4px; }
+.hero .desc{ opacity:.95; margin-top:6px; }
 
-}
+/* Forecast card + search */
+.card{ background: var(--card-background-color); border:1px solid #eee; border-radius:16px; padding:12px; }
+.row .search{ flex:1; height:38px; border-radius:10px; border:1px solid #ddd; padding:0 10px; }
+.muted{ opacity:.7; }
+.tag-container{ display:flex; gap:8px; flex-wrap:wrap; }
+.tag-container .badge{ padding:.35rem .6rem; border-radius:999px; border:1px solid #d0d7de; font-size:.85rem; background:rgba(0,0,0,.03); }
 
-body.dark-mode {
-  --background-color: #121212;
-  --card-background-color: #1e1e1e;
-  --text-primary: #e0e0e0;
-  --text-secondary: #adb5bd;
-  --primary-color: #4dabf7;
-}
+/* Horizontal scroller (기존 cards 영역 유지) */
+.scroller{ display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding:8px 8px 16px; }
+.card.scroller-item{ flex:0 0 90%; scroll-snap-align:start; }
 
-body {
-  font-family: 'Noto Sans KR', sans-serif;
-  background-color: var(--background-color);
-  color: var(--text-primary);
-  margin: 0;
-  padding-top: max(0px, var(--safe-top)); 
+/* Half gauges (PM10/PM2.5) – 기존 색 변수 사용 */
+.half-gauges{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.half{ display:flex; flex-direction:column; align-items:center; }
+.arc{
+  --val: 0; --col: var(--primary-color);
+  width:160px; height:80px; border-radius:160px 160px 0 0 / 160px 160px 0 0;
+  background: conic-gradient(from 180deg at 50% 100%, var(--col) calc(var(--val)*180deg), #eee 0);
+  clip-path: inset(0 0 50% 0 round 160px 160px 0 0);
+  display:grid; place-items:center; position:relative;
 }
+.arc span{ position:absolute; bottom:6px; background:#fff; color:var(--text-primary); padding:4px 8px; border-radius:8px; font-weight:700; }
+.glab{ margin-top:6px; font-weight:600; }
 
-.app-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 1rem;
-}
+/* Bars (가로선형 지표) – 기존 primary 색상 사용 */
+.bars{ display:grid; gap:8px; margin-top:8px; }
+.bar label{ display:block; font-size:.9rem; margin-bottom:4px; }
+.bar div{ background:#eee; border-radius:999px; height:10px; position:relative; overflow:hidden; }
+.bar span{ position:absolute; left:0; top:0; bottom:0; width:0%; background: var(--primary-color); }
 
-.top-nav {
-  display: flex;
-  justify-content: flex-start;
-  padding: 0.5rem 0;
+/* FAB */
+.fab{ position:fixed; right:16px; bottom:24px; z-index:9; width:48px; height:48px;
+  border-radius:16px; border:1px solid #ddd; background:#fff; color:var(--text-primary);
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
 }
-
-.icon-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-primary);
-}
-
-.summary-card {
-  background: var(--card-background-color);
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin: 1rem 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  text-align: center;
-}
-
-.summary-header {
-  position: relative;
-}
-
-.summary-header h2 {
-  font-size: 2.5rem;
-  margin: 0;
-  font-family: 'ONE-Mobile-Title', sans-serif;
-}
-
-.summary-header p {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  margin: 0.5rem 0 1.5rem 0;
-}
-
-#share-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-.location-search-box {
-  background: var(--background-color);
-  padding: 0.8rem;
-  border-radius: 12px;
-  margin-bottom: 0.5rem;
-  cursor: text;
-}
-
-#current-location {
-  font-weight: 700;
-}
-
-#place-search-input {
-  border: none;
-  background: none;
-  width: 80%;
-  margin-left: 0.5rem;
-  color: var(--text-primary);
-}
-#place-search-input:focus {
-  outline: none;
-}
-
-.timestamp {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.gauge-section {
-  display: flex;
-  justify-content: space-around;
-  margin: 2rem 0;
-}
-
-.semi-gauge-container {
-  text-align: center;
-}
-
-.semi-gauge {
-  width: 120px;
-  height: 60px;
-  position: relative;
-  overflow: hidden;
-}
-
-.gauge-arc {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: conic-gradient(var(--primary-color) 0deg, var(--primary-color) 90deg, #e9ecef 90deg, #e9ecef 180deg);
-  transform: rotate(-90deg); /* 180도 중 90도만 보이게 */
-}
-
-.gauge-value {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.gauge-label {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.details-section {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  background: var(--card-background-color);
-  padding: 1rem;
-  border-radius: 16px;
-}
-
-.weather-icon-container {
-  text-align: center;
-}
-
-#weather-icon {
-  width: 48px;
-  height: 48px;
-  stroke: var(--text-primary);
-  stroke-width: 1.5;
-  fill: none;
-}
-
-#weather-temp {
-  font-weight: 700;
-  margin-top: 0.5rem;
-}
-
-.linear-bars-container {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.linear-bar-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.bar-label {
-  width: 70px;
-  font-size: 0.8rem;
-}
-
-.bar-wrapper {
-  flex-grow: 1;
-  height: 8px;
-  background-color: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.bar-fill {
-  height: 100%;
-  width: 50%; /* JS will update this */
-  background-color: var(--primary-color);
-  border-radius: 4px;
-}
-
-.bar-value {
-  font-size: 0.8rem;
-  font-weight: 700;
-  width: 40px;
-  text-align: right;
-}
-
-.floating-btn {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  background-color: var(--primary-color);
-  color: white;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-footer {
-  text-align: center;
-  margin-top: 3rem;
-  padding: 1rem;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  .site-footer { padding-bottom: max(16px, var(--safe-bottom));}
-}
-
-footer a {
-  color: var(--text-secondary);
-  text-decoration: none;
-}
-footer a:hover {
-  text-decoration: underline;
-}
-
