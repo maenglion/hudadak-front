@@ -21,18 +21,20 @@
   document.querySelector('#std-badge').textContent = `기준: ${label}`;
 </script>
 
-<script type="module" src="/js/apiClient.js" ; ></script>
-<script type="module" src="/js/app.js"></script>
+<link rel="stylesheet" href="/styles.css" />
+<script type="module" src="/app.js"></script>
 
-
+<script type="module">
+  import { STANDARDS } from '/js/standards.js';
+  import { fetchNearestAir } from '/js/apiClient.js';
+  // 부트스트랩 코드...
+</script>
 
 
 
 
   <!-- 초기 포인트 컬러 적용(깜빡임 방지) -->
   <script>
-    import { STANDARDS } from '/js/standards.js';
-
   (function(){
     try{
       const accent = localStorage.getItem('app-accent') || '#1e88e5';
