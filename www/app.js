@@ -1,126 +1,144 @@
-// /app.js — with search & safe boot
-import { fetchNearestAir } from '/js/apiClient.js';
-import { STANDARDS } from '/js/standards.js';
+// www/app.js
+import { fetchNearestAir } from './js/apiClient.js';
+import { STANDARDS } from './js/standards.js';
+import { renderForecast } from './js/forecast.js';
 
 console.log('[app] boot');
 
-const qs = new URLSearchParams(location.search);
+// --- UI 요소 참조 ---
 const el = {
-  place: document.getElementById('place'),
-  btnSearch: document.getElementById('searchBtn'),
-  btnCurrent: document.getElementById('btn-current'),
+  placeInput: document.getElementById('place-search-input'),
+  searchBtn: document.getElementById('search-btn'),
+  currentLocationBtn: document.getElementById('reload-location-btn'),
+  shareBtn: document.getElementById('share-btn'),
+  
+  summaryGrade: document.getElementById('summary-grade'),
+  summaryText: document.getElementById('summary-text'),
+  currentLocation: document.getElementById('current-location'),
+  timestamp: document.getElementById('기준-시간'),
+
+  pm10Gauge: {
+    arc: document.querySelector('#pm10-gauge .gauge-arc'),
+    value: document.querySelector('#pm10-gauge .gauge-value'),
+  },
+  pm25Gauge: {
+    arc: document.querySelector('#pm25-gauge .gauge-arc'),
+    value: document.querySelector('#pm25-gauge .gauge-value'),
+  },
+
+  linearBarsContainer: document.querySelector('.linear-bars-container'),
+  weatherIcon: document.getElementById('weather-icon'),
+  weatherTemp: document.getElementById('weather-temp'),
 };
 
-function ensureContainer() {
-  let pm10 = document.getElementById('pm10-value');
-  let pm25 = document.getElementById('pm25-value');
-  let g10  = document.getElementById('pm10-grade');
-  let g25  = document.getElementById('pm25-grade');
-  let sta  = document.getElementById('station-name');
-  let ts   = document.getElementById('display-ts');
 
-  if (!pm10 || !pm25 || !g10 || !g25 || !sta || !ts) {
-    const card = document.createElement('section');
-    card.className = 'card';
-    card.id = 'autocard';
-    card.innerHTML = `
-      <h4>현재 대기질</h4>
-      <div>PM10: <b id="pm10-value">--</b> μg/m³ <span id="pm10-grade" class="muted">--</span></div>
-      <div>PM2.5: <b id="pm25-value">--</b> μg/m³ <span id="pm25-grade" class="muted">--</span></div>
-      <div class="muted" style="margin-top:6px">
-        기준지역: <span id="station-name">--</span> · 시각: <span id="display-ts">--</span>
-      </div>`;
-    (document.querySelector('main') || document.body).prepend(card);
-    pm10 = card.querySelector('#pm10-value');
-    pm25 = card.querySelector('#pm25-value');
-    g10  = card.querySelector('#pm10-grade');
-    g25  = card.querySelector('#pm25-grade');
-    sta  = card.querySelector('#station-name');
-    ts   = card.querySelector('#display-ts');
-  }
-  return { pm10, pm25, g10, g25, sta, ts };
-}
-
-function gradeLabel(metric, v){
-  const stdCode = localStorage.getItem('aq_standard') || 'WHO8';
+// --- 렌더링 함수 ---
+function getGrade(metric, value) {
+  const stdCode = localStorage.getItem('aqi-standard') || 'KOR'; // 설정값 또는 기본값
   const std = STANDARDS[stdCode];
-  const br = std?.breaks?.[metric];
-  if (!br) return '--';
-  const L2 = ['권고 이내','권고 초과'];
-  const L4 = ['좋음','보통','나쁨','매우나쁨'];
-  const L8 = ['매우 좋음','좋음','양호','주의(IT-4)','나쁨(IT-3)','매우 나쁨(IT-2)','위험(IT-1)','최악'];
-  const labels = br.length===1 ? L2 : br.length===3 ? L4 : br.length===7 ? L8
-               : Array.from({length: br.length+1}, (_,i)=>`${i+1}단계`);
-  const x = Number(v);
-  for (let i=0;i<br.length;i++) if (x<=br[i]) return labels[i];
-  return labels[labels.length-1];
-}
-
-function render(air){
-  const { pm10, pm25, g10, g25, sta, ts } = ensureContainer();
-  pm10.textContent = air.pm10 ?? '--';
-  pm25.textContent = air.pm25 ?? '--';
-  g10.textContent  = air.pm10==null ? '--' : gradeLabel('pm10', air.pm10);
-  g25.textContent  = air.pm25==null ? '--' : gradeLabel('pm25', air.pm25);
-  sta.textContent  = air.station?.name || air.name || '--';
-  ts.textContent   = air.display_ts ? new Date(air.display_ts).toLocaleString('ko-KR') : '--';
-}
-
-/* ---------- 검색: 주소 → 좌표 ---------- */
-/* 우선순위: 1) 백엔드 /api/geo/search (있으면)  2) "lat,lon" 직접 파싱 */
-async function geocode(q){
-  // 2) "37.57,126.98" 형식 허용
-  const m = q.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
-  if (m) return { lat: parseFloat(m[1]), lon: parseFloat(m[2]), address: q.trim() };
-
-  // 1) 백엔드 프록시 시도
-  const resp = await fetch(`/api/geo/search?q=${encodeURIComponent(q)}`);
-  if (!resp.ok) {
-    const text = await resp.text().catch(()=>String(resp.status));
-    throw new Error(`검색 실패 (${resp.status}) ${text}`);
+  if (!std || !std.breaks[metric] || value === null) {
+    return { label: '정보없음', bg: '#868e96', fg: 'white' };
   }
-  return await resp.json(); // {lat, lon, address}
+
+  const breaks = std.breaks[metric];
+  let level = breaks.findIndex(b => value <= b);
+  if (level === -1) level = breaks.length;
+
+  return std.bands[level];
 }
 
-async function doSearch(q){
-  if (!q || q.trim().length < 2) return alert('두 글자 이상 입력하세요 (또는 "37.57,126.98")');
-  try{
-    const g = await geocode(q);
-    el.place && (el.place.value = g.address || `${g.lat},${g.lon}`);
-    render(await fetchNearestAir(g.lat, g.lon));
-  }catch(e){
-    console.error(e);
-    alert('주소 검색이 아직 준비되지 않았습니다. "위도,경도" 형태로 입력해 보세요.');
-  }
+function renderMain(air) {
+    const pm10Grade = getGrade('pm10', air.pm10);
+    
+    el.summaryGrade.textContent = pm10Grade.label;
+    el.summaryGrade.style.color = pm10Grade.bg;
+    el.summaryText.textContent = "오늘의 대기질 총평입니다."; // TODO: 메시지 시스템 연동
+    el.currentLocation.textContent = air.station?.name || air.name || '알 수 없음';
+    el.timestamp.textContent = `기준: ${new Date(air.display_ts).toLocaleString('ko-KR')}`;
+
+    // 반원 게이지 렌더링
+    renderSemiGauge(el.pm10Gauge, air.pm10, 150); // '나쁨' 기준을 max로
+    renderSemiGauge(el.pm25Gauge, air.pm25, 75); // '나쁨' 기준을 max로
+
+    // 선형 막대 렌더링
+    renderLinearBars(air);
 }
 
-/* ---------- 시작: 쿼리 → 지오로케이션 → 기본 ---------- */
-async function boot(){
-  try{
-    const lat = qs.get('lat'), lon = qs.get('lon');
-    if (lat && lon) return render(await fetchNearestAir(parseFloat(lat), parseFloat(lon)));
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async pos => render(await fetchNearestAir(pos.coords.latitude, pos.coords.longitude)),
-        async _   => render(await fetchNearestAir(37.5665,126.9780))
-      );
-    } else {
-      render(await fetchNearestAir(37.5665,126.9780));
+function renderSemiGauge(gauge, value, max) {
+    if (value === null || value === undefined) {
+      gauge.value.textContent = '-';
+      gauge.arc.style.background = '#e9ecef';
+      return;
     }
-  }catch(e){
-    console.error('[app] failed:', e);
-  }
+    gauge.value.textContent = value;
+    const grade = getGrade(gauge === el.pm10Gauge ? 'pm10' : 'pm25', value);
+    const percentage = Math.min(100, (value / max) * 100);
+    const angle = (percentage / 100) * 180;
+    gauge.arc.style.background = `conic-gradient(${grade.bg} 0deg, ${grade.bg} ${angle}deg, #e9ecef ${angle}deg, #e9ecef 180deg)`;
 }
 
-/* ---------- 이벤트 바인딩 ---------- */
-el.btnSearch?.addEventListener('click', ()=>doSearch(el.place?.value || ''));
-el.place?.addEventListener('keydown', e => { if (e.key==='Enter') doSearch(el.place.value); });
-el.btnCurrent?.addEventListener('click', ()=>{
-  navigator.geolocation?.getCurrentPosition(
-    async pos => render(await fetchNearestAir(pos.coords.latitude, pos.coords.longitude)),
-    async _   => render(await fetchNearestAir(37.5665,126.9780))
-  );
-});
+function renderLinearBars(data) {
+    el.linearBarsContainer.innerHTML = '';
+    const pollutants = [
+        { key: 'o3', label: '오존', max: 0.15 },
+        { key: 'no2', label: '이산화질소', max: 0.1 },
+        { key: 'so2', label: '아황산가스', max: 0.05 },
+        { key: 'co', label: '일산화탄소', max: 15 },
+    ];
 
-boot();
+    pollutants.forEach(p => {
+        const value = data[p.key];
+        if (value === null || value === undefined) return;
+        
+        const grade = getGrade(p.key, value); // (기준이 있다면)
+        const percentage = Math.min(100, (value / p.max) * 100);
+        const item = document.createElement('div');
+        item.className = 'linear-bar-item';
+        item.innerHTML = `
+            <span class="bar-label">${p.label}</span>
+            <div class="bar-wrapper">
+                <div class="bar-fill" style="width: ${percentage}%; background-color: ${grade?.bg || '#adb5bd'};"></div>
+            </div>
+            <span class="bar-value">${value}</span>
+        `;
+        el.linearBarsContainer.appendChild(item);
+    });
+}
+
+
+// --- 메인 로직 ---
+async function updateAll(lat, lon) {
+    try {
+        const airData = await fetchNearestAir(lat, lon);
+        renderMain(airData);
+    } catch (error) {
+        console.error("데이터 업데이트 중 오류:", error);
+        el.summaryText.textContent = '데이터를 불러오는 데 실패했습니다.';
+    }
+}
+
+
+// --- 초기화 및 이벤트 리스너 ---
+function initialize() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = urlParams.get('lat');
+    const lon = urlParams.get('lon');
+
+    if (lat && lon) {
+        updateAll(parseFloat(lat), parseFloat(lon));
+    } else {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => updateAll(pos.coords.latitude, pos.coords.longitude),
+            (err) => {
+                console.warn('Geolocation 에러:', err.message);
+                updateAll(37.5665, 126.9780); // 기본 위치: 서울
+            }
+        );
+    }
+
+    el.currentLocationBtn?.addEventListener('click', () => initialize());
+    // TODO: 검색, 공유 기능 이벤트 리스너 추가
+}
+
+initialize();
+

@@ -1,4 +1,3 @@
-// standards.js
 export const STANDARDS = {
   // 대한민국 환경부 CAI 4단계 (24h)
   KOR: {
