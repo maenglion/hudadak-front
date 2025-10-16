@@ -1,5 +1,5 @@
 ﻿// web/js/apiClient.js
-export const API_BASE = "https://air-api-350359872967.asia-northeast3.run.app";
+export const API_BASE = "/api";;
 // Netlify 프록시를 쓸 거면 위 줄 대신 ↓ 사용:
 // export const API_BASE = "/api";
 

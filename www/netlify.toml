@@ -1,0 +1,5 @@
+[[redirects]]
+from = "/api/*"
+to = "https://air-api-350359872967.asia-northeast3.run.app/:splat"
+status = 200
+force = true
