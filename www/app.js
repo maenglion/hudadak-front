@@ -1,101 +1,126 @@
-// /app.js  — LITE
-import { fetchNearestAir, searchByAddress } from '/js/apiClient.js';
+// /app.js — with search & safe boot
+import { fetchNearestAir } from '/js/apiClient.js';
 import { STANDARDS } from '/js/standards.js';
 
-console.log('app.js LITE boot');
+console.log('[app] boot');
 
-const elPM10 = document.getElementById('pm10-value');
-const elPM25 = document.getElementById('pm25-value');
-const elG10  = document.getElementById('pm10-grade');
-const elG25  = document.getElementById('pm25-grade');
-const elSta  = document.getElementById('station-name');
-const elTS   = document.getElementById('display-ts');
+const qs = new URLSearchParams(location.search);
+const el = {
+  place: document.getElementById('place'),
+  btnSearch: document.getElementById('searchBtn'),
+  btnCurrent: document.getElementById('btn-current'),
+};
 
-const inputEl = document.getElementById('place');
-const btnSearch = document.getElementById('searchBtn');
+function ensureContainer() {
+  let pm10 = document.getElementById('pm10-value');
+  let pm25 = document.getElementById('pm25-value');
+  let g10  = document.getElementById('pm10-grade');
+  let g25  = document.getElementById('pm25-grade');
+  let sta  = document.getElementById('station-name');
+  let ts   = document.getElementById('display-ts');
 
-// ---- 기준 선택 (없으면 WHO8 기본) ----
-const STD_KEY = 'aq_standard';
-function getStd() { return localStorage.getItem(STD_KEY) || 'WHO8'; }
-
-// ---- WHO/KOR 구간에서 등급 라벨 만들기 ----
-function labelFromBreaks(breaks, value, labels) {
-  // breaks: 오름차순 상한 배열, labels: breaks.length+1 개
-  for (let i = 0; i < breaks.length; i++) {
-    if (value <= breaks[i]) return labels[i];
+  if (!pm10 || !pm25 || !g10 || !g25 || !sta || !ts) {
+    const card = document.createElement('section');
+    card.className = 'card';
+    card.id = 'autocard';
+    card.innerHTML = `
+      <h4>현재 대기질</h4>
+      <div>PM10: <b id="pm10-value">--</b> μg/m³ <span id="pm10-grade" class="muted">--</span></div>
+      <div>PM2.5: <b id="pm25-value">--</b> μg/m³ <span id="pm25-grade" class="muted">--</span></div>
+      <div class="muted" style="margin-top:6px">
+        기준지역: <span id="station-name">--</span> · 시각: <span id="display-ts">--</span>
+      </div>`;
+    (document.querySelector('main') || document.body).prepend(card);
+    pm10 = card.querySelector('#pm10-value');
+    pm25 = card.querySelector('#pm25-value');
+    g10  = card.querySelector('#pm10-grade');
+    g25  = card.querySelector('#pm25-grade');
+    sta  = card.querySelector('#station-name');
+    ts   = card.querySelector('#display-ts');
   }
-  return labels[labels.length - 1];
+  return { pm10, pm25, g10, g25, sta, ts };
 }
 
-function gradeLabel(metric, v) {
-  const std = STANDARDS[getStd()];
-  if (!std) return '--';
-  const br = std.breaks?.[metric];
+function gradeLabel(metric, v){
+  const stdCode = localStorage.getItem('aq_standard') || 'WHO8';
+  const std = STANDARDS[stdCode];
+  const br = std?.breaks?.[metric];
   if (!br) return '--';
-
-  // 라벨 세트(필요 시 바꿔도 됨)
-  const LABELS_4 = ['좋음','보통','나쁨','매우나쁨'];
-  const LABELS_2 = ['권고 이내','권고 초과'];
-  const LABELS_8 = ['매우 좋음','좋음','양호','주의(IT-4)','나쁨(IT-3)','매우 나쁨(IT-2)','위험(IT-1)','최악'];
-
-  const labels =
-    br.length === 1 ? LABELS_2 :
-    br.length === 3 ? LABELS_4 :
-    br.length === 7 ? LABELS_8 : // WHO8
-    // 그 외 길이는 간단 라벨로 생성
-    Array.from({length: br.length + 1}, (_,i)=>`${i+1}단계`);
-
-  return labelFromBreaks(br, Number(v), labels);
+  const L2 = ['권고 이내','권고 초과'];
+  const L4 = ['좋음','보통','나쁨','매우나쁨'];
+  const L8 = ['매우 좋음','좋음','양호','주의(IT-4)','나쁨(IT-3)','매우 나쁨(IT-2)','위험(IT-1)','최악'];
+  const labels = br.length===1 ? L2 : br.length===3 ? L4 : br.length===7 ? L8
+               : Array.from({length: br.length+1}, (_,i)=>`${i+1}단계`);
+  const x = Number(v);
+  for (let i=0;i<br.length;i++) if (x<=br[i]) return labels[i];
+  return labels[labels.length-1];
 }
 
-// ---- 렌더 ----
-function renderAir(air){
-  const pm10 = air.pm10 ?? null;
-  const pm25 = air.pm25 ?? null;
-
-  elPM10.textContent = (pm10 ?? '--');
-  elPM25.textContent = (pm25 ?? '--');
-
-  elG10.textContent  = (pm10 == null) ? '--' : gradeLabel('pm10', pm10);
-  elG25.textContent  = (pm25 == null) ? '--' : gradeLabel('pm25', pm25);
-
-  elSta.textContent  = air.station?.name || air.name || '--';
-  elTS.textContent   = air.display_ts ? new Date(air.display_ts).toLocaleString('ko-KR') : '--';
+function render(air){
+  const { pm10, pm25, g10, g25, sta, ts } = ensureContainer();
+  pm10.textContent = air.pm10 ?? '--';
+  pm25.textContent = air.pm25 ?? '--';
+  g10.textContent  = air.pm10==null ? '--' : gradeLabel('pm10', air.pm10);
+  g25.textContent  = air.pm25==null ? '--' : gradeLabel('pm25', air.pm25);
+  sta.textContent  = air.station?.name || air.name || '--';
+  ts.textContent   = air.display_ts ? new Date(air.display_ts).toLocaleString('ko-KR') : '--';
 }
 
-// ---- 데이터 갱신 ----
-async function updateAll(lat, lon){
-  const air = await fetchNearestAir(lat, lon);
-  renderAir(air);
+/* ---------- 검색: 주소 → 좌표 ---------- */
+/* 우선순위: 1) 백엔드 /api/geo/search (있으면)  2) "lat,lon" 직접 파싱 */
+async function geocode(q){
+  // 2) "37.57,126.98" 형식 허용
+  const m = q.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (m) return { lat: parseFloat(m[1]), lon: parseFloat(m[2]), address: q.trim() };
+
+  // 1) 백엔드 프록시 시도
+  const resp = await fetch(`/api/geo/search?q=${encodeURIComponent(q)}`);
+  if (!resp.ok) {
+    const text = await resp.text().catch(()=>String(resp.status));
+    throw new Error(`검색 실패 (${resp.status}) ${text}`);
+  }
+  return await resp.json(); // {lat, lon, address}
 }
 
-// ---- 검색 ----
 async function doSearch(q){
-  if (!q || q.trim().length < 2) return alert('두 글자 이상 입력하세요');
-  try {
-    const g = await searchByAddress(q);
-    inputEl.value = g.address;
-    updateAll(g.lat, g.lon);
-  } catch(e){
+  if (!q || q.trim().length < 2) return alert('두 글자 이상 입력하세요 (또는 "37.57,126.98")');
+  try{
+    const g = await geocode(q);
+    el.place && (el.place.value = g.address || `${g.lat},${g.lon}`);
+    render(await fetchNearestAir(g.lat, g.lon));
+  }catch(e){
     console.error(e);
-    alert('주소 검색 실패');
+    alert('주소 검색이 아직 준비되지 않았습니다. "위도,경도" 형태로 입력해 보세요.');
   }
 }
-btnSearch?.addEventListener('click', ()=>doSearch(inputEl.value));
-inputEl?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(inputEl.value); });
 
-// ---- 시작: 쿼리/지오로케이션/기본 서울 ----
-(function boot(){
-  const u = new URLSearchParams(location.search);
-  const lat = u.get('lat'), lon = u.get('lon');
-  if (lat && lon) return updateAll(parseFloat(lat), parseFloat(lon));
+/* ---------- 시작: 쿼리 → 지오로케이션 → 기본 ---------- */
+async function boot(){
+  try{
+    const lat = qs.get('lat'), lon = qs.get('lon');
+    if (lat && lon) return render(await fetchNearestAir(parseFloat(lat), parseFloat(lon)));
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => updateAll(pos.coords.latitude, pos.coords.longitude),
-      _   => updateAll(37.5665, 126.9780) // 서울
-    );
-  } else {
-    updateAll(37.5665, 126.9780);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async pos => render(await fetchNearestAir(pos.coords.latitude, pos.coords.longitude)),
+        async _   => render(await fetchNearestAir(37.5665,126.9780))
+      );
+    } else {
+      render(await fetchNearestAir(37.5665,126.9780));
+    }
+  }catch(e){
+    console.error('[app] failed:', e);
   }
-})();
+}
+
+/* ---------- 이벤트 바인딩 ---------- */
+el.btnSearch?.addEventListener('click', ()=>doSearch(el.place?.value || ''));
+el.place?.addEventListener('keydown', e => { if (e.key==='Enter') doSearch(el.place.value); });
+el.btnCurrent?.addEventListener('click', ()=>{
+  navigator.geolocation?.getCurrentPosition(
+    async pos => render(await fetchNearestAir(pos.coords.latitude, pos.coords.longitude)),
+    async _   => render(await fetchNearestAir(37.5665,126.9780))
+  );
+});
+
+boot();

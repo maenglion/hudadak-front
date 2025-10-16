@@ -1,5 +1,5 @@
 // color-scale.js
-import { STANDARDS } from './standards.js';
+import { STANDARDS } from './js/standards.js';
 
 export function bandIndex(value, breakpoints) {
   if (value == null || isNaN(value)) return 0;
