@@ -1,5 +1,6 @@
 ﻿// web/js/apiClient.js
-export const API_BASE = "/api";;
+export const API_BASE = "/backend";
+
 // Netlify 프록시를 쓸 거면 위 줄 대신 ↓ 사용:
 // export const API_BASE = "/api";
 
