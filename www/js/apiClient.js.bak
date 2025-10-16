@@ -1,28 +1,29 @@
-// js/apiClient.js
-import { API_BASE } from "./constants.js";
+﻿// web/js/apiClient.js
+export const API_BASE = "/api";;
+// Netlify 프록시를 쓸 거면 위 줄 대신 ↓ 사용:
+// export const API_BASE = "/api";
 
-async function j(res){ if(!res.ok) throw new Error(await res.text()); return res.json(); }
-
-export const API_BASE = "https://air-api-350359872967.asia-northeast3.run.app";
-
-export async function fetchNearestAir(lat, lon){
+export async function fetchNearestAir(lat, lon) {
   const url = `${API_BASE}/nearest?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
-  const data = await j(await fetch(url, { credentials: "omit" }));
-  // app.js가 기대하는 키 이름은 이미 서버에서 맞춰줌 (station, cai_grade, cai_value 등)
-  return data;
-}
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  const raw = await r.json();
 
-export async function fetchForecast(lat, lon){
-  const url = `${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
-  return j(await fetch(url));
-}
-
-export async function searchByAddress(q){
-  const url = `${API_BASE}/geo/search?q=${encodeURIComponent(q)}`;
-  return j(await fetch(url));
-}
-
-export async function reverseToAddress(lat, lon){
-  const url = `${API_BASE}/geo/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
-  return j(await fetch(url));
+  // 서버 응답(provider/name/...) → 프런트 표준 스키마로 맵핑
+  return {
+    pm10: raw.pm10,
+    pm25: raw.pm25,
+    pm10_24h: raw.pm10_24h ?? null,
+    pm25_24h: raw.pm25_24h ?? null,
+    cai_grade: raw.cai_grade ?? null,
+    cai_value: raw.cai_value ?? null,
+    display_ts: raw.display_ts,
+    station: {
+      name: raw.name,
+      provider: raw.provider,
+      kind: raw.source_kind || 'unknown',
+      lat: raw.lat ?? null,
+      lon: raw.lon ?? null,
+    },
+  };
 }
