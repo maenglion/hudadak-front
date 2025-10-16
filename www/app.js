@@ -1,255 +1,101 @@
-// --- 모듈 임포트 ---
-// API 클라이언트 및 새로운 UI에 필요한 상수와 렌더러를 가져옵니다.
-import { API_BASE, HERO_GRADIENT, STANDARDS, MESSAGES, MINI_COLORS } from './js/constants.js';
-import { fetchForecast, fetchNearestAir, searchByAddress, reverseToAddress } from './js/apiClient.js';
-import { renderForecast } from './js/forecast.js';
+// /app.js  — LITE
+import { fetchNearestAir, searchByAddress } from '/js/apiClient.js';
+import { STANDARDS } from '/js/standards.js';
 
-console.log("app.js 로드 및 실행!");
+console.log('app.js LITE boot');
 
-(() => {
-  // --- 기존 게이지를 위한 상수 (유지) ---
-  const SCALE = {
-    PM10: [
-      { name: '좋음',   max: 30,  color: { dark: ['#367BB8', '#7C9CC5'], light: ['#1e88e5', '#69AAFF'] } },
-      { name: '보통',   max: 80,  color: { light: ['#43A047', '#3BD497'], dark: ['#629473', '#9ACEB9'] } },
-      { name: '나쁨',   max: 150, color: { light: ['#F57C00', '#FFB20B'], dark: ['#F6AA5C', '#DDC472'] } },
-      { name: '매우나쁨', max: 1000,color: { light: ['#D32F2F', '#FF886B'], dark: ['#C75959', '#BF8779'] } }
-    ],
-    PM25: [
-      { name: '좋음',   max: 15,  color: { dark: ['#367BB8', '#7C9CC5'], light: ['#1e88e5', '#69AAFF'] } },
-      { name: '보통',   max: 35,  color: { light: ['#43A047', '#3BD497'], dark: ['#629473', '#9ACEB9'] } },
-      { name: '나쁨',   max: 75,  color: { light: ['#F57C00', '#FFB20B'], dark: ['#F6AA5C', '#DDC472'] } },
-      { name: '매우나쁨', max: 1000,color: { light: ['#D32F2F', '#FF886B'], dark: ['#C75959', '#BF8779'] } }
-    ]
-  };
+const elPM10 = document.getElementById('pm10-value');
+const elPM25 = document.getElementById('pm25-value');
+const elG10  = document.getElementById('pm10-grade');
+const elG25  = document.getElementById('pm25-grade');
+const elSta  = document.getElementById('station-name');
+const elTS   = document.getElementById('display-ts');
 
-  // --- 설정 및 상태 관리 ---
-  const STD_KEY = 'aqi-standard';
-  let currentStd = localStorage.getItem(STD_KEY) || 'MOE'; // MOE: 환경부, WHO: 세계보건기구
-  let currentCoords = null;
+const inputEl = document.getElementById('place');
+const btnSearch = document.getElementById('searchBtn');
 
-  // --- UI 요소 참조 ---
-  const hero = document.getElementById('hero');
-  const elLoc = document.getElementById('hero-location');
-  const elTime = document.getElementById('hero-time');
-  const elVal = document.getElementById('hero-value');
-  const elGrade = document.getElementById('hero-grade');
-  const elDesc = document.getElementById('hero-desc');
-  const miniWrap = document.getElementById('mini-gauges');
-  const btnSettings = document.getElementById('btn-settings');
-  const dlg = document.getElementById('settings-modal');
-  const stdSelect = document.getElementById('std-select');
-  const inputEl = document.getElementById('place');
-  const errorEl = document.getElementById('error-message');
-  const themeToggle = document.getElementById('theme-toggle');
+// ---- 기준 선택 (없으면 WHO8 기본) ----
+const STD_KEY = 'aq_standard';
+function getStd() { return localStorage.getItem(STD_KEY) || 'WHO8'; }
 
-  // --- 헬퍼 함수 ---
-  function setHeroGradient(grade) {
-    const g = HERO_GRADIENT[grade] || HERO_GRADIENT[2]; // 기본값: 보통
-    hero.style.background = `linear-gradient(160deg, ${g[0]}, ${g[1]})`;
+// ---- WHO/KOR 구간에서 등급 라벨 만들기 ----
+function labelFromBreaks(breaks, value, labels) {
+  // breaks: 오름차순 상한 배열, labels: breaks.length+1 개
+  for (let i = 0; i < breaks.length; i++) {
+    if (value <= breaks[i]) return labels[i];
   }
-  function pctByStandard(kind, value) {
-    const t = (STANDARDS[currentStd]?.[kind] || {});
-    const max = t.bad || 100;
-    return Math.max(0, Math.min(1, (value / max)));
+  return labels[labels.length - 1];
+}
+
+function gradeLabel(metric, v) {
+  const std = STANDARDS[getStd()];
+  if (!std) return '--';
+  const br = std.breaks?.[metric];
+  if (!br) return '--';
+
+  // 라벨 세트(필요 시 바꿔도 됨)
+  const LABELS_4 = ['좋음','보통','나쁨','매우나쁨'];
+  const LABELS_2 = ['권고 이내','권고 초과'];
+  const LABELS_8 = ['매우 좋음','좋음','양호','주의(IT-4)','나쁨(IT-3)','매우 나쁨(IT-2)','위험(IT-1)','최악'];
+
+  const labels =
+    br.length === 1 ? LABELS_2 :
+    br.length === 3 ? LABELS_4 :
+    br.length === 7 ? LABELS_8 : // WHO8
+    // 그 외 길이는 간단 라벨로 생성
+    Array.from({length: br.length + 1}, (_,i)=>`${i+1}단계`);
+
+  return labelFromBreaks(br, Number(v), labels);
+}
+
+// ---- 렌더 ----
+function renderAir(air){
+  const pm10 = air.pm10 ?? null;
+  const pm25 = air.pm25 ?? null;
+
+  elPM10.textContent = (pm10 ?? '--');
+  elPM25.textContent = (pm25 ?? '--');
+
+  elG10.textContent  = (pm10 == null) ? '--' : gradeLabel('pm10', pm10);
+  elG25.textContent  = (pm25 == null) ? '--' : gradeLabel('pm25', pm25);
+
+  elSta.textContent  = air.station?.name || air.name || '--';
+  elTS.textContent   = air.display_ts ? new Date(air.display_ts).toLocaleString('ko-KR') : '--';
+}
+
+// ---- 데이터 갱신 ----
+async function updateAll(lat, lon){
+  const air = await fetchNearestAir(lat, lon);
+  renderAir(air);
+}
+
+// ---- 검색 ----
+async function doSearch(q){
+  if (!q || q.trim().length < 2) return alert('두 글자 이상 입력하세요');
+  try {
+    const g = await searchByAddress(q);
+    inputEl.value = g.address;
+    updateAll(g.lat, g.lon);
+  } catch(e){
+    console.error(e);
+    alert('주소 검색 실패');
   }
-  function colorByStandard(kind, value) {
-    const t = (STANDARDS[currentStd]?.[kind] || {});
-    if (value <= (t.good ?? Infinity)) return MINI_COLORS.good;
-    if (value <= (t.mid  ?? Infinity)) return MINI_COLORS.mid;
-    if (value <= (t.bad  ?? Infinity)) return MINI_COLORS.bad;
-    return MINI_COLORS.worst;
+}
+btnSearch?.addEventListener('click', ()=>doSearch(inputEl.value));
+inputEl?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(inputEl.value); });
+
+// ---- 시작: 쿼리/지오로케이션/기본 서울 ----
+(function boot(){
+  const u = new URLSearchParams(location.search);
+  const lat = u.get('lat'), lon = u.get('lon');
+  if (lat && lon) return updateAll(parseFloat(lat), parseFloat(lon));
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => updateAll(pos.coords.latitude, pos.coords.longitude),
+      _   => updateAll(37.5665, 126.9780) // 서울
+    );
+  } else {
+    updateAll(37.5665, 126.9780);
   }
-  function gradeLabel(g) {
-    return ["", "좋음", "보통", "나쁨(민감군)", "나쁨", "매우나쁨", "최악"][g] || "—";
-  }
-
-  // --- 렌더링 함수 ---
-  function updateHero(air) {
-    const grade = Number(air.cai_grade ?? air.grade ?? 0) || 0;
-    const value = Number(air.cai_value ?? air.pm25 ?? air.pm10 ?? 0) || 0;
-    elLoc.textContent = air.station?.name ? `${air.station.name}` : '—';
-    elTime.textContent = air.display_ts ? new Date(air.display_ts).toLocaleString('ko-KR') : new Date().toLocaleString('ko-KR');
-    elVal.textContent = value;
-    elGrade.textContent = gradeLabel(grade);
-    elDesc.textContent = MESSAGES[grade] || '';
-    setHeroGradient(grade);
-  }
-
-  function renderMiniGauges(air) {
-    const rows = [
-      { k: "pm10",  label: "미세먼지",     unit: "㎍/㎥", v: air.pm10 },
-      { k: "pm25",  label: "초미세먼지",   unit: "㎍/㎥", v: air.pm25 },
-      { k: "cai",   label: "통합대기지수", unit: "",      v: air.cai_value ?? air.cai ?? null },
-      { k: "o3",    label: "오존",         unit: "ppm",   v: air.o3 },
-      { k: "no2",   label: "이산화질소",   unit: "ppm",   v: air.no2 },
-      { k: "so2",   label: "아황산가스",   unit: "ppm",   v: air.so2 },
-      { k: "co",    label: "일산화탄소",   unit: "ppm",   v: air.co },
-    ];
-    miniWrap.innerHTML = '';
-    rows.forEach(r => {
-      if (r.v == null) return;
-      const p = r.k === "cai" ? Math.min(1, (Number(r.v) / 200)) : pctByStandard(r.k, Number(r.v));
-      const col = r.k === "cai" ? MINI_COLORS.mid : colorByStandard(r.k, Number(r.v));
-      const div = document.createElement('div');
-      div.className = 'mini';
-      div.innerHTML = `
-        <div class="ring" style="--pct:${(p * 100).toFixed(0)};--ring:${col}">
-          <span>${Number(r.v)}</span>
-        </div>
-        <div class="label">${r.label}</div>
-        <div class="sub">${r.unit}</div>
-      `;
-      miniWrap.appendChild(div);
-    });
-  }
-  
-  // 기존 게이지 렌더링 함수 (유지)
-  function getStatus(type, v) {
-    if (v === null) return null;
-    return SCALE[type].find(c => v <= c.max) || SCALE[type][SCALE[type].length - 1];
-  }
-
-  function drawGauge(pmType, value, grade, details = {}) {
-    const wheelEl = document.getElementById(`gauge${pmType}`);
-    const statusTextEl = document.getElementById(`statusText${pmType}`);
-    const valueTextEl = document.getElementById(`valueText${pmType}`);
-    const stationEl = document.getElementById(`station${pmType}`);
-    if (!wheelEl) return;
-
-    const isDarkMode = document.body.classList.contains('dark-mode');
-
-    if (value === null) {
-      statusTextEl.textContent = grade || '--';
-      valueTextEl.textContent = '- µg/m³';
-    } else {
-      const status = getStatus(pmType, value);
-      const colorSet = isDarkMode ? status.color.dark : status.color.light;
-      const deg = 360 * Math.min(value / (status.max * 1.2), 1);
-
-      wheelEl.style.setProperty('--gauge-color-start', colorSet[0]);
-      wheelEl.style.setProperty('--gauge-color-end', colorSet[1]);
-      wheelEl.style.setProperty('--angle', `${deg}deg`);
-      statusTextEl.textContent = grade || status.name;
-      statusTextEl.style.color = colorSet[0];
-      valueTextEl.textContent = `${value} µg/m³`;
-    }
-    if (details.station) {
-        stationEl.textContent = `측정소: ${details.station}`;
-    }
-  }
-
-  function showError(msg) {
-    errorEl.textContent = msg;
-    errorEl.style.display = 'block';
-  }
-
-  // --- 메인 데이터 로직 ---
-  async function updateAll(lat, lon, isManualSearch = false) {
-    currentCoords = { lat, lon };
-    errorEl.style.display = 'none';
-    // ... 기타 UI 초기화 코드 ...
-
-    try {
-      // 1) 예보 데이터 호출 (실패해도 괜찮음)
-      fetchForecast(lat, lon)
-        .then(fc => renderForecast(fc, { lat, lon }))
-        .catch(e => console.warn('Forecast fetch failed:', e));
-
-      // 2) 현재 공기질 데이터 호출 (핵심 로직)
-      const air = await fetchNearestAir(lat, lon);
-      window.__lastAir = air; // 설정 변경 시 재렌더링을 위해 전역에 저장
-      
-      // 새로운 UI 렌더링
-      updateHero(air);
-      renderMiniGauges(air);
-
-      // (선택) 기존 큰 게이지도 계속 표시
-      const sname = air.station?.name ?? air.name ?? '—';
-      drawGauge('PM10', air.pm10 ?? null, air.cai_grade ?? '', { station: sname, ts: air.display_ts });
-      drawGauge('PM25', air.pm25 ?? null, air.cai_grade ?? '', { station: sname, ts: air.display_ts });
-      
-    } catch (e) {
-      showError('데이터를 불러오는 중 오류가 발생했습니다.');
-      console.error(e);
-      // 에러 시 기존 게이지 초기화
-      drawGauge('PM10', null, '오류');
-      drawGauge('PM25', null, '오류');
-    }
-  }
-
-  // --- 이벤트 핸들러 및 초기화 ---
-  async function handleAddressSearch(query) {
-    if (!query || query.trim().length < 2) {
-      alert('검색어를 두 글자 이상 입력하세요');
-      return;
-    }
-    try {
-      const geo = await searchByAddress(query);
-      inputEl.value = geo.address;
-      updateAll(geo.lat, geo.lon, true);
-    } catch (err) {
-      console.warn(err);
-      alert('주소 검색에 실패했습니다.');
-    }
-  }
-  
-  document.getElementById('searchBtn').onclick = () => handleAddressSearch(inputEl.value);
-  inputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleAddressSearch(inputEl.value);
-  });
-
-  btnSettings?.addEventListener('click', () => {
-    stdSelect.value = currentStd;
-    dlg.showModal();
-  });
-  stdSelect?.addEventListener('change', (e) => {
-    currentStd = e.target.value;
-    localStorage.setItem(STD_KEY, currentStd);
-    // 기준 변경 시 미니 게이지 즉시 재렌더링
-    if (window.__lastAir) renderMiniGauges(window.__lastAir);
-  });
-  
-  async function initializeApp() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const lat = urlParams.get('lat');
-    const lon = urlParams.get('lon');
-
-    if (lat && lon) {
-      updateAll(parseFloat(lat), parseFloat(lon), true);
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => updateAll(pos.coords.latitude, pos.coords.longitude, false),
-        (err) => {
-          console.error("위치 정보 오류", err);
-          alert('위치 정보를 가져올 수 없습니다. 기본 위치(서울)로 조회합니다.');
-          updateAll(37.5665, 126.9780, false);
-        }
-      );
-    }
-  }
-
-  // 테마 관리
-  const applyTheme = (theme) => {
-    const isDark = theme === 'dark';
-    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-    document.body.classList.toggle('dark-mode', isDark);
-  };
-
-  if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-      localStorage.setItem('theme', newTheme);
-      applyTheme(newTheme);
-      if (currentCoords) updateAll(currentCoords.lat, currentCoords.lon);
-    });
-  }
-  
-  const savedTheme = localStorage.getItem('theme') 
-      || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  applyTheme(savedTheme);
-
-  // 앱 시작!
-  initializeApp();
 })();
-

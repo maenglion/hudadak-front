@@ -11,54 +11,65 @@
   <meta name="theme-color" content="#ffffff" id="meta-theme-color" />
 
   <!-- 초기 테마/포인트 컬러 적용(깜빡임 방지) -->
-  <script>
-  (function(){
-    try{
-      // 1) 테마 부트: data-theme = 'light' | 'dark' | (없음=system)
-      const THEME_KEY='app-theme';
-      const t = localStorage.getItem(THEME_KEY) || 'system';
-      if (t === 'light' || t === 'dark') {
-        document.documentElement.setAttribute('data-theme', t);
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-      }
-      // 2) 포인트 컬러(버튼·게이지 등). theme-color 메타는 "배경"과 동기화하므로 여기선 건드리지 않음
-      const ACCENT_KEY='app-accent';
-      const accent = localStorage.getItem(ACCENT_KEY) || '#1e88e5';
-      document.documentElement.style.setProperty('--primary-color', accent);
-      // 3) meta theme-color를 현재 테마 배경색으로 동기화
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const isDark = (t==='dark') || (t==='system' && prefersDark);
-      const meta = document.querySelector('#meta-theme-color');
-      if (meta) meta.setAttribute('content', isDark ? '#0b0d12' : '#ffffff');
-    }catch(_){}
-  })();
-  </script>
+<script>
+(function(){
+  try{
+    // 테마 부트: data-theme = 'light' | 'dark' | (없음=system)
+    const THEME_KEY='app-theme';
+    const t = localStorage.getItem(THEME_KEY) || 'system';
+    if (t === 'light' || t === 'dark') {
+      document.documentElement.setAttribute('data-theme', t);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+
+    // meta theme-color 동기화 (배경색 기준)
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = (t === 'dark') || (t === 'system' && prefersDark);
+    const meta = document.querySelector('#meta-theme-color');
+    if (meta) meta.setAttribute('content', isDark ? '#0b0d12' : '#ffffff');
+
+    // (마이그레이션) 기존에 저장된 사용자 포인트 컬러가 있으면 무시/정리
+    localStorage.removeItem('app-accent');
+  }catch(_){}
+})();
+</script>
 
   <link rel="stylesheet" href="../styles.css" />
   <style>
     /* 안전영역 변수 */
-    :root{
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+  :root{
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-      /* 라이트 기본 토큰 */
-      --bg:#ffffff; --fg:#111111; --card:#f6f7f9; --muted:#6b7280; --border:#e5e7eb;
-      --primary-color:#1e88e5;
-    }
-    /* 시스템 다크(사용자가 system 선택 시 @media가 적용) */
-    @media (prefers-color-scheme: dark){
-      :root:not([data-theme="light"]){
-        --bg:#0b0d12; --fg:#f5f6f8; --card:#10141b; --muted:#9aa3b2; --border:#1e2530;
-      }
-    }
-    /* 강제 라이트/다크 */
-    html[data-theme="light"]{
-      --bg:#ffffff; --fg:#111111; --card:#f6f7f9; --muted:#6b7280; --border:#e5e7eb;
-    }
-    html[data-theme="dark"]{
-      --bg:#0b0d12; --fg:#f5f6f8; --card:#10141b; --muted:#9aa3b2; --border:#1e2530;
-    }
+  /* Light 기본 토큰 */
+  --bg:#ffffff; --fg:#111111; --card:#f6f7f9; --muted:#6b7280; --border:#e5e7eb;
+
+  /* 라이트 기본 포인트 컬러(자동) */
+  --primary-color:#1e88e5;
+}
+
+/* 시스템 다크 (system 선택 시 @media가 적용) */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0d12; --fg:#f5f6f8; --card:#10141b; --muted:#9aa3b2; --border:#1e2530;
+
+    /* 다크 기본 포인트 컬러(자동) */
+    --primary-color:#60a5fa; /* 밝은 블루톤 */
+  }
+}
+
+/* 강제 라이트/다크일 때도 토큰으로 결정 (system 무시) */
+html[data-theme="light"]{
+  --bg:#ffffff; --fg:#21242b; --card:#f6f7f9; --muted:#6b7280; --border:#e5e7eb;
+  --primary-color:#1e88e5;
+}
+html[data-theme="dark"]{
+  --bg:#21242b; --fg:#f5f6f8; --card:#292b30; --muted:#9aa3b2; --border:#1e2530;
+  --primary-color:#60a5fa;
+}
+
+
 
     body{ background:var(--bg); color:var(--fg); padding-top:var(--safe-top); }
     .topbar{ height:56px; display:flex; align-items:center; padding:0 12px; }
@@ -94,18 +105,49 @@
     </section>
 
     <!-- 2) 평가 기준 (하나로 통합) -->
-    <section class="card">
-      <h2>미세먼지 평가 기준</h2>
-      <div class="row">
-<!-- 미세먼지 평가 기준 -->
+<!-- setup/index.html 내부 적절한 위치에 추가 -->
+<section class="card">
+  <h2>표시 기준</h2>
+  <div class="row">
+    <label><input type="radio" name="aq_standard" value="KOR"> 대한민국 CAI</label>
+    <label><input type="radio" name="aq_standard" value="WHO24"> WHO 2단계</label>
+    <label><input type="radio" name="aq_standard" value="WHO8"> WHO 8단계</label>
+  </div>
+  <p id="std-explain" class="muted" style="margin-top:8px"></p>
+  <details style="margin-top:8px">
+    <summary>세부 경계값 보기</summary>
+    <pre style="white-space:pre-wrap;margin-top:8px">
+PM10 (WHO8): 15,30,45,50,75,100,150 μg/m³
+PM2.5 (WHO8): 5,10,15,25,37.5,50,75 μg/m³
+CAI (KOR): PM10 ≤30/≤80/≤150/>150, PM2.5 ≤15/≤35/≤75/>75
+    </pre>
+  </details>
+</section>
 
-  <label><input type="radio" name="aq_standard" value="KOR"> 대한민국 CAI</label>
-  <label><input type="radio" name="aq_standard" value="WHO24"> WHO 2단계</label>
-  <label><input type="radio" name="aq_standard" value="WHO8"> WHO 8단계</label>
+<section class="card">
+  <h2>데이터 출처</h2>
+  <ul class="muted">
+    <li>실측/모델: Open-Meteo, 자체 수집소스</li>
+    <li>표시 기준: 대한민국 CAI, WHO 2021 가이드라인</li>
+  </ul>
+</section>
 
-      </div>
-      <div id="std-explain" class="explain" style="margin-top:8px"></div>
-    </section>
+<script type="module">
+  import { STANDARDS } from '/js/standards.js';
+  const radios = document.querySelectorAll('input[name="aq_standard"]');
+  const box = document.getElementById('std-explain');
+  const KEY='aq_standard';
+  const explain = {
+    KOR:  STANDARDS.KOR.label + ' — 국내 CAI 4단계.',
+    WHO24:STANDARDS.WHO24.label + ' — 권고 이내/초과 2단계.',
+    WHO8: STANDARDS.WHO8.label + ' — 세분화 8단계.',
+  };
+  function apply(v){ localStorage.setItem(KEY,v); box.textContent = explain[v] || ''; }
+  const saved = localStorage.getItem(KEY) || 'WHO8';
+  radios.forEach(r=>{ r.checked = (r.value===saved); r.addEventListener('change',e=>apply(e.target.value)); });
+  apply(saved);
+</script>
+
 
     <!-- 3) 테마(라이트/다크/시스템) -->
     <section class="card">
@@ -118,20 +160,6 @@
       <p class="muted" style="margin-top:8px">시스템 기본은 기기 설정(라이트/다크)에 따라 자동 전환됩니다.</p>
     </section>
 
-    <!-- 4) (옵션) 포인트 컬러 -->
-    <section class="card">
-      <h2>포인트 컬러</h2>
-      <div class="row">
-        <button class="swatch" data-color="#1e88e5" style="--c:#1e88e5" aria-label="파랑"></button>
-        <button class="swatch" data-color="#ff6b6b" style="--c:#ff6b6b" aria-label="코랄"></button>
-        <button class="swatch" data-color="#22c55e" style="--c:#22c55e" aria-label="그린"></button>
-        <button class="swatch" data-color="#8b5cf6" style="--c:#8b5cf6" aria-label="퍼플"></button>
-        <button class="swatch" data-color="#f59e0b" style="--c:#f59e0b" aria-label="옐로"></button>
-        <label style="display:flex;align-items:center;gap:6px">직접 선택 <input id="accentPicker" type="color" value="#1e88e5"></label>
-        <button id="accentReset" class="icon-btn" style="margin-left:auto">기본값</button>
-      </div>
-      <p class="muted" style="margin-top:8px">포인트 컬러는 버튼·게이지·막대 등에만 적용됩니다.</p>
-    </section>
 
     <footer class="site-footer">
       <a href="../termsofuse.html">이용약관</a> · Owner: 2e-studio
@@ -158,6 +186,8 @@
     stdRadios.forEach(r => { r.checked = (r.value===savedStd); r.addEventListener('change', e=>applyStd(e.target.value)); });
     applyStd(savedStd);
 
+
+    
     // ===== 테마 =====
     const THEME_KEY = 'app-theme';
     const themeRadios = document.querySelectorAll('input[name="theme"]');
@@ -180,21 +210,6 @@
     const mql = window.matchMedia('(prefers-color-scheme: dark)');
     mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(THEME_KEY)||'system')==='system') syncMetaTheme(); });
 
-    // ===== 포인트 컬러 =====
-    const ACCENT_KEY='app-accent', DEFAULT_ACCENT='#1e88e5';
-    const swatches = document.querySelectorAll('.swatch');
-    const picker   = document.getElementById('accentPicker');
-    const resetBtn = document.getElementById('accentReset');
-    function applyAccent(hex){
-      document.documentElement.style.setProperty('--primary-color', hex);
-      localStorage.setItem(ACCENT_KEY, hex);
-      swatches.forEach(s => s.classList.toggle('selected', (s.dataset.color||'').toLowerCase()===hex.toLowerCase()));
-      if (picker) picker.value = hex;
-    }
-    swatches.forEach(s => s.addEventListener('click', () => applyAccent(s.dataset.color)));
-    picker?.addEventListener('input', e => applyAccent(e.target.value));
-    resetBtn?.addEventListener('click', () => applyAccent(DEFAULT_ACCENT));
-    applyAccent(localStorage.getItem(ACCENT_KEY) || DEFAULT_ACCENT);
   </script>
 </body>
 </html>

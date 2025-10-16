@@ -1,39 +1,17 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>후다닥 미세먼지 피하기</title>
 
-  <!-- 상태표시줄 / PWA -->
-  <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#1e88e5">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- PWA / 상태표시줄 -->
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#1e88e5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-
-<div id="std-badge" class="text-muted"></div>
-<script type="module">
-  import { STANDARDS } from './standards.js';
-  const code = localStorage.getItem('aq_standard') || 'KOR';
-  const label = STANDARDS[code]?.label || 'KOR';
-  document.querySelector('#std-badge').textContent = `기준: ${label}`;
-</script>
-
-<link rel="stylesheet" href="/styles.css" />
-<script type="module" src="/app.js"></script>
-
-<script type="module">
-  import { STANDARDS } from '/js/standards.js';
-  import { fetchNearestAir } from '/js/apiClient.js';
-  // 부트스트랩 코드...
-</script>
-
-
-
-
-  <!-- 초기 포인트 컬러 적용(깜빡임 방지) -->
+  <!-- 초기 포인트 컬러(깜빡임 방지) -->
   <script>
   (function(){
     try{
@@ -45,18 +23,8 @@
   })();
   </script>
 
-  <!-- SEO/OpenGraph -->
-  <meta property="og:title" content="후다닥 미세먼지 피하기">
-  <meta property="og:description" content="내 주변 가장 가까운 곳의 미세먼지 정보를 확인하세요!">
-  <meta property="og:image" content="https://placehold.co/600x315/1E88E5/FFFFFF?text=후다닥!%0A미세먼지%0A피하기">
-
-  <!-- Icons & Manifest -->
-  <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
-  <link rel="manifest" href="manifest.json">
-
   <!-- Styles -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/styles.css" />
 
   <!-- Preconnect -->
   <link rel="preconnect" href="https://dapi.kakao.com" crossorigin>
@@ -66,11 +34,11 @@
 
   <!-- HEADER -->
   <header class="topbar">
-    <a class="icon-btn left" href="./setup/index.html" aria-label="설정">⚙️</a>
-    <button id="shareResultBtn" class="icon-btn right" aria-label="공유">🔗</button>
+    <a class="icon-btn left" href="/setup/index.html" aria-label="설정">⚙️</a>
+    <a id="std-badge" class="text-muted" href="/setup/index.html" style="margin-left:auto;text-decoration:none"></a>
   </header>
 
-  <!-- HERO (점수/장소/시간/문구) -->
+  <!-- HERO -->
   <section id="hero" class="hero">
     <div class="hero-meta">
       <div id="hero-location" class="hero-loc">—</div>
@@ -83,65 +51,42 @@
     </div>
   </section>
 
-  <!-- FORECAST (상단 카드) -->
+  <!-- 상단 카드: 검색/예보 요약 -->
   <section id="forecast-section" class="card" style="margin:8px;">
-    <div class="row" style="align-items:center; gap:8px;">
-      <!-- 검색창은 이 한 곳만 사용 -->
+    <div class="row" style="align-items:center;gap:8px;">
       <input id="place" class="search" placeholder="지역 검색 (예: 송도동, 가평군)" autocomplete="off">
       <button id="btn-current" class="icon-btn" title="현 위치">📍</button>
     </div>
     <small id="forecast-time" class="muted"></small>
     <div class="muted" style="margin-top:4px;">기준 지역: <span id="forecast-region"></span></div>
-
     <div id="whyTags" class="tag-container" style="margin-top:8px;"></div>
     <p id="forecastCause" class="inform-cause-text"></p>
   </section>
 
-  <!-- HORIZONTAL CARDS -->
+  <!-- 필요하면 카드 더 -->
   <section class="cards scroller" id="cards">
-    <!-- 카드 #1: 미니 게이지 -->
     <article class="card scroller-item">
       <h4>주요 지표</h4>
       <div id="mini-gauges" class="mini-grid"></div>
     </article>
-    <!-- 필요하면 카드 추가 -->
   </section>
 
-  <!-- 기존 큰 게이지(숨김 유지) -->
-  <section id="gauges" style="display:none;">
-    <div class="gauge-container">
-      <h2>미세먼지</h2>
-      <div class="gauge-wrapper">
-        <div class="gauge-wheel" id="gaugePM10"></div>
-        <div class="gauge-hole">
-          <div class="gauge-status" id="statusTextPM10">--</div>
-          <div class="gauge-value" id="valueTextPM10">-- µg/m³</div>
-        </div>
-      </div>
-      <p id="stationPM10" class="station-info">--</p>
-    </div>
-    <div class="gauge-container">
-      <h2>초미세먼지</h2>
-      <div class="gauge-wrapper">
-        <div class="gauge-wheel" id="gaugePM25"></div>
-        <div class="gauge-hole">
-          <div class="gauge-status" id="statusTextPM25">--</div>
-          <div class="gauge-value" id="valueTextPM25">-- µg/m³</div>
-        </div>
-      </div>
-      <p id="stationPM25" class="station-info">--</p>
-    </div>
-  </section>
-
-  <!-- 현 위치 FAB -->
+  <!-- FAB -->
   <button id="btn-fab-current" class="fab" title="현 위치로 재로딩">📍</button>
 
   <!-- Footer -->
   <footer class="site-footer" style="text-align:center;margin:16px 0;">
-    <a href="./termsofuse.html">이용약관</a> · Owner: 2e-studio
+    <a href="/termsofuse.html">이용약관</a> · Owner: 2e-studio
   </footer>
 
-  <!-- App -->
-  <script type="module" src="./app.js?v=20251013" defer></script>
+  <!-- App (메인 엔트리만 로드) -->
+  <script type="module" src="/app.js"></script>
+  <script type="module">
+    import { STANDARDS } from '/js/standards.js';
+    const code = localStorage.getItem('aq_standard') || 'WHO8';
+    const label = STANDARDS[code]?.label || code;
+    const badge = document.getElementById('std-badge');
+    if (badge) badge.textContent = `기준: ${label}`;
+  </script>
 </body>
 </html>
