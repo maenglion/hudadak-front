@@ -21,12 +21,16 @@
   document.querySelector('#std-badge').textContent = `기준: ${label}`;
 </script>
 
-<script type="module" src="/js/apiClient.js"></script>
+<script type="module" src="/js/apiClient.js" ; ></script>
+<script type="module" src="/js/standards.js"></script>
+
+
 
 
 
   <!-- 초기 포인트 컬러 적용(깜빡임 방지) -->
   <script>
+
   (function(){
     try{
       const accent = localStorage.getItem('app-accent') || '#1e88e5';
