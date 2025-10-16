@@ -1,92 +1,88 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>후다닥 미세먼지 피하기</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>후다닥</title>
+  
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#2c2c2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- PWA / 상태표시줄 -->
-  <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#1e88e5" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-  <!-- 초기 포인트 컬러(깜빡임 방지) -->
-  <script>
-  (function(){
-    try{
-      const accent = localStorage.getItem('app-accent') || '#1e88e5';
-      document.documentElement.style.setProperty('--primary-color', accent);
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', accent);
-    }catch(_){}
-  })();
-  </script>
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="/styles.css" />
-
-  <!-- Preconnect -->
-  <link rel="preconnect" href="https://dapi.kakao.com" crossorigin>
-  <link rel="preconnect" href="https://air-api-350359872967.asia-northeast3.run.app" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  
+  <!-- 전체 레이아웃 컨테이너 -->
+  <div class="app-container">
+    
+    <!-- 상단 종합 정보 -->
+    <header class="summary-section">
+      <div class="location-bar">
+        <span id="current-location">위치 정보 없음</span>
+        <span id="current-time" class="time">--:--</span>
+      </div>
+      <h1 id="summary-grade">데이터 로딩 중...</h1>
+      <p id="summary-text">가장 가까운 측정소의 데이터를 가져오고 있습니다.</p>
+    </header>
 
-  <!-- HEADER -->
-  <header class="topbar">
-    <a class="icon-btn left" href="/setup/index.html" aria-label="설정">⚙️</a>
-    <a id="std-badge" class="text-muted" href="/setup/index.html" style="margin-left:auto;text-decoration:none"></a>
-  </header>
+    <!-- 예보 카드 -->
+    <section class="card forecast-card">
+      <div class="forecast-header">
+        <h3>오늘의 예보</h3>
+        <span id="forecast-badge" class="badge"></span>
+      </div>
+      <p id="forecast-text">예보 정보를 불러오는 중입니다.</p>
+    </section>
 
-  <!-- HERO -->
-  <section id="hero" class="hero">
-    <div class="hero-meta">
-      <div id="hero-location" class="hero-loc">—</div>
-      <div id="hero-time" class="hero-time">—</div>
-    </div>
-    <div class="hero-score">
-      <div id="hero-value" class="value">--</div>
-      <div id="hero-grade" class="grade">—</div>
-      <div id="hero-desc" class="desc">—</div>
-    </div>
-  </section>
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="main-content">
+      <div class="standard-display">
+        <span id="current-standard">대한민국 환경부 기준</span>
+      </div>
 
-  <!-- 상단 카드: 검색/예보 요약 -->
-  <section id="forecast-section" class="card" style="margin:8px;">
-    <div class="row" style="align-items:center;gap:8px;">
-      <input id="place" class="search" placeholder="지역 검색 (예: 송도동, 가평군)" autocomplete="off">
-      <button id="btn-current" class="icon-btn" title="현 위치">📍</button>
-    </div>
-    <small id="forecast-time" class="muted"></small>
-    <div class="muted" style="margin-top:4px;">기준 지역: <span id="forecast-region"></span></div>
-    <div id="whyTags" class="tag-container" style="margin-top:8px;"></div>
-    <p id="forecastCause" class="inform-cause-text"></p>
-  </section>
+      <!-- 반원 게이지 -->
+      <div class="semi-gauges">
+        <div class="gauge-container">
+          <div class="gauge-arc-wrapper">
+            <div class="gauge-arc" id="pm10-arc"></div>
+            <div class="gauge-value" id="pm10-value">--</div>
+          </div>
+          <div class="gauge-label">PM10 (미세먼지)</div>
+        </div>
+        <div class="gauge-container">
+          <div class="gauge-arc-wrapper">
+            <div class="gauge-arc" id="pm25-arc"></div>
+            <div class="gauge-value" id="pm25-value">--</div>
+          </div>
+          <div class="gauge-label">PM2.5 (초미세먼지)</div>
+        </div>
+      </div>
 
-  <!-- 필요하면 카드 더 -->
-  <section class="cards scroller" id="cards">
-    <article class="card scroller-item">
-      <h4>주요 지표</h4>
-      <div id="mini-gauges" class="mini-grid"></div>
-    </article>
-  </section>
+      <!-- 선형 막대 그래프 -->
+      <div class="linear-bars-container">
+        <!-- app.js에서 동적으로 생성 -->
+      </div>
+    </main>
 
-  <!-- FAB -->
-  <button id="btn-fab-current" class="fab" title="현 위치로 재로딩">📍</button>
+    <!-- 하단 검색 및 액션 바 -->
+    <footer class="bottom-bar">
+      <input type="text" id="place-search-input" class="search-input" placeholder="다른 지역 검색...">
+      <button id="reload-location-btn" class="icon-button" aria-label="현재 위치로 새로고침">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/><path d="M13 12V7h-2v7h7v-2h-5z"/></svg>
+      </button>
+      <a href="setup/index.html" class="icon-button" aria-label="설정">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.829 15.228 17.723 12l2.106-3.228a1 1 0 0 0-.586-1.586l-4.212-.963a1 1 0 0 0-1.163.66l-1 4.286-4.286 1a1 1 0 0 0-.66 1.163l.963 4.212a1 1 0 0 0 1.586.586L12 17.723l3.228 2.106a1 1 0 0 0 1.586-.586l.963-4.212a1 1 0 0 0-.66-1.163zM12 14a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
+      </a>
+    </footer>
 
-  <!-- Footer -->
-  <footer class="site-footer" style="text-align:center;margin:16px 0;">
-    <a href="/termsofuse.html">이용약관</a> · Owner: 2e-studio
-  </footer>
+  </div> <!-- .app-container -->
 
-  <!-- App (메인 엔트리만 로드) -->
-  <script type="module" src="/app.js"></script>
-  <script type="module">
-    import { STANDARDS } from '/js/standards.js';
-    const code = localStorage.getItem('aq_standard') || 'WHO8';
-    const label = STANDARDS[code]?.label || code;
-    const badge = document.getElementById('std-badge');
-    if (badge) badge.textContent = `기준: ${label}`;
-  </script>
+  <script src="app.js" type="module"></script>
 </body>
 </html>
+
