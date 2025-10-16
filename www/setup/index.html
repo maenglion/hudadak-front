@@ -37,51 +37,11 @@
 </script>
 
   <link rel="stylesheet" href="/styles.css" />
-  <style>
-    /* 안전영역 변수 */
-  :root{
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-
-  /* Light 기본 토큰 */
-  --bg:#ffffff; --fg:#111111; --card:#f6f7f9; --muted:#6b7280; --border:#e5e7eb;
-
-  /* 라이트 기본 포인트 컬러(자동) */
-  --primary-color:#1e88e5;
-}
-
-/* 시스템 다크 (system 선택 시 @media가 적용) */
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0b0d12; --fg:#f5f6f8; --card:#10141b; --muted:#9aa3b2; --border:#1e2530;
-
-    /* 다크 기본 포인트 컬러(자동) */
-    --primary-color:#60a5fa; /* 밝은 블루톤 */
-  }
-}
-
-/* 강제 라이트/다크일 때도 토큰으로 결정 (system 무시) */
-html[data-theme="light"]{
-  --bg:#ffffff; --fg:#21242b; --card:#f6f7f9; --muted:#6b7280; --border:#e5e7eb;
-  --primary-color:#1e88e5;
-}
-html[data-theme="dark"]{
-  --bg:#21242b; --fg:#f5f6f8; --card:#292b30; --muted:#9aa3b2; --border:#1e2530;
-  --primary-color:#60a5fa;
-}
-
-
-
+  <style>  
     body{ background:var(--bg); color:var(--fg); padding-top:var(--safe-top); }
     .topbar{ height:56px; display:flex; align-items:center; padding:0 12px; }
     main{ padding:16px; }
-    .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; margin:12px 0; }
-    .row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    .muted{ color:var(--muted); }
-    .explain{ font-size:.92rem; opacity:.9; }
-    .site-footer{ padding:16px; padding-bottom:calc(16px + var(--safe-bottom)); }
 
-     .icon-btn{ cursor:pointer; background:none; border:0; color:var(--fg); }
   </style>
 </head>
 <body>

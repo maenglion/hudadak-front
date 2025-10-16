@@ -1,69 +1,130 @@
-/* ===== New layout styles (keep primary color) ===== */
-/* 안전영역 변수 (폴백 0px) */
-:root {
+/* ===============================
+   THEME TOKENS (global)
+   =============================== */
+
+/* 기본(Light) */
+:root{
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Light 기본 토큰 (setup/index.html에서 쓰던 것 그대로) */
+  --bg:#ffffff;
+  --fg:#111111;
+  --card:#f6f7f9;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+
+  /* 라이트 기본 포인트 컬러(자동) */
+  --primary-color:#1e88e5;
 }
 
-/* 상단 패딩: 안전영역만 반영 */
-body {
-  padding-top: var(--safe-top);
+/* 시스템 다크 (system 선택 시 적용) */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0d12;
+    --fg:#f5f6f8;
+    --card:#10141b;
+    --muted:#9aa3b2;
+    --border:#1e2530;
+
+    /* 다크 기본 포인트 컬러(자동) */
+    --primary-color:#60a5fa;
+  }
 }
 
-/* 하단 푸터: 기본 16px + 안전영역 */
-.site-footer {
-  padding-bottom: calc(16px + var(--safe-bottom));
+/* 강제 라이트/다크 (설정에서 data-theme=light|dark 지정) */
+html[data-theme="light"]{
+  --bg:#ffffff;
+  --fg:#21242b;
+  --card:#f6f7f9;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --primary-color:#1e88e5;
+}
+html[data-theme="dark"]{
+  --bg:#21242b;
+  --fg:#f5f6f8;
+  --card:#292b30;
+  --muted:#9aa3b2;
+  --border:#1e2530;
+  --primary-color:#60a5fa;
 }
 
-/* 테마 변수 사용 파트 */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-}
+/* ===============================
+   BASE / LAYOUT
+   =============================== */
 
-.text-muted {
-  color: var(--muted);
-}
+html,body{height:100%}
+body{ background:var(--bg); color:var(--fg); padding-top:var(--safe-top); margin:0; }
 
+.site-footer{ padding:16px; padding-bottom:calc(16px + var(--safe-bottom)); }
+.text-muted,.muted{ color:var(--muted); }
 
-html[data-theme="dark"] {
-  --bg: #0b0d12;
-  --fg: #f5f6f8;
-  --card: #10141b;
-  --muted: #9aa3b2;
-  --border: #1e2530;
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px 16px;
 }
 
 /* Top bar */
-.topbar{ position:sticky; top:0; z-index:10; display:flex; align-items:center; height:44px; padding:0 8px; backdrop-filter:blur(6px); }
-.icon-btn{ display:inline-grid; place-items:center; width:36px; height:36px; border-radius:10px; border:1px solid #ddd; background:#fff; color:var(--text-primary); }
+.topbar{
+  position:sticky; top:0; z-index:10;
+  display:flex; align-items:center;
+  height:56px; padding:0 12px;
+  backdrop-filter:blur(6px);
+}
+.icon-btn{
+  display:inline-grid; place-items:center;
+  width:36px; height:36px; border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--bg); color:var(--fg);
+}
 .icon-btn.left{ margin-right:auto; }
 .icon-btn.right{ margin-left:auto; }
 
-/* Hero (배경은 메인컬러 계열 그라데이션) */
+/* ===============================
+   HERO (그라데이션은 primary 기반)
+   =============================== */
+
 .hero{
   padding:16px; border-radius:16px; margin:8px; color:#fff;
-  background: linear-gradient(160deg, #1e88e5, #6ab7ff);
+  background: linear-gradient(160deg, var(--primary-color), color-mix(in srgb, var(--primary-color), #fff 40%));
 }
 .hero .hero-meta{ opacity:.9; font-size:.9rem; }
 .hero .value{ font-size:56px; line-height:1; font-weight:700; }
 .hero .grade{ font-size:1.1rem; margin-top:4px; }
 .hero .desc{ opacity:.95; margin-top:6px; }
 
-/* Forecast card + search */
-.card{ background: var(--card-background-color); border:1px solid #eee; border-radius:16px; padding:12px; }
-.row .search{ flex:1; height:38px; border-radius:10px; border:1px solid #ddd; padding:0 10px; }
-.muted{ opacity:.7; }
-.tag-container{ display:flex; gap:8px; flex-wrap:wrap; }
-.tag-container .badge{ padding:.35rem .6rem; border-radius:999px; border:1px solid #d0d7de; font-size:.85rem; background:rgba(0,0,0,.03); }
+/* ===============================
+   SEARCH / TAGS / LISTS
+   =============================== */
 
-/* Horizontal scroller (기존 cards 영역 유지) */
+.row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.row .search{ flex:1; height:38px; border-radius:10px; border:1px solid var(--border); padding:0 10px; background:var(--bg); color:var(--fg); }
+
+.tag-container{ display:flex; gap:8px; flex-wrap:wrap; }
+.tag-container .badge{
+  padding:.35rem .6rem; border-radius:999px;
+  border:1px solid color-mix(in srgb, var(--border), #000 10%);
+  font-size:.85rem;
+  background:color-mix(in srgb, var(--bg), #000 3%);
+}
+
+/* ===============================
+   SCROLLER / CARDS
+   =============================== */
+
 .scroller{ display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding:8px 8px 16px; }
 .card.scroller-item{ flex:0 0 90%; scroll-snap-align:start; }
 
-/* Half gauges (PM10/PM2.5) – 기존 색 변수 사용 */
+/* ===============================
+   MINI GAUGES / BARS (primary 사용)
+   =============================== */
+
 .half-gauges{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .half{ display:flex; flex-direction:column; align-items:center; }
+
 .arc{
   --val: 0; --col: var(--primary-color);
   width:160px; height:80px; border-radius:160px 160px 0 0 / 160px 160px 0 0;
@@ -71,17 +132,33 @@ html[data-theme="dark"] {
   clip-path: inset(0 0 50% 0 round 160px 160px 0 0);
   display:grid; place-items:center; position:relative;
 }
-.arc span{ position:absolute; bottom:6px; background:#fff; color:var(--text-primary); padding:4px 8px; border-radius:8px; font-weight:700; }
+.arc span{
+  position:absolute; bottom:6px; background:var(--bg); color:var(--fg);
+  padding:4px 8px; border-radius:8px; font-weight:700; border:1px solid var(--border);
+}
 .glab{ margin-top:6px; font-weight:600; }
 
-/* Bars (가로선형 지표) – 기존 primary 색상 사용 */
 .bars{ display:grid; gap:8px; margin-top:8px; }
 .bar label{ display:block; font-size:.9rem; margin-bottom:4px; }
 .bar div{ background:#eee; border-radius:999px; height:10px; position:relative; overflow:hidden; }
 .bar span{ position:absolute; left:0; top:0; bottom:0; width:0%; background: var(--primary-color); }
 
-/* FAB */
-.fab{ position:fixed; right:16px; bottom:24px; z-index:9; width:48px; height:48px;
-  border-radius:16px; border:1px solid #ddd; background:#fff; color:var(--text-primary);
+/* ===============================
+   FAB
+   =============================== */
+
+.fab{
+  position:fixed; right:16px; bottom:24px; z-index:9; width:48px; height:48px;
+  border-radius:16px; border:1px solid var(--border);
+  background:var(--bg); color:var(--fg);
   box-shadow:0 6px 18px rgba(0,0,0,.12);
 }
+
+/* ===============================
+   CLEANUPS (남은 과거 클래스 정리)
+   =============================== */
+
+/* 옛 .text-muted / .muted 동시 지원 */
+.text-muted{ color:var(--muted); }
+
+.explain{ font-size:.92rem; opacity:.9; }
