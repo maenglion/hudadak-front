@@ -1,0 +1,28 @@
+// js/apiClient.js
+import { API_BASE } from "./constants.js";
+
+async function j(res){ if(!res.ok) throw new Error(await res.text()); return res.json(); }
+
+export const API_BASE = "https://air-api-350359872967.asia-northeast3.run.app";
+
+export async function fetchNearestAir(lat, lon){
+  const url = `${API_BASE}/nearest?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+  const data = await j(await fetch(url, { credentials: "omit" }));
+  // app.js가 기대하는 키 이름은 이미 서버에서 맞춰줌 (station, cai_grade, cai_value 등)
+  return data;
+}
+
+export async function fetchForecast(lat, lon){
+  const url = `${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+  return j(await fetch(url));
+}
+
+export async function searchByAddress(q){
+  const url = `${API_BASE}/geo/search?q=${encodeURIComponent(q)}`;
+  return j(await fetch(url));
+}
+
+export async function reverseToAddress(lat, lon){
+  const url = `${API_BASE}/geo/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+  return j(await fetch(url));
+}
