@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#ffffff" id="meta-theme-color" />
 
+ 
   <!-- 초기 테마/포인트 컬러 적용(깜빡임 방지) -->
 <script>
 (function(){
@@ -35,7 +36,7 @@
 })();
 </script>
 
-  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="/styles.css" />
   <style>
     /* 안전영역 변수 */
   :root{
@@ -80,9 +81,7 @@ html[data-theme="dark"]{
     .explain{ font-size:.92rem; opacity:.9; }
     .site-footer{ padding:16px; padding-bottom:calc(16px + var(--safe-bottom)); }
 
-    .swatch{ width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--c);cursor:pointer }
-    .swatch.selected{ outline:3px solid color-mix(in srgb, var(--c), #000 25%) }
-    .icon-btn{ cursor:pointer; background:none; border:0; color:var(--fg); }
+     .icon-btn{ cursor:pointer; background:none; border:0; color:var(--fg); }
   </style>
 </head>
 <body>
@@ -170,12 +169,12 @@ CAI (KOR): PM10 ≤30/≤80/≤150/>150, PM2.5 ≤15/≤35/≤75/>75
   <script type="module">
     // ===== 평가 기준 =====
     const STD_KEY='aq_standard';
-    const stdExplain = {
-      KOR:  "대한민국 CAI 등급(좋음/보통/나쁨/매우나쁨) 기준으로 표시합니다.",
-      WHO24:"WHO 2021 24시간 권고 기준으로 표시합니다. 권고 초과 여부를 더 엄격히 보여줍니다."
-    };
-    const stdRadios = document.querySelectorAll('input[name="aq_standard"]');
-    const stdBox = document.getElementById('std-explain');
+   const stdExplain = {
+KOR:  "대한민국 CAI 4단계(좋음/보통/나쁨/매우나쁨) 기준으로 표시합니다.",
+WHO24:"WHO 2021 24시간 권고(AQG) 기준. 권고 이내/초과 2단계로 단순 표시합니다.",
+WHO8: "WHO 2021 기준을 8단계로 세분화(AQG 이하 3칸 + IT-4~IT-1 4칸 + 초과최상 1칸)하여 표시합니다.",
+ };
+      const stdBox = document.getElementById('std-explain');
     function applyStd(v){
       localStorage.setItem(STD_KEY, v);
       stdBox.textContent = stdExplain[v] || '';
