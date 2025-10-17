@@ -294,22 +294,10 @@ function initialize() {
     // TODO: 검색, 공유 기능 이벤트 리스너 추가
 }
 
- const settingsBtn      = document.getElementById('settings-btn');
+ // === Settings slide-in (single source) ===
+const settingsBtn      = document.getElementById('settings-btn');
 const settingsPanel    = document.getElementById('settings-panel');
 const settingsBackdrop = document.getElementById('settings-backdrop');
-
-    function closeSettings() {
-      settingsPanel.classList.remove('is-open');
-      settings-backdrop.classList.remove('is-visible');
-    }
-
- settingsBtn?.addEventListener('click', () => {
-    settingsPanel.classList.add('is-open');
-    settings-backdrop.classList.add('is-visible');
-  });
-
- settings-backdrop?.addEventListener('click', closeSettings);
-
 
 function openSettings(){
   settingsPanel?.classList.add('is-open');
@@ -327,15 +315,19 @@ function closeSettings(){
 settingsBtn?.addEventListener('click', openSettings);
 settingsBackdrop?.addEventListener('click', closeSettings);
 
-// 설정(iframe) → 메인 통신
+// (선택) 설정 iframe이 메시지로 닫으라고 보낼 때
 window.addEventListener('message', (ev)=>{
-  const { type, value } = ev.data || {};
-  if (type === 'standardChanged') {
-    localStorage.setItem('aq_standard', value);
-    // 배지/게이지 재도색 훅이 있으면 호출
-    window.repaintByStandard?.(value);
+  if (ev.data?.type === 'closeSettings') closeSettings();
+  if (ev.data?.type === 'standardChanged') {
+    localStorage.setItem('aq_standard', ev.data.value);
+    window.repaintByStandard?.(ev.data.value);
   }
-  if (type === 'closeSettings') closeSettings();
+  if (ev.data?.type === 'themeChanged') {
+    const v = ev.data.value;
+    localStorage.setItem('app-theme', v);
+    if (v==='light' || v==='dark') document.documentElement.setAttribute('data-theme', v);
+    else document.documentElement.removeAttribute('data-theme');
+  }
 });
 
 // 메인 → 설정(iframe)으로 현재 값 보내고 싶으면(선택)
