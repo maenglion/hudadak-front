@@ -39,7 +39,7 @@ const stdCode = () => localStorage.getItem('aq_standard') || 'WHO8';
 async function fetchForecast(lat, lon){
   // 1) 백엔드 먼저
   try{
-    const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, {cache:'no-store'});
+     const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, { cache:'no-store' });
     if (r.ok){
       const j = await r.json();
       if (j?.daily?.length) return j; // { daily:[ {date, icon, tmin, tmax, desc, pm25, pm10}... ] }
