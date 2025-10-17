@@ -9,57 +9,39 @@
   <meta name="color-scheme" content="light dark" />
 
   <link rel="stylesheet" href="/styles.css" />
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/paper-log/Paperlog-font/Paperlog.css" />
 </head>
 <body>
   <div class="app-container">
-  
+    
     <div id="settings-backdrop"></div>
 
-       <aside id="settings-panel">
-       <section class="settings-section">
-      <h2>표시 기준 설정</h2>
-      <div class="radio-group" id="standard-options">
-        <label>
-          <input type="radio" name="aq_standard" value="KOR"> 대한민국 환경부 (CAI)
-        </label>
-        <label>
-          <input type="radio" name="aq_standard" value="WHO8"> WHO 권고 (8단계)
-        </label>
-      </div>
-      <p id="standard-description" class="section-description">
-        표시 기준은 게이지와 막대 그래프의 색상 및 등급에 적용됩니다.
-      </p>
-    </section>
-
-    <section class="settings-section data-story">
-      <h2>이 앱의 특별한 이야기</h2>
-      <p>
-        <strong>후다닥</strong>은 단순한 미세먼지 앱이 아닙니다. 국내 측정망 데이터뿐만 아니라, 전 세계의 기상 모델과 위성 데이터를 종합하여 가장 정확하고 신뢰도 높은 정보를 제공하기 위해 노력합니다.
-      </p>
-      <p>
-        저희는 Open-Meteo의 고급 기상 모델을 통해 대기의 흐름을 예측하고, 위성으로 관측된 에어로졸 데이터를 분석하여 현재 위치에 가장 가까운 최적의 데이터를 찾아냅니다. 이를 통해 측정소가 없는 지역의 대기 질까지 추정하여 정보의 공백을 최소화합니다.
-      </p>
-    </section>
+    <aside id="settings-panel">
+      <header class="panel-header">HUDADAK</header>
       
-    <section class="settings-section">
-      <h2>예보 뱃지 안내</h2>
-      <p>
-        메인 화면의 예보 카드에는 예측의 신뢰도와 주요 원인을 나타내는 뱃지가 표시됩니다.
-      </p>
-      <div class="badge-info">
-        <span class="badge-example">신뢰도 높음</span>
-        <p>예측 모델의 신뢰도가 높을 때 표시됩니다.</p>
-      </div>
-      <div class="badge-info">
-        <span class="badge-example">대기 정체</span>
-        <p>바람이 거의 없어 오염물질이 정체될 때 표시됩니다.</p>
-      </div>
-    </section>
+      <section class="panel-section">
+        <h2>표시 기준 설정</h2>
+        <div class="radio-group" id="standard-options">
+          <label><input type="radio" name="aq_standard" value="KOR"> 대한민국 환경부 (CAI)</label>
+          <label><input type="radio" name="aq_standard" value="WHO8"> WHO 권고 (8단계)</label>
+        </div>
+      </section>
 
+      <section class="panel-section accordion-menu">
+        <details>
+          <summary>이 앱의 특별한 이야기</summary>
+          <div class="accordion-content">
+            <p><strong>후다닥</strong>은 단순한 미세먼지 앱이 아닙니다. 국내 측정망 데이터뿐만 아니라, 전 세계의 기상 모델과 위성 데이터를 종합하여 가장 정확하고 신뢰도 높은 정보를 제공하기 위해 노력합니다.</p>
+          </div>
+        </details>
+        <details>
+          <summary>예보 뱃지 안내</summary>
+          <div class="accordion-content">
+            <p>메인 화면의 예보 카드에는 예측의 신뢰도와 주요 원인을 나타내는 뱃지가 표시됩니다.</p>
+          </div>
+        </details>
+      </section>
     </aside>
-    <div id="settings-backdrop"></div>
 
     <main id="app-main">
       <header class="hero-section">
@@ -69,7 +51,8 @@
             <span id="station-name" class="location-name-text">—</span>
             <input type="search" id="location-input" class="location-name-input" placeholder="지역 검색..." style="display: none;" />
           </div>
-          <div style="width: 44px;"></div> </div>
+          <button id="current-btn" class="icon-button">📍</button>
+        </div>
 
         <div class="hero-content">
           <div id="hero-grade-label" class="grade-label">측정 중</div>
@@ -106,25 +89,22 @@
             </div>
           </div>
         </section>
-
         <section class="card">
           <h4>기타 지표</h4>
-          <div class="linear-bars" id="linear-bars-container">
-            </div>
+          <div class="linear-bars" id="linear-bars-container"></div>
         </section>
       </div>
 
       <div class="tab-content" id="tab-weather-forecast">
         <section class="card">
           <h4>주간 예보</h4>
-          <div id="forecast-grid" class="forecast-grid">
-            </div>
+          <div id="forecast-grid" class="forecast-grid"></div>
           <small id="forecast-note" class="muted"></small>
         </section>
       </div>
     </main>
   </div>
 
-  <script type="module" src="/app.js?v=20251017_final"></script>
+  <script type="module" src="/app.js?v=20251018_final"></script>
 </body>
 </html>
