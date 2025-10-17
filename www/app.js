@@ -1,7 +1,7 @@
 // www/app.js
-import { fetchNearestAir } from './js/apiClient.js';
-import { STANDARDS } from './js/standards.js';
-import { renderForecast } from './js/forecast.js';
+import { fetchNearestAir, API_BASE } from '/js/apiClient.js';
+import { STANDARDS } from '/js/standards.js';
+
 
 console.log('[app] boot');
 
@@ -32,6 +32,50 @@ const el = {
 };
 
 
+// --- forecast fetch + render ---
+async function fetchForecast(lat, lon){
+  // 백엔드가 비어있으면 {}나 {daily: []}가 올 수 있어요.
+  const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, {cache:'no-store'});
+  if (!r.ok) return { daily: [] };
+  return await r.json(); // { daily: [...] }
+}
+
+function renderForecast(daily){
+  const grid = document.getElementById('forecast-grid');
+  const note = document.getElementById('forecast-note');
+  if (!grid) return;
+
+  if (!daily || !daily.length){
+    grid.innerHTML = `
+      <div class="forecast-card">
+        <p class="forecast-day">예보 준비 중</p>
+        <div class="forecast-icon">📡</div>
+        <p class="forecast-temp">— / <strong>—</strong></p>
+        <p class="forecast-desc">곧 제공됩니다</p>
+      </div>`;
+    note && (note.textContent = '예보 API가 준비되는 대로 자동으로 표시됩니다.');
+    return;
+  }
+
+  grid.innerHTML = daily.slice(0,5).map(d => {
+    // 백엔드 스키마 가정: { date: '2025-10-13', icon:'☀️', tmin:22, tmax:28, desc:'맑음' }
+    const day = new Date(d.date || d.time || Date.now()).toLocaleDateString('ko-KR', {weekday:'long'});
+    const icon = d.icon || '🌤️';
+    const tmin = (d.tmin ?? d.min ?? '—');
+    const tmax = (d.tmax ?? d.max ?? '—');
+    const desc = d.desc || d.summary || '—';
+    return `
+      <div class="forecast-card">
+        <p class="forecast-day">${day}</p>
+        <div class="forecast-icon">${icon}</div>
+        <p class="forecast-temp">${tmin}° / <strong>${tmax}°</strong></p>
+        <p class="forecast-desc">${desc}</p>
+      </div>`;
+  }).join('');
+  note && (note.textContent = '');
+}
+
+
 // --- 렌더링 함수 ---
 function getGrade(metric, value) {
   const stdCode = localStorage.getItem('aqi-standard') || 'KOR'; // 설정값 또는 기본값
@@ -46,6 +90,7 @@ function getGrade(metric, value) {
 
   return std.bands[level];
 }
+
 
 function renderMain(air) {
     const pm10Grade = getGrade('pm10', air.pm10);
@@ -64,6 +109,8 @@ function renderMain(air) {
     renderLinearBars(air);
 }
 
+
+
 function renderSemiGauge(gauge, value, max) {
     if (value === null || value === undefined) {
       gauge.value.textContent = '-';
@@ -76,6 +123,9 @@ function renderSemiGauge(gauge, value, max) {
     const angle = (percentage / 100) * 180;
     gauge.arc.style.background = `conic-gradient(${grade.bg} 0deg, ${grade.bg} ${angle}deg, #e9ecef ${angle}deg, #e9ecef 180deg)`;
 }
+
+
+
 
 function renderLinearBars(data) {
     el.linearBarsContainer.innerHTML = '';
