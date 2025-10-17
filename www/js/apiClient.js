@@ -1,5 +1,5 @@
 ﻿// /js/apiClient.js
-export const API_BASE = "/api";
+export const API_BASE = '/backend';
 
 export async function fetchNearestAir(lat, lon) {
   const url = `${API_BASE}/nearest?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
