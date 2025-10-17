@@ -22,71 +22,90 @@
   --bg-color: #f4f6f8;
   --card-bg: #ffffff;
   --text-color: #212529;
-  --text-color-rgb: 33, 37, 41;
   --subtle-text-color: #6c757d;
   --border-color: #e9ecef;
-  --primary-color: #0d6efd;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  /* Grade Gradients */
+  --grad-good: linear-gradient(90deg, #1D976C, #93F9B9);
+  --grad-moderate: linear-gradient(90deg, #FDB813, #FFD700);
+  --grad-bad: linear-gradient(90deg, #E67E22, #F39C12);
+  --grad-verybad: linear-gradient(90deg, #D32F2F, #E74C3C);
+  --grad-default: linear-gradient(90deg, #adb5bd, #ced4da);
 }
 
 /* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-color: #0b0d12;
-    --card-bg: #161a22;
-    --text-color: #f8f9fa;
-    --text-color-rgb: 248, 249, 250;
-    --subtle-text-color: #adb5bd;
-    --border-color: #343a40;
-    --primary-color: #4dabf7;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-}
-
 html[data-theme="dark"] {
   --bg-color: #0b0d12;
   --card-bg: #161a22;
   --text-color: #f8f9fa;
-  --text-color-rgb: 248, 249, 250;
   --subtle-text-color: #adb5bd;
   --border-color: #343a40;
-  --primary-color: #4dabf7;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  /* Grade Gradients */
+  --grad-good: linear-gradient(90deg, #1D976C, #93F9B9);
+  --grad-moderate: linear-gradient(90deg, #FDB813, #FFD700);
+  --grad-bad: linear-gradient(90deg, #E67E22, #F39C12);
+  --grad-verybad: linear-gradient(90deg, #D32F2F, #E74C3C);
+  --grad-default: linear-gradient(90deg, #495057, #6c757d);
 }
 
 /* =================================================================
-   BASE & LAYOUT
+   BASE & LAYOUT (MOBILE-FIRST)
    ================================================================= */
 * {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-tap-highlight-color: transparent; /* Disable tap highlight */
+}
+
 body {
   margin: 0;
-  padding-top: var(--safe-top);
   font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   overscroll-behavior-y: contain; /* Prevents pull-to-refresh */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app-container {
+  max-width: 420px; /* Standard mobile width */
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: var(--card-bg); /* Use card color for main canvas */
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 main {
+  flex-grow: 1;
   padding: 0 1rem calc(80px + var(--safe-bottom)); /* Padding for bottom bar */
+  padding-top: calc(56px + var(--safe-top)); /* Padding for top header */
 }
 
+
 /* =================================================================
-   MAIN UI COMPONENTS
+   HEADER & FOOTER
    ================================================================= */
 .top-header {
-  position: sticky;
+  position: fixed;
   top: var(--safe-top);
+  left: 0;
+  right: 0;
+  max-width: 420px; /* Match app container */
+  margin: 0 auto;
   z-index: 10;
   display: flex;
   justify-content: space-between;
   align-items: center;
   height: 56px;
   padding: 0 0.5rem;
-  background-color: color-mix(in srgb, var(--bg-color) 80%, transparent);
+  background-color: color-mix(in srgb, var(--card-bg) 80%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -99,199 +118,76 @@ main {
   transform: translateX(-50%);
 }
 
-.hero-summary {
-  text-align: center;
-  padding: 2rem 1rem;
-}
-
-.hero-summary .grade {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.hero-summary .text {
-  font-size: 1rem;
-  color: var(--subtle-text-color);
-  margin: 0.25rem 0 0;
-}
-
-.meta-info {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  font-size: 0.85rem;
-  color: var(--subtle-text-color);
-  margin-top: 1rem;
-}
-
-.forecast-card {
-  background-color: var(--card-bg);
-  border-radius: 16px;
-  padding: 1rem;
-  margin: 1rem 0;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-}
-
-.gauge-display {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-
-.semi-circle-gauge {
-  text-align: center;
-}
-
-.gauge-arc {
-  width: 100%;
-  padding-top: 50%; /* Creates a 2:1 aspect ratio container */
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 0.5rem;
-}
-
-.gauge-arc::before { /* The arc itself */
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 200%;
-  border-radius: 50%;
-  transition: --angle 0.5s ease-out;
-  background: conic-gradient(from -90deg, var(--c1, #007bff) 0deg, var(--c2, #4dabf7) var(--angle, 0deg), var(--border-color) var(--angle, 0deg), var(--border-color) 180deg);
-}
-
-.gauge-value {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.gauge-label {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.linear-bars {
-  margin: 2rem 0;
-}
-
-.linear-bar-item {
-  display: grid;
-  grid-template-columns: 80px 1fr 40px;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.9rem;
-}
-
-.bar-wrapper {
-  height: 8px;
-  background-color: var(--border-color);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease-out;
-  background: linear-gradient(90deg, var(--c1, #007bff), var(--c2, #4dabf7));
-}
-
 .bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
+  max-width: 420px; /* Match app container */
+  margin: 0 auto;
   z-index: 10;
-  padding: 0.75rem 1rem var(--safe-bottom, 0.75rem);
+  padding: 0.75rem 1rem calc(0.75rem + var(--safe-bottom));
   background-color: color-mix(in srgb, var(--bg-color) 80%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--border-color);
 }
 
-#place-search-input {
-  width: 100%;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  padding: 0 1rem;
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  font-size: 1rem;
+/* =================================================================
+   UI COMPONENTS
+   ================================================================= */
+.hero-summary {
+  text-align: center;
+  padding: 2rem 1rem 1rem;
 }
+.hero-summary .grade { font-size: 2.5rem; font-weight: 700; margin: 0; }
+.hero-summary .text { font-size: 1rem; color: var(--subtle-text-color); margin: 0.25rem 0 0; }
+.meta-info { display: flex; justify-content: center; gap: 1rem; font-size: 0.85rem; color: var(--subtle-text-color); margin-top: 1rem; }
+
+.forecast-card { /* ... existing styles if needed */ }
+
+.gauge-display { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0; }
+.semi-circle-gauge { text-align: center; }
+
+.gauge-arc {
+  width: 100%;
+  padding-top: 50%;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+.gauge-arc::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 200%;
+  border-radius: 50%;
+  transition: --angle 0.5s ease-out;
+  background: conic-gradient(from -90deg, var(--c1, #007bff) 0deg, var(--c2, #4dabf7) var(--angle, 0deg), var(--border-color) var(--angle, 0deg), var(--border-color) 180deg);
+}
+.gauge-value { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; font-weight: 700; }
+.gauge-label { font-size: 0.9rem; font-weight: 500; }
+
+.linear-bars { margin: 2rem 0; }
+.linear-bar-item { display: grid; grid-template-columns: 80px 1fr 40px; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; font-size: 0.9rem; }
+.bar-wrapper { height: 8px; background-color: var(--border-color); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out; background-image: var(--grad-default); }
+.bar-value { text-align: right; }
+
+#place-search-input { width: 100%; height: 44px; border-radius: 12px; border: 1px solid var(--border-color); padding: 0 1rem; background-color: var(--bg-color); color: var(--text-color); font-size: 1rem; }
 
 /* =================================================================
    SETTINGS PANEL (SLIDE-IN)
    ================================================================= */
-#settings-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 85%;
-  max-width: 320px;
-  height: 100%;
-  z-index: 1001;
-  background-color: var(--bg-color);
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
-  box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  contain: strict;
-  will-change: transform;
-}
-
-#settings-panel.is-open {
-  transform: translateX(0);
-}
-
-#settings-panel iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-#settings-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-  pointer-events: none;
-}
-
-#settings-backdrop.is-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
+#settings-panel { position: fixed; top: 0; left: 0; width: 85%; max-width: 320px; height: 100%; z-index: 1001; background-color: var(--bg-color); transform: translateX(-110%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 20px rgba(0,0,0,0.2); contain: strict; will-change: transform; }
+#settings-panel.is-open { transform: translateX(0); }
+#settings-panel iframe { width: 100%; height: 100%; border: none; }
+#settings-backdrop { position: fixed; inset: 0; z-index: 1000; background-color: rgba(0, 0, 0, 0.5); opacity: 0; transition: opacity 0.3s ease-in-out; pointer-events: none; }
+#settings-backdrop.is-visible { opacity: 1; pointer-events: auto; }
 
 /* =================================================================
    UTILITY & ICON BUTTON
    ================================================================= */
-.icon-button {
-  width: 44px;
-  height: 44px;
-  border: none;
-  background: none;
-  color: var(--text-color);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  padding: 0;
-}
-
-.icon-button svg {
-  width: 24px;
-  height: 24px;
-}
+.icon-button { width: 44px; height: 44px; border: none; background: none; color: var(--text-color); cursor: pointer; display: grid; place-items: center; border-radius: 50%; padding: 0; }
+.icon-button svg { width: 24px; height: 24px; }
 
