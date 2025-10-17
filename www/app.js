@@ -349,17 +349,23 @@ bindSearchUI();
 // --- 메인 로직 ---
 async function updateAll(lat, lon){
   try{
+    // 1) 공기질 (백엔드 → 가스 4종은 apiClient.js 내부에서 필요 시 Open-Meteo 폴백)
     const air = await fetchNearestAir(lat, lon);
-    renderMain(air);
 
+    // 2) 예보 (백엔드 /forecast 실패 시 폴백; fetchForecast는 app.js에 정의)
     const fc = await fetchForecast(lat, lon);
-    renderForecast(fc);
-  }catch(e){
-    console.error(e);
-    setText('hero-desc', '데이터를 불러오는 데 실패했습니다.');
+
+    // 3) 렌더
+    renderMain(air);          // pm10/pm25 게이지 + 상단 요약
+    renderLinearBars(air);    // o3/no2/so2/co 막대 (값 없으면 내부에서 숨김)
+    renderForecastCards(fc);  // 5일 카드 (없으면 숨김)
+
+  } catch(err){
+    console.error('updateAll error:', err);
+    // 최소한의 폴백 UI
+    setText('hero-desc', '데이터를 불러오지 못했습니다.');
   }
 }
-
 
 
 // --- 초기화 및 이벤트 리스너 ---
@@ -408,4 +414,4 @@ settingsBackdrop?.addEventListener('click', closeSettings);
 
 
 initialize();
-bindSearchUI();
+
