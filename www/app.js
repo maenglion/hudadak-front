@@ -195,20 +195,19 @@ async function doSearch(q){
     // 좌표 얻기
     const g = await geocode(v);
     // 좌표로 측정값 갱신
-    if (typeof updateAll === 'function') {
-      await updateAll(g.lat, g.lon);             // 네 앱에 이미 있는 통합 갱신 함수
-    } else if (typeof renderMain === 'function') {
-      const data = await fetchNearestAir(g.lat, g.lon);
-      renderMain(data);                           // 기존 렌더 함수가 있으면 사용
-    } else {
-      // 최소 안전 렌더 (id가 있다면 꽂기)
-      const data = await fetchNearestAir(g.lat, g.lon);
-      document.getElementById('pm10-value')?.textContent = data.pm10 ?? '--';
-      document.getElementById('pm25-value')?.textContent = data.pm25 ?? '--';
-      document.getElementById('station-name')?.textContent = data.station?.name || data.name || '--';
-      document.getElementById('display-ts')?.textContent =
-        data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--';
-    }
+if (typeof updateAll === 'function') {
+  await updateAll(g.lat, g.lon);
+} else if (typeof renderMain === 'function') {
+  const data = await fetchNearestAir(g.lat, g.lon);
+  renderMain(data);
+} else {
+  const data = await fetchNearestAir(g.lat, g.lon);
+  setText('pm10-value',  data.pm10 ?? '--');
+  setText('pm25-value',  data.pm25 ?? '--');
+  setText('station-name', data.station?.name || data.name || '--');
+  setText('display-ts',   data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
+}
+
     // 입력창에 정규화된 주소 표시
     if (el.placeInput) el.placeInput.value = g.address || `${g.lat},${g.lon}`;
   }catch(e){
