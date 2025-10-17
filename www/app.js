@@ -316,59 +316,68 @@ async function doSearch(query){
   }
 }
 
-// 이벤트 바인딩(안전 가드)
-document.getElementById('searchBtn')?.addEventListener('click', ()=>{
-  const v = (document.getElementById('place') || document.getElementById('place-search-input'))?.value || '';
-  doSearch(v);
-});
-(document.getElementById('place') || document.getElementById('place-search-input'))?.addEventListener('keydown', (e)=>{
-  if (e.key === 'Enter'){
-    doSearch(e.currentTarget.value || '');
-  }
-});
+// === [검색/지오코딩/현위치] 단일 바인딩 (중복 금지) ===
+function bindSearchUI(){
+  const placeInput = document.getElementById('place') || document.getElementById('place-search-input');
+  const searchBtn  = document.getElementById('searchBtn') || document.getElementById('search-btn');
+  const currentBtn = document.getElementById('btn-current') || document.getElementById('reload-location-btn');
 
+  // 검색 버튼
+  searchBtn?.addEventListener('click', () => {
+    const q = placeInput?.value || '';
+    doSearch(q);
+  });
 
+  // 입력 엔터
+  placeInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      doSearch(e.currentTarget.value || '');
+    }
+  });
 
-// 안전 바인딩 (요소가 있을 때만 연결)
-el.searchBtn && el.searchBtn.addEventListener('click', () => doSearch(el.placeInput?.value || ''));
-el.placeInput && el.placeInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(el.placeInput.value || ''); });
-el.currentBtn && el.currentBtn.addEventListener('click', () => {
-  navigator.geolocation?.getCurrentPosition(
-    async pos => {
-      if (typeof updateAll === 'function') {
-        await updateAll(pos.coords.latitude, pos.coords.longitude);
-      } else {
+  // 현위치 버튼
+  currentBtn?.addEventListener('click', () => {
+    navigator.geolocation?.getCurrentPosition(
+      async pos => {
+        // 통합 갱신 함수가 있으면 사용
+        if (typeof updateAll === 'function') {
+          await updateAll(pos.coords.latitude, pos.coords.longitude);
+          return;
+        }
+        // 없으면 최소 렌더
         const data = await fetchNearestAir(pos.coords.latitude, pos.coords.longitude);
         if (typeof renderMain === 'function') {
           renderMain(data);
         } else {
-          // ❗여기서 LHS에 ?. 쓰지 말고 헬퍼 사용
-          setText('pm10-value', data.pm10 ?? '--');
-          setText('pm25-value', data.pm25 ?? '--');
+          setText('pm10-value',  data.pm10 ?? '--');
+          setText('pm25-value',  data.pm25 ?? '--');
           setText('station-name', data.station?.name || data.name || '--');
-          setText('display-ts', data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
+          setText('display-ts',   data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
         }
-      }
-    },
-    async _ => {
-      // 실패 시 서울 기본
-      if (typeof updateAll === 'function') {
-        await updateAll(37.5665, 126.9780);
-      } else {
+      },
+      async _ => {
+        // 실패 시 서울 기본
+        if (typeof updateAll === 'function') {
+          await updateAll(37.5665, 126.9780);
+          return;
+        }
         const data = await fetchNearestAir(37.5665, 126.9780);
         if (typeof renderMain === 'function') {
           renderMain(data);
         } else {
-          setText('pm10-value', data.pm10 ?? '--');
-          setText('pm25-value', data.pm25 ?? '--');
+          setText('pm10-value',  data.pm10 ?? '--');
+          setText('pm25-value',  data.pm25 ?? '--');
           setText('station-name', data.station?.name || data.name || '--');
-          setText('display-ts', data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
+          setText('display-ts',   data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
         }
       }
-    }
-  );
-});
-// == [검색/지오코딩] 블록 끝 =======================================
+    );
+  });
+}
+
+// doSearch/updateAll/fetchNearestAir 정의 이후, 스크립트 맨 끝에서 1회만 실행
+bindSearchUI();
+
 
 
 // --- 메인 로직 ---
