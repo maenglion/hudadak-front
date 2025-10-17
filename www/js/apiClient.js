@@ -18,6 +18,12 @@ export async function fetchNearestAir(lat, lon) {
     cai_grade: raw.cai_grade ?? null,
     cai_value: raw.cai_value ?? null,
     display_ts: raw.display_ts,
+
+    o3 : raw.o3  ?? null,
+    no2: raw.no2 ?? null,
+    so2: raw.so2 ?? null,
+    co : raw.co  ?? null,
+
     station: {
       name: raw.name,
       provider: raw.provider,
