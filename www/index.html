@@ -4,14 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <title>HUDADAK</title>
+  
+  <meta name="theme-color" id="theme-color-meta" content="#f4f6f8" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#f4f6f8" />
+
   <link rel="stylesheet" href="/styles.css" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/paper-log/Paperlog-font/Paperlog.css" />
 </head>
 <body>
   <div class="app-container">
-    <!-- SLIDE-IN SETTINGS PANEL -->
-   <aside id="settings-panel">
+    <aside id="settings-panel">
+        </aside>
+    <div id="settings-backdrop"></div>
+
+       <aside id="settings-panel">
        <section class="settings-section">
       <h2>표시 기준 설정</h2>
       <div class="radio-group" id="standard-options">
@@ -55,91 +62,70 @@
     </aside>
     <div id="settings-backdrop"></div>
 
-    <!-- HEADER -->
-    <header class="topbar">
-      <button id="settings-btn" class="icon-button" aria-controls="settings-panel" aria-expanded="false">☰</button>
-      <h1 class="app-title" style="margin-left:8px;">HUDADAK</h1>
-      <button id="settings-btn" class="icon-btn" aria-controls="settings-panel" aria-expanded="false" title="설정">⚙️</button>
+    <main id="app-main">
+      <header class="hero-section">
+        <div class="top-bar">
+          <button id="settings-btn" class="icon-button" aria-controls="settings-panel" aria-expanded="false">☰</button>
+          <div class="location-search">
+            <span id="station-name" class="location-name-text">—</span>
+            <input type="search" id="location-input" class="location-name-input" placeholder="지역 검색..." style="display: none;" />
+          </div>
+          <div style="width: 44px;"></div> </div>
 
-    </header>
-
-    <main>
-      <!-- 종합 요약(HERO) -->
-      <section class="hero" style="margin:8px;">
-        <div class="hero-meta">
-          <div id="station-name" class="hero-loc">—</div>
-          <div id="display-ts" class="hero-time">—</div>
+        <div class="hero-content">
+          <div id="hero-grade-label" class="grade-label">측정 중</div>
+          <div id="hero-score" class="score">--</div>
+          <div id="hero-desc" class="desc">현재 위치의 대기질 정보를 불러오고 있습니다.</div>
         </div>
-        <div class="hero-score">
-          <!-- 등급/간단 설명은 app.js에서 계산해 넣을 수 있음. -->
-          <div id="hero-grade" class="grade">—</div>
-          <div id="hero-desc" class="desc">—</div>
-        </div>
-      </section>
-          <!-- 하단 검색 바 -->
-    <footer class="bottom-bar" style="display:flex; gap:8px; padding:12px; position:sticky; bottom:0; background:var(--bg);">
-      <input type="search" id="place" class="search" placeholder="지역 검색 (예: 강남역) 또는 '37.57,126.98'" />
-      <button id="searchBtn" class="icon-btn" aria-label="검색">🔎</button>
-      <button id="btn-current" class="icon-btn" aria-label="현 위치">📍</button>
-    </footer>
-  </div>
+      </header>
 
-      <!-- 상세 지표 카드 -->
-      <section class="card" style="margin:8px;">
-        <h4>주요 지표</h4>
+      <nav class="tab-nav">
+        <button class="tab-button active" data-tab="air-quality">공기질 분석</button>
+        <button class="tab-button" data-tab="weather-forecast">기상 예보</button>
+      </nav>
 
-        <div class="gauge-display" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-          <!-- PM10 -->
-          <div class="semi-circle-gauge">
-            <div class="gauge-header"><h4>미세먼지 (PM10)</h4></div>
-            <div class="gauge-arc" id="pm10-arc">
-              <div class="gauge-content">
-                <span class="gauge-grade" id="pm10-grade">--</span>
-                <span class="gauge-value" id="pm10-value">--</span>
+      <div class="tab-content active" id="tab-air-quality">
+        <section class="card">
+          <div class="concentric-gauge">
+            <div class="gauge-outer" id="pm10-gauge">
+              <div class="gauge-inner" id="pm25-gauge">
+                <div class="gauge-center-text">
+                  <span id="center-text-label">통합지수</span>
+                  <span id="center-text-value">--</span>
+                </div>
+              </div>
+            </div>
+            <div class="gauge-labels">
+              <div class="label-item">
+                <span class="label-title">미세먼지(PM10)</span>
+                <span id="pm10-value" class="label-value">-- <em>μg/m³</em></span>
+              </div>
+              <div class="label-item">
+                <span class="label-title">초미세먼지(PM2.5)</span>
+                <span id="pm25-value" class="label-value">-- <em>μg/m³</em></span>
               </div>
             </div>
           </div>
-          <!-- PM2.5 -->
-          <div class="semi-circle-gauge">
-            <div class="gauge-header"><h4>초미세먼지 (PM2.5)</h4></div>
-            <div class="gauge-arc" id="pm25-arc">
-              <div class="gauge-content">
-                <span class="gauge-grade" id="pm25-grade">--</span>
-                <span class="gauge-value" id="pm25-value">--</span>
-              </div>
+        </section>
+
+        <section class="card">
+          <h4>기타 지표</h4>
+          <div class="linear-bars" id="linear-bars-container">
             </div>
-          </div>
-        </div>
+        </section>
+      </div>
 
-        <div class="standard-display" style="margin-top:8px;">
-          <span id="current-standard-label" class="muted">기준: —</span>
-        </div>
-
-        <div class="linear-bars" id="linear-bars-container" style="margin-top:8px;">
-          <!-- O3/NO2/SO2/CO 막대는 필요 시 JS에서 렌더 -->
-        </div>
-      </section>
+      <div class="tab-content" id="tab-weather-forecast">
+        <section class="card">
+          <h4>주간 예보</h4>
+          <div id="forecast-grid" class="forecast-grid">
+            </div>
+          <small id="forecast-note" class="muted"></small>
+        </section>
+      </div>
     </main>
-
-
-
-      <!-- 5일 예보 -->
-<section class="card" style="margin:8px;">
-  <h4>예보</h4>
-  <div id="forecast-grid" class="forecast-grid">
-    <!-- 데이터 없을 땐 샘플 1장 표시 -->
-    <div class="forecast-card">
-      <p class="forecast-day">금요일</p>
-      <div class="forecast-icon">☀️</div>
-      <p class="forecast-temp">22° / <strong>28°</strong></p>
-      <p class="forecast-desc">맑음</p>
-    </div>
   </div>
-  <small id="forecast-note" class="muted" style="margin-left:8px"></small>
-</section>
 
-  <!-- 앱 엔트리 (캐시 우회 버전) -->
- <script type="module" src="/app.js?v=20251017n"></script>
-
+  <script type="module" src="/app.js?v=20251017_final"></script>
 </body>
 </html>
