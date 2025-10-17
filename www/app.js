@@ -42,16 +42,16 @@ import { API_BASE } from '/js/apiClient.js';
  * 예보: 우선 백엔드(API_BASE/forecast), 실패하면 Open-Meteo(날씨+공기질)로 폴백
  * 반환 스키마: { daily:[ {date, icon, desc, tmin, tmax, pm25, pm10, horizon} ... ] }
  */
-export async function fetchForecast(lat, lon){
-  // 1) 백엔드 우선 시도
+async function fetchForecast(lat, lon){
   try{
     const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, { cache:'no-store' });
     if (!r.ok) throw new Error(String(r.status));
-    const j = await r.json();
+    return await r.json(); 
     // 백엔드가 이미 {daily: [...]} 형태면 그대로 사용
     if (j && Array.isArray(j.daily)) return j;
-  }catch(_){ /* 무시하고 폴백 진행 */ }
-
+  }catch(_){
+    
+  
   // 2) 폴백(Open-Meteo; CORS OK)
   const [w, aq] = await Promise.all([
     fetch(
@@ -105,7 +105,8 @@ export async function fetchForecast(lat, lon){
     };
   });
 
-  return { daily };
+    return { daily: [] }; // 백엔드 없으면 조용히 빈값(아래 폴백 로직 쓰는 경우는 거기서)
+  }
 }
 
 /** WMO weathercode → 간단 아이콘/설명 */
@@ -303,36 +304,28 @@ function renderLinearBars(data){
 
 // 검색 "위도,경도" 직접 입력 허용 + 백엔드 프록시(/api/geo/search) 사용
 // === 주소 검색 → 좌표 → 전체 갱신 ===
-async function geocode(query){
-  // "37.57,126.98" 직접 입력 처리
-  const m = String(query||'').trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
-  if (m) return { lat: parseFloat(m[1]), lon: parseFloat(m[2]), address: `${m[1]},${m[2]}` };
+async function geocode(q){
+  const m = String(q||'').trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (m) return { lat:+m[1], lon:+m[2], address:`${m[1]},${m[2]}` };
 
-  // 백엔드가 있으면 먼저 시도
   try{
-    const r = await fetch(`${API_BASE}/geo/search?q=${encodeURIComponent(query)}`, { cache:'no-store' });
+    const r = await fetch(`${API_BASE}/geo/search?q=${encodeURIComponent(q)}`, { cache:'no-store' });
     if (r.ok) return await r.json(); // {lat, lon, address}
   }catch(_){}
 
-  // 폴백: Open-Meteo Geocoding
-  const u = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=ko`;
+  const u = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=ko`;
   const r2 = await fetch(u, { cache:'no-store' });
   const j = await r2.json();
   const hit = j?.results?.[0];
   if (!hit) throw new Error('no result');
-  return {
-    lat: hit.latitude, lon: hit.longitude,
-    address: [hit.country, hit.admin1, hit.name].filter(Boolean).join(' · ')
-  };
+  return { lat:hit.latitude, lon:hit.longitude, address:[hit.country, hit.admin1, hit.name].filter(Boolean).join(' · ') };
 }
 
-async function doSearch(query){
-  if (!query) return;
+async function doSearch(q){
+  if (!q) return;
   try{
-    const g = await geocode(query);
-    // 입력창 값 갱신(있으면)
-    const placeInput = document.getElementById('place') || document.getElementById('place-search-input');
-    if (placeInput) placeInput.value = g.address;
+    const g = await geocode(q);
+    (document.getElementById('place') || document.getElementById('place-search-input'))?.value = g.address;
     await updateAll(g.lat, g.lon);
   }catch(e){
     console.error(e);
@@ -340,61 +333,23 @@ async function doSearch(query){
   }
 }
 
+
 // === [검색/지오코딩/현위치] 단일 바인딩 (중복 금지) ===
 function bindSearchUI(){
   const placeInput = document.getElementById('place') || document.getElementById('place-search-input');
   const searchBtn  = document.getElementById('searchBtn') || document.getElementById('search-btn');
   const currentBtn = document.getElementById('btn-current') || document.getElementById('reload-location-btn');
 
-  // 검색 버튼
-  searchBtn?.addEventListener('click', () => {
-    const q = placeInput?.value || '';
-    doSearch(q);
+  searchBtn?.addEventListener('click', ()=>{
+    doSearch(placeInput?.value || '');
   });
-
-  // 입력 엔터
-  placeInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      doSearch(e.currentTarget.value || '');
-    }
+  placeInput?.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter') doSearch(e.currentTarget.value || '');
   });
-
-  // 현위치 버튼
-  currentBtn?.addEventListener('click', () => {
+  currentBtn?.addEventListener('click', ()=>{
     navigator.geolocation?.getCurrentPosition(
-      async pos => {
-        // 통합 갱신 함수가 있으면 사용
-        if (typeof updateAll === 'function') {
-          await updateAll(pos.coords.latitude, pos.coords.longitude);
-          return;
-        }
-        // 없으면 최소 렌더
-        const data = await fetchNearestAir(pos.coords.latitude, pos.coords.longitude);
-        if (typeof renderMain === 'function') {
-          renderMain(data);
-        } else {
-          setText('pm10-value',  data.pm10 ?? '--');
-          setText('pm25-value',  data.pm25 ?? '--');
-          setText('station-name', data.station?.name || data.name || '--');
-          setText('display-ts',   data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
-        }
-      },
-      async _ => {
-        // 실패 시 서울 기본
-        if (typeof updateAll === 'function') {
-          await updateAll(37.5665, 126.9780);
-          return;
-        }
-        const data = await fetchNearestAir(37.5665, 126.9780);
-        if (typeof renderMain === 'function') {
-          renderMain(data);
-        } else {
-          setText('pm10-value',  data.pm10 ?? '--');
-          setText('pm25-value',  data.pm25 ?? '--');
-          setText('station-name', data.station?.name || data.name || '--');
-          setText('display-ts',   data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
-        }
-      }
+      async pos => await updateAll(pos.coords.latitude, pos.coords.longitude),
+      async _   => await updateAll(37.5665,126.9780)
     );
   });
 }
@@ -466,4 +421,4 @@ settingsBackdrop?.addEventListener('click', closeSettings);
 
 
 initialize();
-
+bindSearchUI();
