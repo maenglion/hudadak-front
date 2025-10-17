@@ -390,27 +390,56 @@ function initialize() {
     // TODO: 검색, 공유 기능 이벤트 리스너 추가
 }
 
-// === Settings slide-in (single source) ===
+function bindUIEvents() {
 const settingsBtn      = document.getElementById('settings-btn');
 const settingsPanel    = document.getElementById('settings-panel');
 const settingsBackdrop = document.getElementById('settings-backdrop');
 
-function openSettings(){
+const openSettings = () => 
+{
   settingsPanel?.classList.add('is-open');
   settingsBackdrop?.classList.add('is-visible');
   settingsBtn?.setAttribute('aria-expanded', 'true');
   document.body.style.overflow = 'hidden';
-}
-function closeSettings(){
+};
+const closeSettings = () =>
+{
   settingsPanel?.classList.remove('is-open');
   settingsBackdrop?.classList.remove('is-visible');
   settingsBtn?.setAttribute('aria-expanded', 'false');
   document.body.style.overflow = '';
-}
+};
 
 settingsBtn?.addEventListener('click', openSettings);
 settingsBackdrop?.addEventListener('click', closeSettings);
 
+const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // 현재 활성화된 탭과 콘텐츠의 'active' 클래스를 제거
+            document.querySelector('.tab-button.active').classList.remove('active');
+            document.querySelector('.tab-content.active').classList.remove('active');
+            
+            // 클릭된 버튼과 그에 맞는 콘텐츠에 'active' 클래스를 추가
+            const tabId = button.dataset.tab;
+            button.classList.add('active');
+            byId(`tab-${tabId}`).classList.add('active');
+        });
+    });
+
+const accordionItems = document.querySelectorAll('#settings-panel .accordion-menu details');
+    accordionItems.forEach(item => {
+        item.addEventListener('toggle', (event) => {
+            if (item.open) {
+                accordionItems.forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.removeAttribute('open');
+                    }
+                });
+            }
+        });
+    });
+  }
 
 
 initialize();
