@@ -426,4 +426,3 @@ const accordionItems = document.querySelectorAll('#settings-panel .accordion-men
 
 
 initialize();
-
