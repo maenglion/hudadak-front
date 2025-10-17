@@ -2,11 +2,11 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <title>후다닥</title>
   
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#2c2c2e">
+  <meta name="theme-color" content="#1c1c1e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -16,73 +16,91 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  
-  <!-- 전체 레이아웃 컨테이너 -->
-  <div class="app-container">
+
+  <!-- 모바일 화면을 감싸는 프레임 -->
+  <div class="mobile-frame">
     
-    <!-- 상단 종합 정보 -->
-    <header class="summary-section">
-      <div class="location-bar">
-        <span id="current-location">위치 정보 없음</span>
-        <span id="current-time" class="time">--:--</span>
-      </div>
-      <h1 id="summary-grade">데이터 로딩 중...</h1>
-      <p id="summary-text">가장 가까운 측정소의 데이터를 가져오고 있습니다.</p>
-    </header>
+    <!-- 왼쪽에서 나타나는 설정 패널 -->
+    <aside id="settings-panel" class="settings-panel">
+      <iframe src="setup/index.html" frameborder="0"></iframe>
+    </aside>
+    <!-- 설정을 닫기 위한 반투명 오버레이 -->
+    <div id="overlay" class="overlay"></div>
 
-    <!-- 예보 카드 -->
-    <section class="card forecast-card">
-      <div class="forecast-header">
-        <h3>오늘의 예보</h3>
-        <span id="forecast-badge" class="badge"></span>
-      </div>
-      <p id="forecast-text">예보 정보를 불러오는 중입니다.</p>
-    </section>
-
-    <!-- 메인 컨텐츠 영역 -->
-    <main class="main-content">
-      <div class="standard-display">
-        <span id="current-standard">대한민국 환경부 기준</span>
-      </div>
-
-      <!-- 반원 게이지 -->
-      <div class="semi-gauges">
-        <div class="gauge-container">
-          <div class="gauge-arc-wrapper">
-            <div class="gauge-arc" id="pm10-arc"></div>
-            <div class="gauge-value" id="pm10-value">--</div>
+    <!-- 앱의 메인 컨텐츠 -->
+    <div class="app-main-view">
+      <!-- 상단 헤더 -->
+      <header class="app-header">
+        <button id="settings-btn" class="icon-button" aria-label="설정 열기">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg>
+        </button>
+        <h2 class="app-title">HUDADAK</h2>
+      </header>
+      
+      <!-- 전체 레이아웃 컨테이너 -->
+      <div class="app-container">
+        <!-- 상단 종합 정보 -->
+        <section class="summary-section">
+          <div class="location-bar">
+            <span id="current-location">위치 정보 없음</span>
+            <span id="current-time" class="time">--:--</span>
           </div>
-          <div class="gauge-label">PM10 (미세먼지)</div>
-        </div>
-        <div class="gauge-container">
-          <div class="gauge-arc-wrapper">
-            <div class="gauge-arc" id="pm25-arc"></div>
-            <div class="gauge-value" id="pm25-value">--</div>
+          <h1 id="summary-grade">데이터 로딩 중...</h1>
+          <p id="summary-text">가장 가까운 측정소의 데이터를 가져오고 있습니다.</p>
+        </section>
+
+        <!-- 예보 카드 -->
+        <section class="card forecast-card">
+          <div class="forecast-header">
+            <h3>오늘의 예보</h3>
+            <span id="forecast-badge" class="badge"></span>
           </div>
-          <div class="gauge-label">PM2.5 (초미세먼지)</div>
-        </div>
+          <p id="forecast-text">예보 정보를 불러오는 중입니다.</p>
+        </section>
+
+        <!-- 메인 컨텐츠 영역 -->
+        <main class="main-content">
+          <div class="standard-display">
+            <span id="current-standard">대한민국 환경부 기준</span>
+          </div>
+
+          <!-- 반원 게이지 -->
+          <div class="semi-gauges">
+            <div class="gauge-container">
+              <div class="gauge-arc-wrapper">
+                <div class="gauge-arc" id="pm10-arc"></div>
+                <div class="gauge-value" id="pm10-value">--</div>
+              </div>
+              <div class="gauge-label">PM10 (미세먼지)</div>
+            </div>
+            <div class="gauge-container">
+              <div class="gauge-arc-wrapper">
+                <div class="gauge-arc" id="pm25-arc"></div>
+                <div class="gauge-value" id="pm25-value">--</div>
+              </div>
+              <div class="gauge-label">PM2.5 (초미세먼지)</div>
+            </div>
+          </div>
+
+          <!-- 선형 막대 그래프 -->
+          <div class="linear-bars-container">
+            <!-- app.js에서 동적으로 생성 -->
+          </div>
+        </main>
       </div>
-
-      <!-- 선형 막대 그래프 -->
-      <div class="linear-bars-container">
-        <!-- app.js에서 동적으로 생성 -->
-      </div>
-    </main>
-
-    <!-- 하단 검색 및 액션 바 -->
-    <footer class="bottom-bar">
-      <input type="text" id="place-search-input" class="search-input" placeholder="다른 지역 검색...">
-      <button id="reload-location-btn" class="icon-button" aria-label="현재 위치로 새로고침">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/><path d="M13 12V7h-2v7h7v-2h-5z"/></svg>
-      </button>
-      <a href="setup/index.html" class="icon-button" aria-label="설정">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.829 15.228 17.723 12l2.106-3.228a1 1 0 0 0-.586-1.586l-4.212-.963a1 1 0 0 0-1.163.66l-1 4.286-4.286 1a1 1 0 0 0-.66 1.163l.963 4.212a1 1 0 0 0 1.586.586L12 17.723l3.228 2.106a1 1 0 0 0 1.586-.586l.963-4.212a1 1 0 0 0-.66-1.163zM12 14a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
-      </a>
-    </footer>
-
-  </div> <!-- .app-container -->
+      
+      <!-- 하단 검색 및 액션 바 -->
+      <footer class="bottom-bar">
+        <input type="text" id="place-search-input" class="search-input" placeholder="다른 지역 검색...">
+        <button id="reload-location-btn" class="icon-button" aria-label="현재 위치로 새로고침">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/><path d="M13 12V7h-2v7h7v-2h-5z"/></svg>
+        </button>
+      </footer>
+    </div>
+  </div>
 
   <script src="app.js" type="module"></script>
+
 </body>
 </html>
 

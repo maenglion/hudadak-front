@@ -140,5 +140,21 @@ function initialize() {
     // TODO: 검색, 공유 기능 이벤트 리스너 추가
 }
 
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsPanel = document.getElementById('settings-panel');
+    const overlay = document.getElementById('overlay');
+    
+    function closeSettings() {
+      settingsPanel.classList.remove('is-open');
+      overlay.classList.remove('is-visible');
+    }
+
+    settingsBtn.addEventListener('click', () => {
+      settingsPanel.classList.add('is-open');
+      overlay.classList.add('is-visible');
+    });
+
+    overlay.addEventListener('click', closeSettings);
+
 initialize();
 
