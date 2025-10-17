@@ -6,7 +6,21 @@ import { STANDARDS } from '/js/standards.js';
 console.log('[app] boot');
 
 const setText = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+// --- 설정 패널 여닫기 기능 ---
+const logoBtn = document.querySelector('.header-logo');
+const settingsPanel = document.getElementById('settings-panel');
+const settingsBackdrop = document.getElementById('settings-backdrop');
 
+const toggleSettings = () => {
+  settingsPanel.classList.toggle('is-open');
+  settingsBackdrop.classList.toggle('is-visible');
+};
+
+// 로고를 클릭하면 설정 패널을 토글(열기)
+logoBtn.addEventListener('click', toggleSettings);
+
+// 뒷배경을 클릭하면 설정 패널을 토글(닫기)
+settingsBackdrop.addEventListener('click', toggleSettings);
 
    // 검색 UI: 없을 수 있으니 존재하면만 쓸 거예요
  const el = {

@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/paper-log/Paperlog-font/Paperlog.css" />
 </head>
 <body>
-  <div class="app-container">
+ <div class="app-container">
     
     <div id="settings-backdrop"></div>
 
@@ -42,22 +42,23 @@
         </details>
       </section>
     </aside>
+        <main id="app-main">
+      <header class="hero-section grade-2"> <h1 class="header-logo">HUDADAK</h1>
+        
+        <img src="https://res.cloudinary.com/dnswboo5z/image/upload/v1760730007/Group_6_mhnxwh.png" 
+             id="current-btn" 
+             class="current-location-btn" 
+             alt="Current Location" />
 
-    <main id="app-main">
-      <header class="hero-section">
-        <div class="top-bar">
-          <button id="settings-btn" class="icon-button" aria-controls="settings-panel" aria-expanded="false">☰</button>
-          <div class="location-search">
-            <span id="station-name" class="location-name-text">—</span>
-            <input type="search" id="location-input" class="location-name-input" placeholder="지역 검색..." style="display: none;" />
-          </div>
-          <button id="current-btn" class="icon-button">📍</button>
+        <input type="search" id="location-input" class="location-search-bar" placeholder="지역 검색..." />
+
+        <div class="timestamp">
+          오전 11:32 <span class="ampm">오후</span> 업데이트
         </div>
-
+        
         <div class="hero-content">
-          <div id="hero-grade-label" class="grade-label">측정 중</div>
-          <div id="hero-score" class="score">--</div>
-          <div id="hero-desc" class="desc">현재 위치의 대기질 정보를 불러오고 있습니다.</div>
+          <div id="hero-grade-label" class="grade-label">좋음</div>
+          <div id="hero-score" class="score">통합지수 42</div>
         </div>
       </header>
 
@@ -72,9 +73,7 @@
             <div class="gauge-outer" id="pm10-gauge">
               <div class="gauge-inner" id="pm25-gauge">
                 <div class="gauge-center-text">
-                  <span id="center-text-label">통합지수</span>
-                  <span id="center-text-value">--</span>
-                </div>
+                  </div>
               </div>
             </div>
             <div class="gauge-labels">
