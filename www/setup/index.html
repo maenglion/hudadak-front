@@ -136,7 +136,7 @@
     const standardOptions = document.getElementById('standard-options');
     const standardDescription = document.getElementById('standard-description');
     const closeBtn = document.getElementById('close-settings-btn');
-    const AQI_STANDARD_KEY = 'aqi-standard';
+    const AQI_STANDARD_KEY = 'aq_standard';
 
     const descriptions = {
       KOR: '대한민국 환경부의 통합대기환경지수(CAI) 4단계(좋음/보통/나쁨/매우나쁨) 기준으로 표시합니다.',
@@ -154,7 +154,7 @@
       updateDescription(selectedStandard);
       
       // Notify the parent window (main app) that the standard has changed
-      window.parent.postMessage({ type: 'standardChanged', value: selectedStandard }, '*');
+      window.parent?.postMessage({ type:'standardChanged', value: nextValue }, '*');
     }
     
     // --- Event Listeners ---
@@ -162,7 +162,8 @@
     
     closeBtn.addEventListener('click', () => {
       // Send a message to the parent window to close the panel
-      window.parent.postMessage({ type: 'closeSettings' }, '*');
+ window.parent?.postMessage({ type:'closeSettings' }, '*');
+
     });
 
     // --- Initialization ---

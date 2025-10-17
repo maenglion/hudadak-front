@@ -32,6 +32,8 @@
   --grad-bad: linear-gradient(90deg, #E67E22, #F39C12);
   --grad-verybad: linear-gradient(90deg, #D32F2F, #E74C3C);
   --grad-default: linear-gradient(90deg, #adb5bd, #ced4da);
+--bg-color: var(--bg);
+  --text-color: var(--fg);
 }
 
 /* Dark Mode */

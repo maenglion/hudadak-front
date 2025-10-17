@@ -8,10 +8,10 @@ console.log('[app] boot');
 // --- UI 요소 참조 ---
  const el = {
    // 검색 UI: 없을 수 있으니 존재하면만 쓸 거예요
-   placeInput: document.getElementById('place'),
-   searchBtn: document.getElementById('searchBtn'),
-   currentLocationBtn: document.getElementById('btn-current'),
-   shareBtn: document.getElementById('share-btn'),
+  placeInput: document.getElementById('place')                  || document.getElementById('place-search-input'),
+  searchBtn:  document.getElementById('searchBtn')              || document.getElementById('search-btn'),
+  currentBtn: document.getElementById('btn-current')            || document.getElementById('reload-location-btn'),
+  shareBtn:   document.getElementById('share-btn'), 
 
    // 요약(히어로)
    summaryGrade: document.getElementById('hero-grade'),
@@ -189,25 +189,60 @@ function initialize() {
         );
     }
 
-    el.currentLocationBtn?.addEventListener('click', () => initialize());
+    el.currentBtn?.addEventListener('click', ()=>initialize());
     // TODO: 검색, 공유 기능 이벤트 리스너 추가
 }
 
-    const settingsBtn = document.getElementById('settings-btn');
-    const settingsPanel = document.getElementById('settings-panel');
-    const overlay = document.getElementById('settings-backdrop');
-    
+ const settingsBtn      = document.getElementById('settings-btn');
+const settingsPanel    = document.getElementById('settings-panel');
+const settingsBackdrop = document.getElementById('settings-backdrop');
+
     function closeSettings() {
       settingsPanel.classList.remove('is-open');
-      overlay.classList.remove('is-visible');
+      settings-backdrop.classList.remove('is-visible');
     }
 
  settingsBtn?.addEventListener('click', () => {
     settingsPanel.classList.add('is-open');
-    overlay.classList.add('is-visible');
+    settings-backdrop.classList.add('is-visible');
   });
 
-+ overlay?.addEventListener('click', closeSettings);
+ settings-backdrop?.addEventListener('click', closeSettings);
+
+
+function openSettings(){
+  settingsPanel?.classList.add('is-open');
+  settingsBackdrop?.classList.add('is-visible');
+  settingsBtn?.setAttribute('aria-expanded', 'true');
+  document.body.style.overflow = 'hidden'; // 배경 스크롤 잠금
+}
+function closeSettings(){
+  settingsPanel?.classList.remove('is-open');
+  settingsBackdrop?.classList.remove('is-visible');
+  settingsBtn?.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+}
+
+settingsBtn?.addEventListener('click', openSettings);
+settingsBackdrop?.addEventListener('click', closeSettings);
+
+// 설정(iframe) → 메인 통신
+window.addEventListener('message', (ev)=>{
+  const { type, value } = ev.data || {};
+  if (type === 'standardChanged') {
+    localStorage.setItem('aq_standard', value);
+    // 배지/게이지 재도색 훅이 있으면 호출
+    window.repaintByStandard?.(value);
+  }
+  if (type === 'closeSettings') closeSettings();
+});
+
+// 메인 → 설정(iframe)으로 현재 값 보내고 싶으면(선택)
+function sendToSettings(msg){
+  const frame = settingsPanel?.querySelector('iframe');
+  frame?.contentWindow?.postMessage(msg, '*');
+}
+
 
 initialize();
 
