@@ -157,6 +157,85 @@ function renderLinearBars(data) {
 }
 
 
+// 검색 "위도,경도" 직접 입력 허용 + 백엔드 프록시(/api/geo/search) 사용
+async function geocode(query){
+  if (!query) throw new Error('query required');
+
+  // 1) "37.57,126.98" 같이 콤마로 구분된 좌표 문자열 지원
+  const m = String(query).trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (m) return { lat: parseFloat(m[1]), lon: parseFloat(m[2]), address: `${m[1]},${m[2]}` };
+
+  // 2) 백엔드 지오코딩 프록시 (미구현이어도 에러만 캐치하면 됨)
+  const url = `${API_BASE}/geo/search?q=${encodeURIComponent(query)}`;
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) {
+    const t = await r.text().catch(()=>`${r.status} ${r.statusText}`);
+    throw new Error(`검색 실패: ${t}`);
+  }
+  // 기대 스키마: {lat, lon, address}
+  return await r.json();
+}
+
+// 실제 검색 실행
+async function doSearch(q){
+  const v = (q ?? el.placeInput?.value ?? '').trim();
+  if (v.length < 2 && !/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(v)) {
+    alert('두 글자 이상 입력하거나 "37.57,126.98" 형태로 입력하세요.');
+    return;
+  }
+  try{
+    // 좌표 얻기
+    const g = await geocode(v);
+    // 좌표로 측정값 갱신
+    if (typeof updateAll === 'function') {
+      await updateAll(g.lat, g.lon);             // 네 앱에 이미 있는 통합 갱신 함수
+    } else if (typeof renderMain === 'function') {
+      const data = await fetchNearestAir(g.lat, g.lon);
+      renderMain(data);                           // 기존 렌더 함수가 있으면 사용
+    } else {
+      // 최소 안전 렌더 (id가 있다면 꽂기)
+      const data = await fetchNearestAir(g.lat, g.lon);
+      document.getElementById('pm10-value')?.textContent = data.pm10 ?? '--';
+      document.getElementById('pm25-value')?.textContent = data.pm25 ?? '--';
+      document.getElementById('station-name')?.textContent = data.station?.name || data.name || '--';
+      document.getElementById('display-ts')?.textContent =
+        data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--';
+    }
+    // 입력창에 정규화된 주소 표시
+    if (el.placeInput) el.placeInput.value = g.address || `${g.lat},${g.lon}`;
+  }catch(e){
+    console.error(e);
+    alert('주소 검색이 아직 준비되지 않았습니다. "위도,경도" 형태로 입력해 보세요.');
+  }
+}
+
+// 안전 바인딩 (요소가 있을 때만 연결)
+el.searchBtn?.addEventListener('click', () => doSearch());
+el.placeInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doSearch();
+});
+el.currentBtn?.addEventListener('click', () => {
+  navigator.geolocation?.getCurrentPosition(
+    async pos => {
+      if (typeof updateAll === 'function') await updateAll(pos.coords.latitude, pos.coords.longitude);
+      else {
+        const data = await fetchNearestAir(pos.coords.latitude, pos.coords.longitude);
+        (typeof renderMain === 'function') ? renderMain(data) : (document.getElementById('pm10-value')?.textContent = data.pm10 ?? '--');
+      }
+    },
+    async _ => {
+      // 실패 시 서울 기본
+      if (typeof updateAll === 'function') await updateAll(37.5665,126.9780);
+      else {
+        const data = await fetchNearestAir(37.5665,126.9780);
+        (typeof renderMain === 'function') ? renderMain(data) : (document.getElementById('pm10-value')?.textContent = data.pm10 ?? '--');
+      }
+    }
+  );
+});
+// == [검색/지오코딩] 블록 끝 =======================================
+
+
 // --- 메인 로직 ---
 async function updateAll(lat, lon) {
     try {

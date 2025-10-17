@@ -32,9 +32,18 @@
   --grad-bad: linear-gradient(90deg, #E67E22, #F39C12);
   --grad-verybad: linear-gradient(90deg, #D32F2F, #E74C3C);
   --grad-default: linear-gradient(90deg, #adb5bd, #ced4da);
---bg-color: var(--bg);
-  --text-color: var(--fg);
+  --bg: var(--bg-color);
+  --fg: var(--text-color);
+  --card: var(--card-bg);
+  --muted: var(--subtle-text-color);
+  --border: var(--border-color);
+  /* 포인트 컬러(자동): 라이트/다크에서 기본값 */
+  --primary-color: #1e88e5;
 }
+html[data-theme="dark"]{
+  --primary-color: #60a5fa;
+}
+
 
 /* Dark Mode */
 html[data-theme="dark"] {
@@ -90,6 +99,18 @@ main {
   padding-top: calc(56px + var(--safe-top)); /* Padding for top header */
 }
 
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: var(--shadow);
+}
+.row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.muted, .text-muted{ color: var(--muted); }
+.site-footer{ padding:16px; padding-bottom: calc(16px + var(--safe-bottom)); text-align:center; }
+
 
 /* =================================================================
    HEADER & FOOTER
@@ -111,6 +132,25 @@ main {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+.topbar{
+  position: fixed;
+  top: var(--safe-top);
+  left: 0;
+  right: 0;
+  max-width: 420px;
+  margin: 0 auto;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 56px;
+  padding: 0 .5rem;
+  background-color: color-mix(in srgb, var(--card-bg) 80%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 
 .app-title {
   font-size: 1rem;
@@ -211,6 +251,13 @@ main {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 그림자를 더 진하게 */
   transition: all 0.2s ease-in-out; /* 부드러운 전환 효과 */
 }
+.forecast-grid{
+  display: grid;
+  grid-template-columns: repeat(5, minmax(90px, 1fr));
+  gap: 12px;
+  margin: 8px 0;
+}
+
 
 .gauge-display { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0; }
 .semi-circle-gauge { text-align: center; }
@@ -230,6 +277,8 @@ main {
   border-radius: 50%;
   transition: --angle 0.5s ease-out;
   background: conic-gradient(from -90deg, var(--c1, #007bff) 0deg, var(--c2, #4dabf7) var(--angle, 0deg), var(--border-color) var(--angle, 0deg), var(--border-color) 180deg);
+  --c1: var(--primary-color);
+  --c2: color-mix(in srgb, var(--primary-color) 65%, white);
 }
 .gauge-value { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; font-weight: 700; }
 .gauge-label { font-size: 0.9rem; font-weight: 500; }
@@ -254,6 +303,9 @@ main {
 /* =================================================================
    UTILITY & ICON BUTTON
    ================================================================= */
-.icon-button { width: 44px; height: 44px; border: none; background: none; color: var(--text-color); cursor: pointer; display: grid; place-items: center; border-radius: 50%; padding: 0; }
-.icon-button svg { width: 24px; height: 24px; }
+.icon-btn{
+  width: 44px; height: 44px; border: none; background: none; color: var(--text-color);
+  cursor: pointer; display: grid; place-items: center; border-radius: 50%; padding: 0;
+}
+.icon-btn svg{ width: 24px; height: 24px; }
 
