@@ -374,55 +374,54 @@ function initialize() {
 }
 
 function bindUIEvents() {
-const settingsBtn      = document.getElementById('settings-btn');
-const settingsPanel    = document.getElementById('settings-panel');
-const settingsBackdrop = document.getElementById('settings-backdrop');
+  const settingsBtn      = document.getElementById('settings-btn');
+  const settingsPanel    = document.getElementById('settings-panel');
+  const settingsBackdrop = document.getElementById('settings-backdrop');
 
-const openSettings = () => 
-{
-  settingsPanel?.classList.add('is-open');
-  settingsBackdrop?.classList.add('is-visible');
-  settingsBtn?.setAttribute('aria-expanded', 'true');
-  document.body.style.overflow = 'hidden';
-};
-const closeSettings = () =>
-{
-  settingsPanel?.classList.remove('is-open');
-  settingsBackdrop?.classList.remove('is-visible');
-  settingsBtn?.setAttribute('aria-expanded', 'false');
-  document.body.style.overflow = '';
-};
+  const openSettings = () => 
+  {
+    settingsPanel?.classList.add('is-open');
+    settingsBackdrop?.classList.add('is-visible');
+    settingsBtn?.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+  const closeSettings = () =>
+  {
+    settingsPanel?.classList.remove('is-open');
+    settingsBackdrop?.classList.remove('is-visible');
+    settingsBtn?.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
 
-settingsBtn?.addEventListener('click', openSettings);
-settingsBackdrop?.addEventListener('click', closeSettings);
+  settingsBtn?.addEventListener('click', openSettings);
+  settingsBackdrop?.addEventListener('click', closeSettings);
 
-const tabButtons = document.querySelectorAll('.tab-button');
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // 현재 활성화된 탭과 콘텐츠의 'active' 클래스를 제거
-            document.querySelector('.tab-button.active').classList.remove('active');
-            document.querySelector('.tab-content.active').classList.remove('active');
-            
-            // 클릭된 버튼과 그에 맞는 콘텐츠에 'active' 클래스를 추가
-            const tabId = button.dataset.tab;
-            button.classList.add('active');
-            byId(`tab-${tabId}`).classList.add('active');
-        });
-    });
+  const tabButtons = document.querySelectorAll('.tab-button');
+  tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+          // 현재 활성화된 탭과 콘텐츠의 'active' 클래스를 제거
+          document.querySelector('.tab-button.active').classList.remove('active');
+          document.querySelector('.tab-content.active').classList.remove('active');
+          
+          // 클릭된 버튼과 그에 맞는 콘텐츠에 'active' 클래스를 추가
+          const tabId = button.dataset.tab;
+          button.classList.add('active');
+          byId(`tab-${tabId}`).classList.add('active');
+      });
+  });
 
-const accordionItems = document.querySelectorAll('#settings-panel .accordion-menu details');
-    accordionItems.forEach(item => {
-        item.addEventListener('toggle', (event) => {
-            if (item.open) {
-                accordionItems.forEach(otherItem => {
-                    if (otherItem !== item) {
-                        otherItem.removeAttribute('open');
-                    }
-                });
-            }
-        });
-    });
-  }
-
+  const accordionItems = document.querySelectorAll('#settings-panel .accordion-menu details');
+  accordionItems.forEach(item => {
+      item.addEventListener('toggle', (event) => {
+          if (item.open) {
+              accordionItems.forEach(otherItem => {
+                  if (otherItem !== item) {
+                      otherItem.removeAttribute('open');
+                  }
+              });
+          }
+      });
+  });  // ← 여기! 이 `});`가 빠져서 오류 났어요. 추가했어요.
+}
 
 initialize();
