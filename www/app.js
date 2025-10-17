@@ -6,31 +6,32 @@ import { STANDARDS } from '/js/standards.js';
 console.log('[app] boot');
 
 // --- UI 요소 참조 ---
-const el = {
-  placeInput: document.getElementById('place-search-input'),
-  searchBtn: document.getElementById('search-btn'),
-  currentLocationBtn: document.getElementById('reload-location-btn'),
-  shareBtn: document.getElementById('share-btn'),
-  
-  summaryGrade: document.getElementById('summary-grade'),
-  summaryText: document.getElementById('summary-text'),
-  currentLocation: document.getElementById('current-location'),
-  timestamp: document.getElementById('기준-시간'),
+ const el = {
+   // 검색 UI: 없을 수 있으니 존재하면만 쓸 거예요
+   placeInput: document.getElementById('place'),
+   searchBtn: document.getElementById('searchBtn'),
+   currentLocationBtn: document.getElementById('btn-current'),
+   shareBtn: document.getElementById('share-btn'),
 
-  pm10Gauge: {
-    arc: document.querySelector('#pm10-gauge .gauge-arc'),
-    value: document.querySelector('#pm10-gauge .gauge-value'),
-  },
-  pm25Gauge: {
-    arc: document.querySelector('#pm25-gauge .gauge-arc'),
-    value: document.querySelector('#pm25-gauge .gauge-value'),
-  },
+   // 요약(히어로)
+   summaryGrade: document.getElementById('hero-grade'),
+   summaryText: document.getElementById('hero-desc'),
+   currentLocation: document.getElementById('station-name'),
+   timestamp: document.getElementById('display-ts'),
 
-  linearBarsContainer: document.querySelector('.linear-bars-container'),
-  weatherIcon: document.getElementById('weather-icon'),
-  weatherTemp: document.getElementById('weather-temp'),
-};
+   // 게이지 (index.html 구조에 맞춤)
+   pm10Gauge: {
+     arc: document.getElementById('pm10-arc'),
+     value: document.getElementById('pm10-value'),
+   },
+   pm25Gauge: {
+     arc: document.getElementById('pm25-arc'),
+     value: document.getElementById('pm25-value'),
+   },
 
+   // 막대 컨테이너: id로 선택
+   linearBarsContainer: document.getElementById('linear-bars-container'),
+ };
 
 // --- forecast fetch + render ---
 async function fetchForecast(lat, lon){
@@ -78,7 +79,7 @@ function renderForecast(daily){
 
 // --- 렌더링 함수 ---
 function getGrade(metric, value) {
-  const stdCode = localStorage.getItem('aqi-standard') || 'KOR'; // 설정값 또는 기본값
+  const stdCode = localStorage.getItem('aq_standard') || 'WHO8';
   const std = STANDARDS[stdCode];
   if (!std || !std.breaks[metric] || value === null) {
     return { label: '정보없음', bg: '#868e96', fg: 'white' };
@@ -128,7 +129,7 @@ function renderSemiGauge(gauge, value, max) {
 
 
 function renderLinearBars(data) {
-    el.linearBarsContainer.innerHTML = '';
+    el.linearBarsContainer?.innerHTML = '';
     const pollutants = [
         { key: 'o3', label: '오존', max: 0.15 },
         { key: 'no2', label: '이산화질소', max: 0.1 },
@@ -161,6 +162,8 @@ async function updateAll(lat, lon) {
     try {
         const airData = await fetchNearestAir(lat, lon);
         renderMain(airData);
+        const fc = await fetchForecast(lat, lon);
+    renderForecast(fc.daily || []);
     } catch (error) {
         console.error("데이터 업데이트 중 오류:", error);
         el.summaryText.textContent = '데이터를 불러오는 데 실패했습니다.';
@@ -192,19 +195,19 @@ function initialize() {
 
     const settingsBtn = document.getElementById('settings-btn');
     const settingsPanel = document.getElementById('settings-panel');
-    const overlay = document.getElementById('overlay');
+    const overlay = document.getElementById('settings-backdrop');
     
     function closeSettings() {
       settingsPanel.classList.remove('is-open');
       overlay.classList.remove('is-visible');
     }
 
-    settingsBtn.addEventListener('click', () => {
-      settingsPanel.classList.add('is-open');
-      overlay.classList.add('is-visible');
-    });
+ settingsBtn?.addEventListener('click', () => {
+    settingsPanel.classList.add('is-open');
+    overlay.classList.add('is-visible');
+  });
 
-    overlay.addEventListener('click', closeSettings);
++ overlay?.addEventListener('click', closeSettings);
 
 initialize();
 
