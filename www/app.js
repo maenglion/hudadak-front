@@ -36,71 +36,95 @@ const stdCode = () => localStorage.getItem('aq_standard') || 'WHO8';
 /* ========= 예보 =========
    - 먼저 `${API_BASE}/forecast?lat=&lon=` 시도
    - 실패/빈값이면 Open-Meteo 날씨 + Air-Quality로 5일 구성 */
-async function fetchForecast(lat, lon){
-  // 1) 백엔드 먼저
-  try{
-     const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, { cache:'no-store' });
-    if (r.ok){
-      const j = await r.json();
-      if (j?.daily?.length) return j; // { daily:[ {date, icon, tmin, tmax, desc, pm25, pm10}... ] }
-    }
-  }catch(_){}
+import { API_BASE } from '/js/apiClient.js';
 
-  // 2) 폴백(키 없음, CORS OK)
+/**
+ * 예보: 우선 백엔드(API_BASE/forecast), 실패하면 Open-Meteo(날씨+공기질)로 폴백
+ * 반환 스키마: { daily:[ {date, icon, desc, tmin, tmax, pm25, pm10, horizon} ... ] }
+ */
+export async function fetchForecast(lat, lon){
+  // 1) 백엔드 우선 시도
+  try{
+    const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, { cache:'no-store' });
+    if (!r.ok) throw new Error(String(r.status));
+    const j = await r.json();
+    // 백엔드가 이미 {daily: [...]} 형태면 그대로 사용
+    if (j && Array.isArray(j.daily)) return j;
+  }catch(_){ /* 무시하고 폴백 진행 */ }
+
+  // 2) 폴백(Open-Meteo; CORS OK)
   const [w, aq] = await Promise.all([
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`, {cache:'no-store'}).then(r=>r.json()),
-    fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm10,pm2_5&timezone=Asia%2FSeoul`, {cache:'no-store'}).then(r=>r.json()),
+    fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&daily=weathercode,temperature_2m_max,temperature_2m_min` +
+      `&timezone=Asia%2FSeoul`, { cache:'no-store' }
+    ).then(r=>r.json()),
+    fetch(
+      `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}` +
+      `&hourly=pm10,pm2_5` +
+      `&timezone=Asia%2FSeoul`, { cache:'no-store' }
+    ).then(r=>r.json()),
   ]);
 
-  // 시간별 AQ → 날짜별(현지) 최대치로 요약
-  const byDay = {};
-  if (aq?.hourly?.time) {
-    aq.hourly.time.forEach((iso, i)=>{
-      const d = iso.slice(0,10);
-      const pm25 = aq.hourly.pm2_5?.[i];
-      const pm10 = aq.hourly.pm10?.[i];
-      if (!byDay[d]) byDay[d] = { pm25:[], pm10:[] };
-      if (pm25!=null) byDay[d].pm25.push(pm25);
-      if (pm10!=null) byDay[d].pm10.push(pm10);
-    });
+  // 날씨 일자 배열
+  const dates = (w?.daily?.time) || [];
+  const tmax  = (w?.daily?.temperature_2m_max) || [];
+  const tmin  = (w?.daily?.temperature_2m_min) || [];
+  const wcode = (w?.daily?.weathercode) || [];
+
+  // 공기질(시간별) → 날짜별로 집계(최댓값 기준; 필요하면 mean으로 변경 가능)
+  const aqIdx   = aq?.hourly?.time || [];
+  const byDate  = {}; // { 'YYYY-MM-DD': { pm10:[...], pm25:[...] } }
+  for (let i=0;i<aqIdx.length;i++){
+    const d = String(aqIdx[i]).slice(0,10);
+    (byDate[d] ||= { pm10:[], pm25:[] });
+    if (aq?.hourly?.pm10?.[i]  != null) byDate[d].pm10.push(aq.hourly.pm10[i]);
+    if (aq?.hourly?.pm2_5?.[i] != null) byDate[d].pm25.push(aq.hourly.pm2_5[i]);
   }
+  const pick = (arr, mode='max')=>{
+    if (!arr?.length) return null;
+    if (mode==='mean') return Math.round(arr.reduce((a,b)=>a+b,0)/arr.length);
+    return Math.round(Math.max(...arr));
+  };
 
-  const daily = (w?.daily?.time || []).map((d, i)=>{
-    const wcode = w.daily.weathercode?.[i];
-    const tmax  = w.daily.temperature_2m_max?.[i];
-    const tmin  = w.daily.temperature_2m_min?.[i];
-    const aqDay = byDay[d] || {};
-    const pm25max = aqDay.pm25?.length ? Math.max(...aqDay.pm25) : null;
-    const pm10max = aqDay.pm10?.length ? Math.max(...aqDay.pm10) : null;
+  // 카드 5개 구성(날짜 기준 정렬된 앞 5개)
+  const daily = dates.slice(0, 5).map((d, i) => {
+    const agg = byDate[d] || { pm10:[], pm25:[] };
+    const pm10 = pick(agg.pm10, 'max');
+    const pm25 = pick(agg.pm25, 'max');
 
-    const icon = weatherIcon(wcode);
-    const desc = weatherDesc(wcode);
-    return { date:d, icon, tmin, tmax, desc, pm25: pm25max, pm10: pm10max };
-  }).slice(0,5);
+    const { icon, desc } = wmoToIconDesc(wcode[i]);
+    return {
+      date: d,
+      icon,        // 예: '☀️'
+      desc,        // 예: '맑음'
+      tmin: tmin[i] != null ? Math.round(tmin[i]) : null,
+      tmax: tmax[i] != null ? Math.round(tmax[i]) : null,
+      pm10, pm25,
+      horizon: 'Open-Meteo 폴백',
+    };
+  });
 
   return { daily };
 }
 
-// 간단한 날씨코드 → 아이콘/문구
-function weatherIcon(code){
-  if (code==0) return '☀️';
-  if ([1,2].includes(code)) return '🌤️';
-  if (code===3) return '⛅️';
-  if ([45,48].includes(code)) return '🌫️';
-  if ([51,53,55,61,63,65].includes(code)) return '🌧️';
-  if ([71,73,75].includes(code)) return '❄️';
-  if ([95,96,99].includes(code)) return '⛈️';
-  return '🌥️';
+/** WMO weathercode → 간단 아이콘/설명 */
+function wmoToIconDesc(code){
+  // 참고: https://open-meteo.com/en/docs
+  const c = Number(code);
+  if ([0].includes(c))                 return { icon:'☀️', desc:'맑음' };
+  if ([1,2].includes(c))               return { icon:'🌤️', desc:'대체로 맑음' };
+  if ([3].includes(c))                 return { icon:'☁️', desc:'흐림' };
+  if ([45,48].includes(c))             return { icon:'🌫️', desc:'안개' };
+  if ([51,53,55,56,57].includes(c))    return { icon:'🌦️', desc:'이슬비' };
+  if ([61,63,65,66,67].includes(c))    return { icon:'🌧️', desc:'비' };
+  if ([71,73,75,77].includes(c))       return { icon:'❄️', desc:'눈' };
+  if ([80,81,82].includes(c))          return { icon:'🌧️', desc:'소나기' };
+  if ([95,96,99].includes(c))          return { icon:'⛈️', desc:'뇌우' };
+  return { icon:'🌥️', desc:'구름' };
 }
-function weatherDesc(code){
-  if (code==0) return '맑음';
-  if ([1,2,3].includes(code)) return '구름';
-  if ([45,48].includes(code)) return '안개';
-  if ([51,53,55,61,63,65].includes(code)) return '비';
-  if ([71,73,75].includes(code)) return '눈';
-  if ([95,96,99].includes(code)) return '뇌우';
-  return '날씨';
-}
+
+
 
 /* ========= 예보 렌더 =========
    - 컨테이너 id: forecast-grid, 보조문구 id: forecast-note (이미 페이지에 있음) */
