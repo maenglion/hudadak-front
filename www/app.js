@@ -5,13 +5,8 @@ import { STANDARDS } from '/js/standards.js';
 
 console.log('[app] boot');
 
-const byId = (...ids) => ids.map(id => document.getElementById(id)).find(Boolean); // (쓰면 유지, 안 쓰면 삭제해도 됨)
+const setText = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
 
-const setText  = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
-const setValue = (el, value)   => { if (el) el.value = value; };
-
-const clamp   = (v, min, max) => Math.max(min, Math.min(max, v));
-const stdCode = () => localStorage.getItem('aq_standard') || 'WHO8';
 
    // 검색 UI: 없을 수 있으니 존재하면만 쓸 거예요
  const el = {
@@ -20,6 +15,8 @@ const stdCode = () => localStorage.getItem('aq_standard') || 'WHO8';
   summaryScore: document.getElementById('hero-score'),
   summaryText : document.getElementById('hero-desc'),
   currentLocation: document.getElementById('station-name'),
+  currentBtn: document.getElementById('current-btn'),
+
 
   // 겹원 게이지(밖=PM10, 안=PM2.5)
   pm10Gauge: document.getElementById('pm10-gauge'),
@@ -47,8 +44,10 @@ async function fetchForecast(lat, lon){
     if (!r.ok) throw new Error(String(r.status));
     const j = await r.json();
     if (j && Array.isArray(j.daily)) return j;    // 백엔드가 이미 스키마 맞춰주면 그대로 사용
-  }catch(_){ /* 조용히 폴백 진행 */ }
-
+  } catch (err) {
+  // 조용히 폴백 진행 (디버깅용 로그)
+  console.debug('[forecast] backend failed → fallback', err);
+}
   // 2) 폴백(Open-Meteo; CORS OK)
   const [w, aq] = await Promise.all([
     fetch(
@@ -173,6 +172,24 @@ function getGrade(pollutant, value){
   return { key:band.key, label:band.label, bg:band.bg, fg:band.fg };
 }
 
+// 공통: 현재 선택된 '등급 기준 코드'를 알아낸다.
+function stdCode() {
+  // 1) 메모리에 캐시된 값이 있으면 우선
+  if (typeof window.__appStdCode === 'string' && window.__appStdCode) return window.__appStdCode;
+
+  // 2) 설정 셀렉트 박스(id="std-code")가 있으면 그 값
+  const sel = document.getElementById('std-code');
+  if (sel && sel.value) return sel.value;
+
+  // 3) 저장된 로컬 스토리지 값
+  const saved = localStorage.getItem('stdCode');
+  if (saved) return saved;
+
+  // 4) 기본값
+  return 'WHO8';
+}
+
+
 /* 겹원 게이지 렌더러 */
 function renderConcentricGauges(pm10, pm25) {
   // 각도 계산 (시각용 상한, 과감하게 고정)
@@ -224,7 +241,11 @@ function renderMain(air){
   if (el.summaryGrade){ el.summaryGrade.textContent = mainGrade.label; el.summaryGrade.style.color = mainGrade.bg; }
   if (el.summaryScore){ el.summaryScore.textContent = String(scoreFrom(air)).padStart(2, '0'); }
   setText('hero-desc', air.cai_value!=null ? `지수 ${air.cai_value}` : '오늘의 대기질 총평입니다.');
-  document.getElementById('station-name')?.textContent = (air.station?.name || air.name || '—');
+ const $station = document.getElementById('station-name');
+if ($station) {
+  $station.textContent = `${air.station?.name || air.name || '—'}`;
+}
+
 
   // 겹원 게이지
   renderConcentricGauges(air.pm10, air.pm25);
@@ -264,7 +285,9 @@ function renderLinearBars(data){
     wrap.appendChild(item);
   });
 
-  wrap.closest('section').style.display = shown ? '' : 'none';
+const sec = wrap.closest('section');
+if (sec) sec.style.display = shown ? '' : 'none';
+
 }
 
 
@@ -276,7 +299,10 @@ async function geocode(q){
   try{
     const r = await fetch(`${API_BASE}/geo/search?q=${encodeURIComponent(q)}`, { cache:'no-store' });
     if (r.ok) return await r.json(); // {lat, lon, address}
-  }catch(_){}
+  } catch (err) {
+  console.debug('[geocode] backend search failed → fallback', err);
+}
+
 
   const u = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=ko`;
   const j = await fetch(u, { cache:'no-store' }).then(r=>r.json());
@@ -395,32 +421,33 @@ function bindUIEvents() {
   settingsBtn?.addEventListener('click', openSettings);
   settingsBackdrop?.addEventListener('click', closeSettings);
 
-  const tabButtons = document.querySelectorAll('.tab-button');
-  tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-          // 현재 활성화된 탭과 콘텐츠의 'active' 클래스를 제거
-          document.querySelector('.tab-button.active').classList.remove('active');
-          document.querySelector('.tab-content.active').classList.remove('active');
-          
-          // 클릭된 버튼과 그에 맞는 콘텐츠에 'active' 클래스를 추가
-          const tabId = button.dataset.tab;
-          button.classList.add('active');
-          byId(`tab-${tabId}`).classList.add('active');
-      });
+ const tabButtons = document.querySelectorAll('.tab-button');
+tabButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelector('.tab-button.active')?.classList.remove('active');
+    document.querySelector('.tab-content.active')?.classList.remove('active');
+
+    const tabId = button.dataset.tab;
+    button.classList.add('active');
+    const pane = document.getElementById(`tab-${tabId}`);
+    pane?.classList.add('active');
   });
+});
 
   const accordionItems = document.querySelectorAll('#settings-panel .accordion-menu details');
   accordionItems.forEach(item => {
-      item.addEventListener('toggle', (event) => {
-          if (item.open) {
-              accordionItems.forEach(otherItem => {
-                  if (otherItem !== item) {
-                      otherItem.removeAttribute('open');
-                  }
-              });
-          }
-      });
-  });  // ← 여기! 이 `});`가 빠져서 오류 났어요. 추가했어요.
+item.addEventListener('toggle', () => {
+  if (item.open) {
+    accordionItems.forEach(otherItem => {
+      if (otherItem !== item) {
+        otherItem.removeAttribute('open');
+      }
+    });
+  }
+});
+  })
 }
 
+
 initialize();
+bindUIEvents();
