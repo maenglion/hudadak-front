@@ -5,33 +5,41 @@ import { STANDARDS } from '/js/standards.js';
 
 console.log('[app] boot');
 
-// --- UI 요소 참조 ---
- const el = {
+const byId = (...ids) => ids.map(id => document.getElementById(id)).find(Boolean);
+const setText = (id, text) => {
+  const n = document.getElementById(id);
+  if (n) n.textContent = text;
+};
+const setValue = (el, value) => { if (el) el.value = value; };
+
+
+function setTextById(id, text){
+  const n = document.getElementById(id);
+  if (n) n.textContent = text;
+}
+
+function setInputValue(el, value){
+  if (el) el.value = value;
+}
+
    // 검색 UI: 없을 수 있으니 존재하면만 쓸 거예요
-  placeInput: document.getElementById('place')                  || document.getElementById('place-search-input'),
-  searchBtn:  document.getElementById('searchBtn')              || document.getElementById('search-btn'),
-  currentBtn: document.getElementById('btn-current')            || document.getElementById('reload-location-btn'),
-  shareBtn:   document.getElementById('share-btn'), 
+ const el = {
+  placeInput: byId('place', 'place-search-input'),
+  searchBtn : byId('searchBtn', 'search-btn'),
+  currentBtn: byId('btn-current', 'reload-location-btn'),
+  shareBtn  : byId('share-btn'),
 
-   // 요약(히어로)
-   summaryGrade: document.getElementById('hero-grade'),
-   summaryText: document.getElementById('hero-desc'),
-   currentLocation: document.getElementById('station-name'),
-   timestamp: document.getElementById('display-ts'),
+  summaryGrade: byId('hero-grade'),
+  summaryText : byId('hero-desc'),
+  currentLocation: byId('station-name'),
+  timestamp  : byId('display-ts'),
 
-   // 게이지 (index.html 구조에 맞춤)
-   pm10Gauge: {
-     arc: document.getElementById('pm10-arc'),
-     value: document.getElementById('pm10-value'),
-   },
-   pm25Gauge: {
-     arc: document.getElementById('pm25-arc'),
-     value: document.getElementById('pm25-value'),
-   },
+  pm10Gauge: { arc: byId('pm10-arc'), value: byId('pm10-value') },
+  pm25Gauge: { arc: byId('pm25-arc'), value: byId('pm25-value') },
 
-   // 막대 컨테이너: id로 선택
-   linearBarsContainer: document.getElementById('linear-bars-container'),
- };
+  linearBarsContainer: byId('linear-bars-container'),
+};
+
 
 // --- forecast fetch + render ---
 async function fetchForecast(lat, lon){
@@ -210,25 +218,40 @@ async function doSearch(q){
 }
 
 // 안전 바인딩 (요소가 있을 때만 연결)
-el.searchBtn?.addEventListener('click', () => doSearch());
-el.placeInput?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') doSearch();
-});
-el.currentBtn?.addEventListener('click', () => {
+el.searchBtn && el.searchBtn.addEventListener('click', () => doSearch(el.placeInput?.value || ''));
+el.placeInput && el.placeInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(el.placeInput.value || ''); });
+el.currentBtn && el.currentBtn.addEventListener('click', () => {
   navigator.geolocation?.getCurrentPosition(
     async pos => {
-      if (typeof updateAll === 'function') await updateAll(pos.coords.latitude, pos.coords.longitude);
-      else {
+      if (typeof updateAll === 'function') {
+        await updateAll(pos.coords.latitude, pos.coords.longitude);
+      } else {
         const data = await fetchNearestAir(pos.coords.latitude, pos.coords.longitude);
-        (typeof renderMain === 'function') ? renderMain(data) : (document.getElementById('pm10-value')?.textContent = data.pm10 ?? '--');
+        if (typeof renderMain === 'function') {
+          renderMain(data);
+        } else {
+          // ❗여기서 LHS에 ?. 쓰지 말고 헬퍼 사용
+          setText('pm10-value', data.pm10 ?? '--');
+          setText('pm25-value', data.pm25 ?? '--');
+          setText('station-name', data.station?.name || data.name || '--');
+          setText('display-ts', data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
+        }
       }
     },
     async _ => {
       // 실패 시 서울 기본
-      if (typeof updateAll === 'function') await updateAll(37.5665,126.9780);
-      else {
-        const data = await fetchNearestAir(37.5665,126.9780);
-        (typeof renderMain === 'function') ? renderMain(data) : (document.getElementById('pm10-value')?.textContent = data.pm10 ?? '--');
+      if (typeof updateAll === 'function') {
+        await updateAll(37.5665, 126.9780);
+      } else {
+        const data = await fetchNearestAir(37.5665, 126.9780);
+        if (typeof renderMain === 'function') {
+          renderMain(data);
+        } else {
+          setText('pm10-value', data.pm10 ?? '--');
+          setText('pm25-value', data.pm25 ?? '--');
+          setText('station-name', data.station?.name || data.name || '--');
+          setText('display-ts', data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
+        }
       }
     }
   );
