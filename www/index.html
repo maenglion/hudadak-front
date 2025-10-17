@@ -76,21 +76,13 @@
           <div id="hero-desc" class="desc">—</div>
         </div>
       </section>
-      <!-- 5일 예보 -->
-<section class="card" style="margin:8px;">
-  <h4>예보</h4>
-  <div id="forecast-grid" class="forecast-grid">
-    <!-- 데이터 없을 땐 샘플 1장 표시 -->
-    <div class="forecast-card">
-      <p class="forecast-day">금요일</p>
-      <div class="forecast-icon">☀️</div>
-      <p class="forecast-temp">22° / <strong>28°</strong></p>
-      <p class="forecast-desc">맑음</p>
-    </div>
+          <!-- 하단 검색 바 -->
+    <footer class="bottom-bar" style="display:flex; gap:8px; padding:12px; position:sticky; bottom:0; background:var(--bg);">
+      <input type="search" id="place" class="search" placeholder="지역 검색 (예: 강남역) 또는 '37.57,126.98'" />
+      <button id="searchBtn" class="icon-btn" aria-label="검색">🔎</button>
+      <button id="btn-current" class="icon-btn" aria-label="현 위치">📍</button>
+    </footer>
   </div>
-  <small id="forecast-note" class="muted" style="margin-left:8px"></small>
-</section>
-
 
       <!-- 상세 지표 카드 -->
       <section class="card" style="margin:8px;">
@@ -129,13 +121,22 @@
       </section>
     </main>
 
-    <!-- 하단 검색 바 -->
-    <footer class="bottom-bar" style="display:flex; gap:8px; padding:12px; position:sticky; bottom:0; background:var(--bg);">
-      <input type="search" id="place" class="search" placeholder="지역 검색 (예: 강남역) 또는 '37.57,126.98'" />
-      <button id="searchBtn" class="icon-btn" aria-label="검색">🔎</button>
-      <button id="btn-current" class="icon-btn" aria-label="현 위치">📍</button>
-    </footer>
+
+
+      <!-- 5일 예보 -->
+<section class="card" style="margin:8px;">
+  <h4>예보</h4>
+  <div id="forecast-grid" class="forecast-grid">
+    <!-- 데이터 없을 땐 샘플 1장 표시 -->
+    <div class="forecast-card">
+      <p class="forecast-day">금요일</p>
+      <div class="forecast-icon">☀️</div>
+      <p class="forecast-temp">22° / <strong>28°</strong></p>
+      <p class="forecast-desc">맑음</p>
+    </div>
   </div>
+  <small id="forecast-note" class="muted" style="margin-left:8px"></small>
+</section>
 
   <!-- 앱 엔트리 (캐시 우회 버전) -->
  <script type="module" src="/app.js?v=20251017n"></script>
