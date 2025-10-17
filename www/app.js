@@ -137,31 +137,31 @@ function renderSemiGauge(gauge, value, max) {
 
 
 function renderLinearBars(data) {
-    el.linearBarsContainer?.innerHTML = '';
-    const pollutants = [
-        { key: 'o3', label: '오존', max: 0.15 },
-        { key: 'no2', label: '이산화질소', max: 0.1 },
-        { key: 'so2', label: '아황산가스', max: 0.05 },
-        { key: 'co', label: '일산화탄소', max: 15 },
-    ];
+  if (!el.linearBarsContainer) return;
 
-    pollutants.forEach(p => {
-        const value = data[p.key];
-        if (value === null || value === undefined) return;
-        
-        const grade = getGrade(p.key, value); // (기준이 있다면)
-        const percentage = Math.min(100, (value / p.max) * 100);
-        const item = document.createElement('div');
-        item.className = 'linear-bar-item';
-        item.innerHTML = `
-            <span class="bar-label">${p.label}</span>
-            <div class="bar-wrapper">
-                <div class="bar-fill" style="width: ${percentage}%; background-color: ${grade?.bg || '#adb5bd'};"></div>
-            </div>
-            <span class="bar-value">${value}</span>
-        `;
-        el.linearBarsContainer.appendChild(item);
-    });
+  el.linearBarsContainer.innerHTML = '';
+
+  const pollutants = [
+    { key: 'o3',  label: '오존',      max: 0.15 },
+    { key: 'no2', label: '이산화질소', max: 0.10 },
+    { key: 'so2', label: '아황산가스', max: 0.05 },
+    { key: 'co',  label: '일산화탄소', max: 15   },
+  ];
+
+  pollutants.forEach(p => {
+    const v = data?.[p.key];
+    if (v == null) return;
+
+    const pct = Math.max(0, Math.min(100, (v / p.max) * 100));
+    const item = document.createElement('div');
+    item.className = 'linear-bar-item';
+    item.innerHTML = `
+      <div class="bar-label">${p.label}</div>
+      <div class="bar-wrapper"><div class="bar-fill" style="width:${pct}%;"></div></div>
+      <div class="bar-value">${v}</div>
+    `;
+    el.linearBarsContainer.appendChild(item);
+  });
 }
 
 
