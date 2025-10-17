@@ -335,11 +335,12 @@ async function fetchNearestAirSoft(lat, lon){
 async function updateAll(lat, lon){
   try{
     let air;
-    try{
-      air = await fetchNearestAir(lat, lon); // 정상 경로
-    }catch(_){
-      air = await fetchNearestAirSoft(lat, lon); // 폴백
-    }
+    try {
+  air = await fetchNearestAir(lat, lon); // 정상 경로
+} catch(err) { // _ 를 err 로 변경
+  console.error("My backend fetch failed, using fallback:", err); // 🚨 에러 출력 코드 추가
+  air = await fetchNearestAirSoft(lat, lon); // 폴백
+}
     const fc = await fetchForecast(lat, lon);  // 이미 폴백 내장
 
     renderMain(air);
