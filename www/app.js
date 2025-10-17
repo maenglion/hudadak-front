@@ -238,19 +238,22 @@ function renderSemiGauge(gauge, value, max){
     `conic-gradient(${g.bg} 0deg, ${g.bg} ${angle}deg, #e9ecef ${angle}deg, #e9ecef 180deg)`;
 }
 
+// app.js 안의 renderLinearBars 교체
 function renderLinearBars(data){
-  const wrap = el.linearBarsContainer || document.getElementById('linear-bars-container');
+  const wrap = document.getElementById('linear-bars-container');
   if (!wrap) return;
 
   wrap.innerHTML = '';
-  const pollutants = [
-    { key:'o3',  label:'오존(O₃)',        max:0.15 },
-    { key:'no2', label:'이산화질소(NO₂)', max:0.10 },
-    { key:'so2', label:'아황산가스(SO₂)', max:0.05 },
-    { key:'co',  label:'일산화탄소(CO)',  max:15   },
+
+  // μg/m³ 기준의 표시 상한(대략값)
+  const defs = [
+    { key:'o3',  label:'오존(O₃)',        max: 240, unit: (data.units?.o3  || 'µg/m³') },
+    { key:'no2', label:'이산화질소(NO₂)', max: 200, unit: (data.units?.no2 || 'µg/m³') },
+    { key:'so2', label:'아황산가스(SO₂)', max: 350, unit: (data.units?.so2 || 'µg/m³') },
+    { key:'co',  label:'일산화탄소(CO)',  max:10000,unit: (data.units?.co  || 'µg/m³') },
   ];
 
-  pollutants.forEach(p=>{
+  defs.forEach(p=>{
     const v = data?.[p.key];
     if (v == null) return;
     const pct = clamp((v / p.max) * 100, 0, 100);
@@ -260,9 +263,17 @@ function renderLinearBars(data){
     item.innerHTML = `
       <div class="bar-label">${p.label}</div>
       <div class="bar-wrapper"><div class="bar-fill" style="width:${pct}%;"></div></div>
-      <div class="bar-value">${v}</div>`;
+      <div class="bar-value">${Math.round(v)} ${p.unit}</div>
+    `;
     wrap.appendChild(item);
   });
+
+  // 전부 없으면 섹션 숨김(선택)
+  if (!wrap.children.length) {
+    wrap.closest('section')?.style && (wrap.closest('section').style.display = 'none');
+  } else {
+    wrap.closest('section')?.style && (wrap.closest('section').style.display = '');
+  }
 }
 
 
