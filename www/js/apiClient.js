@@ -7,6 +7,21 @@ export async function fetchNearestAir(lat, lon) {
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
   const raw = await r.json();
 
+  // apiClient.js 안에서 raw → data 만든 뒤:
+if (data.o3==null && data.no2==null && data.so2==null && data.co==null) {
+  try {
+    const u = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&timezone=Asia%2FSeoul`;
+    const r2 = await fetch(u, { cache:'no-store' });
+    const j = await r2.json();
+    const idx = (j.hourly?.time?.length || 1) - 1;
+    data.o3  = j.hourly?.ozone?.[idx] ?? null;
+    data.no2 = j.hourly?.nitrogen_dioxide?.[idx] ?? null;
+    data.so2 = j.hourly?.sulphur_dioxide?.[idx] ?? null;
+    data.co  = j.hourly?.carbon_monoxide?.[idx] ?? null;
+  } catch(_) {}
+}
+
+
   // 1) 서버 응답 → 프론트 표준 스키마
   const data = {
     pm10: raw.pm10 ?? null,

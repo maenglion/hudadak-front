@@ -278,34 +278,55 @@ function renderLinearBars(data){
 
 
 // 검색 "위도,경도" 직접 입력 허용 + 백엔드 프록시(/api/geo/search) 사용
+// === 주소 검색 → 좌표 → 전체 갱신 ===
 async function geocode(query){
-  if (!query) throw new Error('query required');
-
-  // 0) "37.57,126.98" 같은 직접 좌표 입력
-  const m = String(query).trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  // "37.57,126.98" 직접 입력 처리
+  const m = String(query||'').trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
   if (m) return { lat: parseFloat(m[1]), lon: parseFloat(m[2]), address: `${m[1]},${m[2]}` };
 
-  // 1) 백엔드 먼저 시도
+  // 백엔드가 있으면 먼저 시도
   try{
     const r = await fetch(`${API_BASE}/geo/search?q=${encodeURIComponent(query)}`, { cache:'no-store' });
     if (r.ok) return await r.json(); // {lat, lon, address}
-    // 404/501 같은 미구현/미결과 시 폴백 진행
-  }catch(_){ /* 네트워크 오류도 폴백 */ }
+  }catch(_){}
 
-  // 2) 폴백: Open-Meteo Geocoding (CORS OK, 무료)
-  // 문서: https://open-meteo.com/en/docs/geocoding-api
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=ko`;
-  const r2 = await fetch(url, { cache:'no-store' });
-  if (!r2.ok) throw new Error(`geocoding failed: ${r2.status}`);
+  // 폴백: Open-Meteo Geocoding
+  const u = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=ko`;
+  const r2 = await fetch(u, { cache:'no-store' });
   const j = await r2.json();
   const hit = j?.results?.[0];
-  if (!hit) throw new Error('no geocoding result');
+  if (!hit) throw new Error('no result');
   return {
-    lat: hit.latitude,
-    lon: hit.longitude,
+    lat: hit.latitude, lon: hit.longitude,
     address: [hit.country, hit.admin1, hit.name].filter(Boolean).join(' · ')
   };
 }
+
+async function doSearch(query){
+  if (!query) return;
+  try{
+    const g = await geocode(query);
+    // 입력창 값 갱신(있으면)
+    const placeInput = document.getElementById('place') || document.getElementById('place-search-input');
+    if (placeInput) placeInput.value = g.address;
+    await updateAll(g.lat, g.lon);
+  }catch(e){
+    console.error(e);
+    alert('주소를 찾지 못했습니다. "37.57,126.98"처럼 위도,경도로도 입력할 수 있어요.');
+  }
+}
+
+// 이벤트 바인딩(안전 가드)
+document.getElementById('searchBtn')?.addEventListener('click', ()=>{
+  const v = (document.getElementById('place') || document.getElementById('place-search-input'))?.value || '';
+  doSearch(v);
+});
+(document.getElementById('place') || document.getElementById('place-search-input'))?.addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter'){
+    doSearch(e.currentTarget.value || '');
+  }
+});
+
 
 
 // 안전 바인딩 (요소가 있을 때만 연결)
