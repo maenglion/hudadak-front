@@ -169,52 +169,32 @@ function renderLinearBars(data) {
 async function geocode(query){
   if (!query) throw new Error('query required');
 
-  // 1) "37.57,126.98" 같이 콤마로 구분된 좌표 문자열 지원
+  // 0) "37.57,126.98" 같은 직접 좌표 입력
   const m = String(query).trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
   if (m) return { lat: parseFloat(m[1]), lon: parseFloat(m[2]), address: `${m[1]},${m[2]}` };
 
-  // 2) 백엔드 지오코딩 프록시 (미구현이어도 에러만 캐치하면 됨)
-  const url = `${API_BASE}/geo/search?q=${encodeURIComponent(query)}`;
-  const r = await fetch(url, { cache: 'no-store' });
-  if (!r.ok) {
-    const t = await r.text().catch(()=>`${r.status} ${r.statusText}`);
-    throw new Error(`검색 실패: ${t}`);
-  }
-  // 기대 스키마: {lat, lon, address}
-  return await r.json();
-}
-
-// 실제 검색 실행
-async function doSearch(q){
-  const v = (q ?? el.placeInput?.value ?? '').trim();
-  if (v.length < 2 && !/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(v)) {
-    alert('두 글자 이상 입력하거나 "37.57,126.98" 형태로 입력하세요.');
-    return;
-  }
+  // 1) 백엔드 먼저 시도
   try{
-    // 좌표 얻기
-    const g = await geocode(v);
-    // 좌표로 측정값 갱신
-if (typeof updateAll === 'function') {
-  await updateAll(g.lat, g.lon);
-} else if (typeof renderMain === 'function') {
-  const data = await fetchNearestAir(g.lat, g.lon);
-  renderMain(data);
-} else {
-  const data = await fetchNearestAir(g.lat, g.lon);
-  setText('pm10-value',  data.pm10 ?? '--');
-  setText('pm25-value',  data.pm25 ?? '--');
-  setText('station-name', data.station?.name || data.name || '--');
-  setText('display-ts',   data.display_ts ? new Date(data.display_ts).toLocaleString('ko-KR') : '--');
+    const r = await fetch(`${API_BASE}/geo/search?q=${encodeURIComponent(query)}`, { cache:'no-store' });
+    if (r.ok) return await r.json(); // {lat, lon, address}
+    // 404/501 같은 미구현/미결과 시 폴백 진행
+  }catch(_){ /* 네트워크 오류도 폴백 */ }
+
+  // 2) 폴백: Open-Meteo Geocoding (CORS OK, 무료)
+  // 문서: https://open-meteo.com/en/docs/geocoding-api
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=ko`;
+  const r2 = await fetch(url, { cache:'no-store' });
+  if (!r2.ok) throw new Error(`geocoding failed: ${r2.status}`);
+  const j = await r2.json();
+  const hit = j?.results?.[0];
+  if (!hit) throw new Error('no geocoding result');
+  return {
+    lat: hit.latitude,
+    lon: hit.longitude,
+    address: [hit.country, hit.admin1, hit.name].filter(Boolean).join(' · ')
+  };
 }
 
-    // 입력창에 정규화된 주소 표시
-    if (el.placeInput) el.placeInput.value = g.address || `${g.lat},${g.lon}`;
-  }catch(e){
-    console.error(e);
-    alert('주소 검색이 아직 준비되지 않았습니다. "위도,경도" 형태로 입력해 보세요.');
-  }
-}
 
 // 안전 바인딩 (요소가 있을 때만 연결)
 el.searchBtn && el.searchBtn.addEventListener('click', () => doSearch(el.placeInput?.value || ''));
