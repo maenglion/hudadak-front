@@ -294,7 +294,7 @@ function initialize() {
     // TODO: 검색, 공유 기능 이벤트 리스너 추가
 }
 
- // === Settings slide-in (single source) ===
+// === Settings slide-in (single source) ===
 const settingsBtn      = document.getElementById('settings-btn');
 const settingsPanel    = document.getElementById('settings-panel');
 const settingsBackdrop = document.getElementById('settings-backdrop');
@@ -303,7 +303,7 @@ function openSettings(){
   settingsPanel?.classList.add('is-open');
   settingsBackdrop?.classList.add('is-visible');
   settingsBtn?.setAttribute('aria-expanded', 'true');
-  document.body.style.overflow = 'hidden'; // 배경 스크롤 잠금
+  document.body.style.overflow = 'hidden';
 }
 function closeSettings(){
   settingsPanel?.classList.remove('is-open');
@@ -315,26 +315,6 @@ function closeSettings(){
 settingsBtn?.addEventListener('click', openSettings);
 settingsBackdrop?.addEventListener('click', closeSettings);
 
-// (선택) 설정 iframe이 메시지로 닫으라고 보낼 때
-window.addEventListener('message', (ev)=>{
-  if (ev.data?.type === 'closeSettings') closeSettings();
-  if (ev.data?.type === 'standardChanged') {
-    localStorage.setItem('aq_standard', ev.data.value);
-    window.repaintByStandard?.(ev.data.value);
-  }
-  if (ev.data?.type === 'themeChanged') {
-    const v = ev.data.value;
-    localStorage.setItem('app-theme', v);
-    if (v==='light' || v==='dark') document.documentElement.setAttribute('data-theme', v);
-    else document.documentElement.removeAttribute('data-theme');
-  }
-});
-
-// 메인 → 설정(iframe)으로 현재 값 보내고 싶으면(선택)
-function sendToSettings(msg){
-  const frame = settingsPanel?.querySelector('iframe');
-  frame?.contentWindow?.postMessage(msg, '*');
-}
 
 
 initialize();
