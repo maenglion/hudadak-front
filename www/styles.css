@@ -211,7 +211,7 @@ body {
 .forecast-desc { grid-column: 3; text-align: right; font-size: 14px; color: var(--text-secondary); margin-top: -8px; }
 .muted { color: var(--text-muted); font-size: 12px; margin-top: 12px; display: block; }
 
-/* --- 설정 패널 스타일 --- */
+/* --- 설정 패널 스타일 (전체 교체) --- */
 #settings-panel {
   position: fixed;
   top: 0;
@@ -224,8 +224,8 @@ body {
   z-index: 1001;
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out;
-  padding: calc(env(safe-area-inset-top, 0) + 16px) 20px 20px;
   box-sizing: border-box;
+  /* 패널 자체의 padding은 제거합니다. */
 }
 
 #settings-panel.is-open {
@@ -233,10 +233,24 @@ body {
 }
 
 .panel-header {
+  /* 절대 위치로 변경하여 좌표 고정 */
+  position: absolute;
+  top: 72px;
+  left: 24px;
+  
+  /* 메인 로고와 동일한 폰트 스타일 적용 */
   font-family: var(--font-p8);
-  font-size: 24px;
+  font-size: 20px;
   color: #FFFFFF;
-  margin-bottom: 32px;
+  margin: 0; /* 기존 margin 제거 */
+}
+
+/* 새로 추가한 content wrapper의 위치를 조정 */
+.panel-content {
+  padding: 130px 24px 24px 24px; /* 위쪽 여백을 확보하여 헤더와 겹치지 않게 함 */
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto; /* 내용이 길어질 경우 스크롤 */
 }
 
 .panel-section {
@@ -253,59 +267,19 @@ body {
   color: #FFFFFF;
 }
 
-/* 라디오 버튼 스타일 */
-.radio-group label {
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-  font-size: 16px;
-}
-.radio-group input[type="radio"] {
-  margin-right: 12px;
-  accent-color: #4CAF50; /* 예시 색상 */
-}
+/* 라디오 버튼, 아코디언 등 나머지 스타일은 그대로 유지 */
+.radio-group label { display: flex; align-items: center; margin-bottom: 12px; font-size: 16px; }
+.radio-group input[type="radio"] { margin-right: 12px; accent-color: #4CAF50; }
+.accordion-menu details { border-bottom: 1px solid rgba(196, 196, 196, 0.2); }
+.accordion-menu details:last-child { border-bottom: none; }
+.accordion-menu summary { padding: 16px 0; font-size: 16px; font-family: var(--font-p5); cursor: pointer; list-style: none; position: relative; padding-right: 20px; }
+.accordion-menu summary::-webkit-details-marker { display: none; }
+.accordion-menu summary::after { content: '▼'; position: absolute; right: 0; top: 16px; font-size: 12px; transition: transform 0.2s; }
+.accordion-menu details[open] > summary::after { transform: rotate(180deg); }
+.accordion-content { padding: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #a9a9a9; }
+.accordion-content p { margin-top: 0; }
 
-/* 아코디언 메뉴 스타일 */
-.accordion-menu details {
-  border-bottom: 1px solid rgba(196, 196, 196, 0.2);
-}
-.accordion-menu details:last-child {
-  border-bottom: none;
-}
-.accordion-menu summary {
-  padding: 16px 0;
-  font-size: 16px;
-  font-family: var(--font-p5);
-  cursor: pointer;
-  list-style: none; /* 기본 화살표 제거 */
-  position: relative;
-  padding-right: 20px;
-}
-.accordion-menu summary::-webkit-details-marker {
-  display: none; /* 기본 화살표 제거 */
-}
-.accordion-menu summary::after {
-  content: '▼';
-  position: absolute;
-  right: 0;
-  top: 16px;
-  font-size: 12px;
-  transition: transform 0.2s;
-}
-.accordion-menu details[open] > summary::after {
-  transform: rotate(180deg);
-}
-.accordion-content {
-  padding: 0 0 16px 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #a9a9a9;
-}
-.accordion-content p {
-  margin-top: 0;
-}
-
-/* 뒷면 백드롭 스타일 */
+/* 뒷면 백드롭 스타일은 그대로 유지 */
 #settings-backdrop {
   position: fixed;
   top: 0;
