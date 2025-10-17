@@ -1,164 +1,297 @@
-/* ===============================
-   THEME TOKENS (global)
-   =============================== */
+/* =================================================================
+   FONTS & CSS PROPERTIES
+   ================================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
-/* 기본(Light) */
-:root{
+/* For smooth gradient transitions on gauges */
+@property --angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* =================================================================
+   THEME & COLOR VARIABLES
+   ================================================================= */
+:root {
+  /* Safe Area Insets for Mobile UI */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* Light 기본 토큰 (setup/index.html에서 쓰던 것 그대로) */
-  --bg:#ffffff;
-  --fg:#111111;
-  --card:#f6f7f9;
-  --muted:#6b7280;
-  --border:#e5e7eb;
-
-  /* 라이트 기본 포인트 컬러(자동) */
-  --primary-color:#1e88e5;
+  /* Light Mode (Default) */
+  --bg-color: #f4f6f8;
+  --card-bg: #ffffff;
+  --text-color: #212529;
+  --text-color-rgb: 33, 37, 41;
+  --subtle-text-color: #6c757d;
+  --border-color: #e9ecef;
+  --primary-color: #0d6efd;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* 시스템 다크 (system 선택 시 적용) */
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0b0d12;
-    --fg:#f5f6f8;
-    --card:#10141b;
-    --muted:#9aa3b2;
-    --border:#1e2530;
-
-    /* 다크 기본 포인트 컬러(자동) */
-    --primary-color:#60a5fa;
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-color: #0b0d12;
+    --card-bg: #161a22;
+    --text-color: #f8f9fa;
+    --text-color-rgb: 248, 249, 250;
+    --subtle-text-color: #adb5bd;
+    --border-color: #343a40;
+    --primary-color: #4dabf7;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* 강제 라이트/다크 (설정에서 data-theme=light|dark 지정) */
-html[data-theme="light"]{
-  --bg:#ffffff;
-  --fg:#21242b;
-  --card:#f6f7f9;
-  --muted:#6b7280;
-  --border:#e5e7eb;
-  --primary-color:#1e88e5;
-}
-html[data-theme="dark"]{
-  --bg:#21242b;
-  --fg:#f5f6f8;
-  --card:#292b30;
-  --muted:#9aa3b2;
-  --border:#1e2530;
-  --primary-color:#60a5fa;
+html[data-theme="dark"] {
+  --bg-color: #0b0d12;
+  --card-bg: #161a22;
+  --text-color: #f8f9fa;
+  --text-color-rgb: 248, 249, 250;
+  --subtle-text-color: #adb5bd;
+  --border-color: #343a40;
+  --primary-color: #4dabf7;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* ===============================
-   BASE / LAYOUT
-   =============================== */
-
-html,body{height:100%}
-body{ background:var(--bg); color:var(--fg); padding-top:var(--safe-top); margin:0; }
-
-.site-footer{ padding:16px; padding-bottom:calc(16px + var(--safe-bottom)); }
-.text-muted,.muted{ color:var(--muted); }
-
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:12px 16px;
+/* =================================================================
+   BASE & LAYOUT
+   ================================================================= */
+* {
+  box-sizing: border-box;
 }
 
-/* Top bar */
-.topbar{
-  position:sticky; top:0; z-index:10;
-  display:flex; align-items:center;
-  height:56px; padding:0 12px;
-  backdrop-filter:blur(6px);
-}
-.icon-btn{
-  display:inline-grid; place-items:center;
-  width:36px; height:36px; border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--bg); color:var(--fg);
-}
-.icon-btn.left{ margin-right:auto; }
-.icon-btn.right{ margin-left:auto; }
-
-/* ===============================
-   HERO (그라데이션은 primary 기반)
-   =============================== */
-
-.hero{
-  padding:16px; border-radius:16px; margin:8px; color:#fff;
-  background: linear-gradient(160deg, var(--primary-color), color-mix(in srgb, var(--primary-color), #fff 40%));
-}
-.hero .hero-meta{ opacity:.9; font-size:.9rem; }
-.hero .value{ font-size:56px; line-height:1; font-weight:700; }
-.hero .grade{ font-size:1.1rem; margin-top:4px; }
-.hero .desc{ opacity:.95; margin-top:6px; }
-
-/* ===============================
-   SEARCH / TAGS / LISTS
-   =============================== */
-
-.row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.row .search{ flex:1; height:38px; border-radius:10px; border:1px solid var(--border); padding:0 10px; background:var(--bg); color:var(--fg); }
-
-.tag-container{ display:flex; gap:8px; flex-wrap:wrap; }
-.tag-container .badge{
-  padding:.35rem .6rem; border-radius:999px;
-  border:1px solid color-mix(in srgb, var(--border), #000 10%);
-  font-size:.85rem;
-  background:color-mix(in srgb, var(--bg), #000 3%);
+body {
+  margin: 0;
+  padding-top: var(--safe-top);
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  overscroll-behavior-y: contain; /* Prevents pull-to-refresh */
 }
 
-/* ===============================
-   SCROLLER / CARDS
-   =============================== */
-
-.scroller{ display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding:8px 8px 16px; }
-.card.scroller-item{ flex:0 0 90%; scroll-snap-align:start; }
-
-/* ===============================
-   MINI GAUGES / BARS (primary 사용)
-   =============================== */
-
-.half-gauges{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.half{ display:flex; flex-direction:column; align-items:center; }
-
-.arc{
-  --val: 0; --col: var(--primary-color);
-  width:160px; height:80px; border-radius:160px 160px 0 0 / 160px 160px 0 0;
-  background: conic-gradient(from 180deg at 50% 100%, var(--col) calc(var(--val)*180deg), #eee 0);
-  clip-path: inset(0 0 50% 0 round 160px 160px 0 0);
-  display:grid; place-items:center; position:relative;
-}
-.arc span{
-  position:absolute; bottom:6px; background:var(--bg); color:var(--fg);
-  padding:4px 8px; border-radius:8px; font-weight:700; border:1px solid var(--border);
-}
-.glab{ margin-top:6px; font-weight:600; }
-
-.bars{ display:grid; gap:8px; margin-top:8px; }
-.bar label{ display:block; font-size:.9rem; margin-bottom:4px; }
-.bar div{ background:#eee; border-radius:999px; height:10px; position:relative; overflow:hidden; }
-.bar span{ position:absolute; left:0; top:0; bottom:0; width:0%; background: var(--primary-color); }
-
-/* ===============================
-   FAB
-   =============================== */
-
-.fab{
-  position:fixed; right:16px; bottom:24px; z-index:9; width:48px; height:48px;
-  border-radius:16px; border:1px solid var(--border);
-  background:var(--bg); color:var(--fg);
-  box-shadow:0 6px 18px rgba(0,0,0,.12);
+main {
+  padding: 0 1rem calc(80px + var(--safe-bottom)); /* Padding for bottom bar */
 }
 
-/* ===============================
-   CLEANUPS (남은 과거 클래스 정리)
-   =============================== */
+/* =================================================================
+   MAIN UI COMPONENTS
+   ================================================================= */
+.top-header {
+  position: sticky;
+  top: var(--safe-top);
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 56px;
+  padding: 0 0.5rem;
+  background-color: color-mix(in srgb, var(--bg-color) 80%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
 
-/* 옛 .text-muted / .muted 동시 지원 */
-.text-muted{ color:var(--muted); }
+.app-title {
+  font-size: 1rem;
+  font-weight: 700;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
 
-.explain{ font-size:.92rem; opacity:.9; }
+.hero-summary {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.hero-summary .grade {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.hero-summary .text {
+  font-size: 1rem;
+  color: var(--subtle-text-color);
+  margin: 0.25rem 0 0;
+}
+
+.meta-info {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--subtle-text-color);
+  margin-top: 1rem;
+}
+
+.forecast-card {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  padding: 1rem;
+  margin: 1rem 0;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.gauge-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.semi-circle-gauge {
+  text-align: center;
+}
+
+.gauge-arc {
+  width: 100%;
+  padding-top: 50%; /* Creates a 2:1 aspect ratio container */
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.gauge-arc::before { /* The arc itself */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  border-radius: 50%;
+  transition: --angle 0.5s ease-out;
+  background: conic-gradient(from -90deg, var(--c1, #007bff) 0deg, var(--c2, #4dabf7) var(--angle, 0deg), var(--border-color) var(--angle, 0deg), var(--border-color) 180deg);
+}
+
+.gauge-value {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.gauge-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.linear-bars {
+  margin: 2rem 0;
+}
+
+.linear-bar-item {
+  display: grid;
+  grid-template-columns: 80px 1fr 40px;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.bar-wrapper {
+  height: 8px;
+  background-color: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+  background: linear-gradient(90deg, var(--c1, #007bff), var(--c2, #4dabf7));
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 0.75rem 1rem var(--safe-bottom, 0.75rem);
+  background-color: color-mix(in srgb, var(--bg-color) 80%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-color);
+}
+
+#place-search-input {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 0 1rem;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+/* =================================================================
+   SETTINGS PANEL (SLIDE-IN)
+   ================================================================= */
+#settings-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 85%;
+  max-width: 320px;
+  height: 100%;
+  z-index: 1001;
+  background-color: var(--bg-color);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  contain: strict;
+  will-change: transform;
+}
+
+#settings-panel.is-open {
+  transform: translateX(0);
+}
+
+#settings-panel iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+#settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
+}
+
+#settings-backdrop.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =================================================================
+   UTILITY & ICON BUTTON
+   ================================================================= */
+.icon-button {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  color: var(--text-color);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.icon-button svg {
+  width: 24px;
+  height: 24px;
+}
+
