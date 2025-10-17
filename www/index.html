@@ -1,94 +1,88 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>HUDADAK</title>
-    <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#f4f6f8">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>HUDADAK</title>
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f4f6f8" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-    <div class="app-container">
-        <!-- SLIDE-IN SETTINGS PANEL -->
-        <aside id="settings-panel">
-            <iframe src="setup/index.html" frameborder="0"></iframe>
-        </aside>
-        <div id="settings-backdrop"></div>
+  <div class="app-container">
+    <!-- SLIDE-IN SETTINGS PANEL -->
+    <aside id="settings-panel">
+      <iframe src="/setup/index.html" frameborder="0"></iframe>
+    </aside>
+    <div id="settings-backdrop"></div>
 
-        <!-- HEADER -->
-        <header class="top-header">
-            <button id="settings-btn" class="icon-button" aria-label="설정 열기">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg>
-            </button>
-            <h1 class="app-title">HUDADAK</h1>
-            <button id="share-btn" class="icon-button" aria-label="결과 공유">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
-            </button>
-        </header>
+    <!-- HEADER -->
+    <header class="topbar">
+      <button id="settings-btn" class="icon-btn" aria-label="설정 열기">☰</button>
+      <h1 class="app-title" style="margin-left:8px;">HUDADAK</h1>
+      <a class="icon-btn right" href="/setup/index.html" title="설정">⚙️</a>
+    </header>
 
-        <main>
-            <!-- 종합 평가 -->
-            <section class="hero-summary">
-                <h2 id="summary-grade" class="grade">보통</h2>
-                <p id="summary-text" class="text">마스크를 챙겨두세요.</p>
-                <div class="meta-info">
-                    <span id="current-location">서울 종로구</span>
-                    <span>·</span>
-                    <span id="기준-시간">오늘 오전 10:00</span>
-                </div>
-            </section>
+    <main>
+      <!-- 종합 요약(HERO) -->
+      <section class="hero" style="margin:8px;">
+        <div class="hero-meta">
+          <div id="station-name" class="hero-loc">—</div>
+          <div id="display-ts" class="hero-time">—</div>
+        </div>
+        <div class="hero-score">
+          <!-- 등급/간단 설명은 app.js에서 계산해 넣을 수 있음. -->
+          <div id="hero-grade" class="grade">—</div>
+          <div id="hero-desc" class="desc">—</div>
+        </div>
+      </section>
 
-            <!-- 예보 -->
-            <section class="forecast-card">
-                <h4>시간대별 예보</h4>
-                <div id="forecast-container"></div>
-            </section>
+      <!-- 상세 지표 카드 -->
+      <section class="card" style="margin:8px;">
+        <h4>주요 지표</h4>
 
-            <!-- 상세 지표 -->
-            <section class="air-details-card">
-                <div class="gauge-display">
-                    <!-- PM10 Gauge -->
-                    <div class="semi-circle-gauge">
-                        <div class="gauge-header">
-                            <h4>미세먼지 (PM10)</h4>
-                        </div>
-                        <div class="gauge-arc" id="pm10-arc">
-                             <div class="gauge-content">
-                                <span class="gauge-grade" id="pm10-grade-text">좋음</span>
-                                <span class="gauge-value" id="pm10-value-text">25</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- PM2.5 Gauge -->
-                    <div class="semi-circle-gauge">
-                         <div class="gauge-header">
-                            <h4>초미세먼지 (PM2.5)</h4>
-                        </div>
-                        <div class="gauge-arc" id="pm25-arc">
-                            <div class="gauge-content">
-                                <span class="gauge-grade" id="pm25-grade-text">보통</span>
-                                <span class="gauge-value" id="pm25-value-text">18</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="standard-display">
-                    <span id="current-standard-label">환경부 기준</span>
-                </div>
+        <div class="gauge-display" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <!-- PM10 -->
+          <div class="semi-circle-gauge">
+            <div class="gauge-header"><h4>미세먼지 (PM10)</h4></div>
+            <div class="gauge-arc" id="pm10-arc">
+              <div class="gauge-content">
+                <span class="gauge-grade" id="pm10-grade">--</span>
+                <span class="gauge-value" id="pm10-value">--</span>
+              </div>
+            </div>
+          </div>
+          <!-- PM2.5 -->
+          <div class="semi-circle-gauge">
+            <div class="gauge-header"><h4>초미세먼지 (PM2.5)</h4></div>
+            <div class="gauge-arc" id="pm25-arc">
+              <div class="gauge-content">
+                <span class="gauge-grade" id="pm25-grade">--</span>
+                <span class="gauge-value" id="pm25-value">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                <div class="linear-bars" id="linear-bars-container">
-                    <!-- Bars for O3, NO2, SO2, CO will be rendered by JS -->
-                </div>
-            </section>
-        </main>
+        <div class="standard-display" style="margin-top:8px;">
+          <span id="current-standard-label" class="muted">기준: —</span>
+        </div>
 
-        <!-- 하단 검색 바 -->
-        <footer class="bottom-bar">
-            <input type="search" id="place-search-input" placeholder="다른 지역 검색 (예: 강남역)">
-        </footer>
-    </div>
-    <script src="app.js" type="module"></script>
+        <div class="linear-bars" id="linear-bars-container" style="margin-top:8px;">
+          <!-- O3/NO2/SO2/CO 막대는 필요 시 JS에서 렌더 -->
+        </div>
+      </section>
+    </main>
+
+    <!-- 하단 검색 바 -->
+    <footer class="bottom-bar" style="display:flex; gap:8px; padding:12px; position:sticky; bottom:0; background:var(--bg);">
+      <input type="search" id="place" class="search" placeholder="지역 검색 (예: 강남역) 또는 '37.57,126.98'" />
+      <button id="searchBtn" class="icon-btn" aria-label="검색">🔎</button>
+      <button id="btn-current" class="icon-btn" aria-label="현 위치">📍</button>
+    </footer>
+  </div>
+
+  <!-- 앱 엔트리 (캐시 우회 버전) -->
+  <script type="module" src="/app.js?v=20251017a"></script>
 </body>
 </html>
-
