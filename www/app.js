@@ -32,54 +32,48 @@ const stdCode = () => localStorage.getItem('aq_standard') || 'WHO8';
 };
 
 
-// --- forecast fetch + render ---
-/* ========= 예보 =========
-   - 먼저 `${API_BASE}/forecast?lat=&lon=` 시도
-   - 실패/빈값이면 Open-Meteo 날씨 + Air-Quality로 5일 구성 */
-import { API_BASE } from '/js/apiClient.js';
-
-/**
- * 예보: 우선 백엔드(API_BASE/forecast), 실패하면 Open-Meteo(날씨+공기질)로 폴백
- * 반환 스키마: { daily:[ {date, icon, desc, tmin, tmax, pm25, pm10, horizon} ... ] }
- */
+// 예보: 먼저 백엔드 /forecast 시도, 실패하면 Open-Meteo(날씨+공기질)로 5일 구성
+// 반환: { daily:[ {date, icon, desc, tmin, tmax, pm25, pm10, horizon} ... ] }
 async function fetchForecast(lat, lon){
+  // 1) 백엔드 시도
   try{
     const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, { cache:'no-store' });
     if (!r.ok) throw new Error(String(r.status));
-    return await r.json(); 
-    // 백엔드가 이미 {daily: [...]} 형태면 그대로 사용
-    if (j && Array.isArray(j.daily)) return j;
-  }catch(_){
-    
-  
+    const j = await r.json();
+    if (j && Array.isArray(j.daily)) return j;    // 백엔드가 이미 스키마 맞춰주면 그대로 사용
+  }catch(_){ /* 조용히 폴백 진행 */ }
+
   // 2) 폴백(Open-Meteo; CORS OK)
   const [w, aq] = await Promise.all([
     fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${lat}&longitude=${lon}` +
       `&daily=weathercode,temperature_2m_max,temperature_2m_min` +
-      `&timezone=Asia%2FSeoul`, { cache:'no-store' }
+      `&timezone=Asia%2FSeoul`,
+      { cache:'no-store' }
     ).then(r=>r.json()),
     fetch(
-      `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}` +
+      `https://air-quality-api.open-meteo.com/v1/air-quality` +
+      `?latitude=${lat}&longitude=${lon}` +
       `&hourly=pm10,pm2_5` +
-      `&timezone=Asia%2FSeoul`, { cache:'no-store' }
+      `&timezone=Asia%2FSeoul`,
+      { cache:'no-store' }
     ).then(r=>r.json()),
   ]);
 
-  // 날씨 일자 배열
-  const dates = (w?.daily?.time) || [];
-  const tmax  = (w?.daily?.temperature_2m_max) || [];
-  const tmin  = (w?.daily?.temperature_2m_min) || [];
-  const wcode = (w?.daily?.weathercode) || [];
+  const dates = w?.daily?.time ?? [];
+  const tmax  = w?.daily?.temperature_2m_max ?? [];
+  const tmin  = w?.daily?.temperature_2m_min ?? [];
+  const wcode = w?.daily?.weathercode ?? [];
 
-  // 공기질(시간별) → 날짜별로 집계(최댓값 기준; 필요하면 mean으로 변경 가능)
-  const aqIdx   = aq?.hourly?.time || [];
-  const byDate  = {}; // { 'YYYY-MM-DD': { pm10:[...], pm25:[...] } }
-  for (let i=0;i<aqIdx.length;i++){
-    const d = String(aqIdx[i]).slice(0,10);
-    (byDate[d] ||= { pm10:[], pm25:[] });
-    if (aq?.hourly?.pm10?.[i]  != null) byDate[d].pm10.push(aq.hourly.pm10[i]);
-    if (aq?.hourly?.pm2_5?.[i] != null) byDate[d].pm25.push(aq.hourly.pm2_5[i]);
+  // 시간별 AQ를 날짜별로 모아 간단 집계(최댓값; 평균 원하면 'mean'으로 바꿔)
+  const idx   = aq?.hourly?.time ?? [];
+  const byDay = {}; // { 'YYYY-MM-DD': { pm10:[], pm25:[] } }
+  for (let i=0;i<idx.length;i++){
+    const d = String(idx[i]).slice(0,10);
+    (byDay[d] ||= { pm10:[], pm25:[] });
+    if (aq?.hourly?.pm10?.[i]  != null) byDay[d].pm10.push(aq.hourly.pm10[i]);
+    if (aq?.hourly?.pm2_5?.[i] != null) byDay[d].pm25.push(aq.hourly.pm2_5[i]);
   }
   const pick = (arr, mode='max')=>{
     if (!arr?.length) return null;
@@ -87,44 +81,37 @@ async function fetchForecast(lat, lon){
     return Math.round(Math.max(...arr));
   };
 
-  // 카드 5개 구성(날짜 기준 정렬된 앞 5개)
-  const daily = dates.slice(0, 5).map((d, i) => {
-    const agg = byDate[d] || { pm10:[], pm25:[] };
-    const pm10 = pick(agg.pm10, 'max');
-    const pm25 = pick(agg.pm25, 'max');
-
+  const daily = dates.slice(0,5).map((d,i)=>{
+    const agg = byDay[d] || { pm10:[], pm25:[] };
     const { icon, desc } = wmoToIconDesc(wcode[i]);
     return {
       date: d,
-      icon,        // 예: '☀️'
-      desc,        // 예: '맑음'
+      icon, desc,
       tmin: tmin[i] != null ? Math.round(tmin[i]) : null,
       tmax: tmax[i] != null ? Math.round(tmax[i]) : null,
-      pm10, pm25,
+      pm10: pick(agg.pm10, 'max'),
+      pm25: pick(agg.pm25, 'max'),
       horizon: 'Open-Meteo 폴백',
     };
   });
 
-    return { daily: [] }; // 백엔드 없으면 조용히 빈값(아래 폴백 로직 쓰는 경우는 거기서)
-  }
+  return { daily };
 }
 
-/** WMO weathercode → 간단 아이콘/설명 */
+// WMO weathercode → 간단 아이콘/설명
 function wmoToIconDesc(code){
-  // 참고: https://open-meteo.com/en/docs
   const c = Number(code);
-  if ([0].includes(c))                 return { icon:'☀️', desc:'맑음' };
-  if ([1,2].includes(c))               return { icon:'🌤️', desc:'대체로 맑음' };
-  if ([3].includes(c))                 return { icon:'☁️', desc:'흐림' };
-  if ([45,48].includes(c))             return { icon:'🌫️', desc:'안개' };
-  if ([51,53,55,56,57].includes(c))    return { icon:'🌦️', desc:'이슬비' };
-  if ([61,63,65,66,67].includes(c))    return { icon:'🌧️', desc:'비' };
-  if ([71,73,75,77].includes(c))       return { icon:'❄️', desc:'눈' };
-  if ([80,81,82].includes(c))          return { icon:'🌧️', desc:'소나기' };
-  if ([95,96,99].includes(c))          return { icon:'⛈️', desc:'뇌우' };
+  if (c===0) return { icon:'☀️', desc:'맑음' };
+  if ([1,2].includes(c)) return { icon:'🌤️', desc:'대체로 맑음' };
+  if (c===3) return { icon:'☁️', desc:'흐림' };
+  if ([45,48].includes(c)) return { icon:'🌫️', desc:'안개' };
+  if ([51,53,55,56,57].includes(c)) return { icon:'🌦️', desc:'이슬비' };
+  if ([61,63,65,66,67].includes(c)) return { icon:'🌧️', desc:'비' };
+  if ([71,73,75,77].includes(c)) return { icon:'❄️', desc:'눈' };
+  if ([80,81,82].includes(c)) return { icon:'🌧️', desc:'소나기' };
+  if ([95,96,99].includes(c)) return { icon:'⛈️', desc:'뇌우' };
   return { icon:'🌥️', desc:'구름' };
 }
-
 
 
 /* ========= 예보 렌더 =========
