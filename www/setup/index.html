@@ -23,16 +23,23 @@
     main {
       padding: 1rem;
     }
-    .settings-header {
-      padding: 1rem;
-      text-align: center;
+    /* Updated Header for back button */
+    .settings-topbar {
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      height: 56px;
       border-bottom: 1px solid var(--border-color);
     }
     .settings-header h1 {
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       margin: 0;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
     }
     .settings-section {
+      margin-top: 2rem;
       margin-bottom: 2rem;
     }
     .settings-section h2 {
@@ -82,16 +89,21 @@
         font-weight: 500;
         border: 1px solid var(--border-color);
     }
+    .icon-button { /* Reusing from main styles */
+        width: 44px; height: 44px; border: none; background: none; color: var(--text-color);
+        cursor: pointer; display: grid; place-items: center; border-radius: 50%;
+    }
   </style>
 </head>
 <body>
+  <header class="settings-topbar">
+    <button id="close-settings-btn" class="icon-button" aria-label="설정 닫기">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10.586 12L3.293 4.707a1 1 0 1 1 1.414-1.414L12 10.586l7.293-7.293a1 1 0 1 1 1.414 1.414L13.414 12l7.293 7.293a1 1 0 1 1-1.414 1.414L12 13.414l-7.293 7.293a1 1 0 1 1-1.414-1.414L10.586 12z"/></svg>
+    </button>
+    <h1>설정</h1>
+  </header>
 
   <main>
-    <div class="settings-header">
-      <h1>HUDADAK</h1>
-      <p>미세먼지 피하기</p>
-    </div>
-
     <section class="settings-section">
       <h2>표시 기준 설정</h2>
       <div class="radio-group" id="standard-options">
@@ -141,7 +153,52 @@
 
   </main>
 
-  <script type="module" src="setup.js"></script>
+  <script type="module">
+    // This script is now inside the iframe (setup/index.html)
+    import { STANDARDS } from '../js/standards.js';
+
+    // --- DOM Elements ---
+    const standardOptions = document.getElementById('standard-options');
+    const standardDescription = document.getElementById('standard-description');
+    const closeBtn = document.getElementById('close-settings-btn');
+    const AQI_STANDARD_KEY = 'aqi-standard';
+
+    const descriptions = {
+      KOR: '대한민국 환경부의 통합대기환경지수(CAI) 4단계(좋음/보통/나쁨/매우나쁨) 기준으로 표시합니다.',
+      WHO8: '세계보건기구(WHO)의 2021년 권고 기준을 8단계로 세분화하여 더욱 정밀하게 표시합니다.',
+    };
+
+    // --- Functions ---
+    function updateDescription(standard) {
+      standardDescription.textContent = descriptions[standard] || '';
+    }
+
+    function handleStandardChange(event) {
+      const selectedStandard = event.target.value;
+      localStorage.setItem(AQI_STANDARD_KEY, selectedStandard);
+      updateDescription(selectedStandard);
+      
+      // Notify the parent window (main app) that the standard has changed
+      window.parent.postMessage({ type: 'standardChanged', value: selectedStandard }, '*');
+    }
+    
+    // --- Event Listeners ---
+    standardOptions.addEventListener('change', handleStandardChange);
+    
+    closeBtn.addEventListener('click', () => {
+      // Send a message to the parent window to close the panel
+      window.parent.postMessage({ type: 'closeSettings' }, '*');
+    });
+
+    // --- Initialization ---
+    const currentStandard = localStorage.getItem(AQI_STANDARD_KEY) || 'KOR';
+    const currentRadio = standardOptions.querySelector(`input[value="${currentStandard}"]`);
+    if (currentRadio) {
+      currentRadio.checked = true;
+    }
+    updateDescription(currentStandard);
+
+  </script>
 
 </body>
 </html>
