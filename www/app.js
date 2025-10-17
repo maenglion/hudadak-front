@@ -5,22 +5,13 @@ import { STANDARDS } from '/js/standards.js';
 
 console.log('[app] boot');
 
-const byId = (...ids) => ids.map(id => document.getElementById(id)).find(Boolean);
-const setText = (id, text) => {
-  const n = document.getElementById(id);
-  if (n) n.textContent = text;
-};
-const setValue = (el, value) => { if (el) el.value = value; };
+const byId = (...ids) => ids.map(id => document.getElementById(id)).find(Boolean); // (쓰면 유지, 안 쓰면 삭제해도 됨)
 
+const setText  = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+const setValue = (el, value)   => { if (el) el.value = value; };
 
-function setTextById(id, text){
-  const n = document.getElementById(id);
-  if (n) n.textContent = text;
-}
-
-function setInputValue(el, value){
-  if (el) el.value = value;
-}
+const clamp   = (v, min, max) => Math.max(min, Math.min(max, v));
+const stdCode = () => localStorage.getItem('aq_standard') || 'WHO8';
 
    // 검색 UI: 없을 수 있으니 존재하면만 쓸 거예요
  const el = {
@@ -42,19 +33,84 @@ function setInputValue(el, value){
 
 
 // --- forecast fetch + render ---
+/* ========= 예보 =========
+   - 먼저 `${API_BASE}/forecast?lat=&lon=` 시도
+   - 실패/빈값이면 Open-Meteo 날씨 + Air-Quality로 5일 구성 */
 async function fetchForecast(lat, lon){
-  // 백엔드가 비어있으면 {}나 {daily: []}가 올 수 있어요.
-  const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, {cache:'no-store'});
-  if (!r.ok) return { daily: [] };
-  return await r.json(); // { daily: [...] }
+  // 1) 백엔드 먼저
+  try{
+    const r = await fetch(`${API_BASE}/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, {cache:'no-store'});
+    if (r.ok){
+      const j = await r.json();
+      if (j?.daily?.length) return j; // { daily:[ {date, icon, tmin, tmax, desc, pm25, pm10}... ] }
+    }
+  }catch(_){}
+
+  // 2) 폴백(키 없음, CORS OK)
+  const [w, aq] = await Promise.all([
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`, {cache:'no-store'}).then(r=>r.json()),
+    fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm10,pm2_5&timezone=Asia%2FSeoul`, {cache:'no-store'}).then(r=>r.json()),
+  ]);
+
+  // 시간별 AQ → 날짜별(현지) 최대치로 요약
+  const byDay = {};
+  if (aq?.hourly?.time) {
+    aq.hourly.time.forEach((iso, i)=>{
+      const d = iso.slice(0,10);
+      const pm25 = aq.hourly.pm2_5?.[i];
+      const pm10 = aq.hourly.pm10?.[i];
+      if (!byDay[d]) byDay[d] = { pm25:[], pm10:[] };
+      if (pm25!=null) byDay[d].pm25.push(pm25);
+      if (pm10!=null) byDay[d].pm10.push(pm10);
+    });
+  }
+
+  const daily = (w?.daily?.time || []).map((d, i)=>{
+    const wcode = w.daily.weathercode?.[i];
+    const tmax  = w.daily.temperature_2m_max?.[i];
+    const tmin  = w.daily.temperature_2m_min?.[i];
+    const aqDay = byDay[d] || {};
+    const pm25max = aqDay.pm25?.length ? Math.max(...aqDay.pm25) : null;
+    const pm10max = aqDay.pm10?.length ? Math.max(...aqDay.pm10) : null;
+
+    const icon = weatherIcon(wcode);
+    const desc = weatherDesc(wcode);
+    return { date:d, icon, tmin, tmax, desc, pm25: pm25max, pm10: pm10max };
+  }).slice(0,5);
+
+  return { daily };
 }
 
-function renderForecast(daily){
+// 간단한 날씨코드 → 아이콘/문구
+function weatherIcon(code){
+  if (code==0) return '☀️';
+  if ([1,2].includes(code)) return '🌤️';
+  if (code===3) return '⛅️';
+  if ([45,48].includes(code)) return '🌫️';
+  if ([51,53,55,61,63,65].includes(code)) return '🌧️';
+  if ([71,73,75].includes(code)) return '❄️';
+  if ([95,96,99].includes(code)) return '⛈️';
+  return '🌥️';
+}
+function weatherDesc(code){
+  if (code==0) return '맑음';
+  if ([1,2,3].includes(code)) return '구름';
+  if ([45,48].includes(code)) return '안개';
+  if ([51,53,55,61,63,65].includes(code)) return '비';
+  if ([71,73,75].includes(code)) return '눈';
+  if ([95,96,99].includes(code)) return '뇌우';
+  return '날씨';
+}
+
+/* ========= 예보 렌더 =========
+   - 컨테이너 id: forecast-grid, 보조문구 id: forecast-note (이미 페이지에 있음) */
+function renderForecast(fc){
   const grid = document.getElementById('forecast-grid');
   const note = document.getElementById('forecast-note');
   if (!grid) return;
 
-  if (!daily || !daily.length){
+  const daily = fc?.daily || [];
+  if (!daily.length){
     grid.innerHTML = `
       <div class="forecast-card">
         <p class="forecast-day">예보 준비 중</p>
@@ -62,105 +118,150 @@ function renderForecast(daily){
         <p class="forecast-temp">— / <strong>—</strong></p>
         <p class="forecast-desc">곧 제공됩니다</p>
       </div>`;
-    note && (note.textContent = '예보 API가 준비되는 대로 자동으로 표시됩니다.');
+    note && (note.textContent = '임시 폴백: 예보 데이터 수집 중');
     return;
   }
 
-  grid.innerHTML = daily.slice(0,5).map(d => {
-    // 백엔드 스키마 가정: { date: '2025-10-13', icon:'☀️', tmin:22, tmax:28, desc:'맑음' }
-    const day = new Date(d.date || d.time || Date.now()).toLocaleDateString('ko-KR', {weekday:'long'});
-    const icon = d.icon || '🌤️';
-    const tmin = (d.tmin ?? d.min ?? '—');
-    const tmax = (d.tmax ?? d.max ?? '—');
-    const desc = d.desc || d.summary || '—';
+  grid.innerHTML = daily.map(d=>{
+    const day = new Date(d.date).toLocaleDateString('ko-KR', { weekday:'long' });
+    // AQ 등급 배지(WHO8 기준)
+    const g = (d.pm25!=null) ? getGrade('pm25', d.pm25)
+            : (d.pm10!=null) ? getGrade('pm10', d.pm10)
+            : null;
+    const aqBadge = g ? `<small class="muted" style="display:block;margin-top:4px">초미세먼지: ${g.label}</small>` : '';
+
     return `
       <div class="forecast-card">
         <p class="forecast-day">${day}</p>
-        <div class="forecast-icon">${icon}</div>
-        <p class="forecast-temp">${tmin}° / <strong>${tmax}°</strong></p>
-        <p class="forecast-desc">${desc}</p>
+        <div class="forecast-icon">${d.icon || '🌤️'}</div>
+        <p class="forecast-temp">${d.tmin ?? '—'}° / <strong>${d.tmax ?? '—'}°</strong></p>
+        <p class="forecast-desc">${d.desc || '—'}</p>
+        ${aqBadge}
       </div>`;
   }).join('');
-  note && (note.textContent = '');
+  note && (note.textContent = 'Open-Meteo 폴백 사용 중');
 }
 
 
-// --- 렌더링 함수 ---
-function getGrade(metric, value) {
-  const stdCode = localStorage.getItem('aq_standard') || 'WHO8';
-  const std = STANDARDS[stdCode];
-  if (!std || !std.breaks[metric] || value === null) {
-    return { label: '정보없음', bg: '#868e96', fg: 'white' };
+/* ========= 등급 계산 ========= */
+function getGrade(pollutant, value){
+  const std = STANDARDS[stdCode()] || STANDARDS.WHO8;
+  const br = std.breaks[pollutant];
+  const bands = std.bands;
+  if (!br) return { key:'-', label:'-', bg:'#adb5bd', fg:'#111' };
+  let idx = br.findIndex(x => value <= x);
+  if (idx < 0) idx = br.length; // 최종 초과 구간
+  const band = bands[idx] || bands[bands.length-1];
+  return { key:band.key, label:band.label, bg:band.bg, fg:band.fg };
+}
+
+/* ========= 반원 게이지 =========
+   - id: pm10-arc / pm10-value, pm25-arc / pm25-value (이미 페이지에 있음)
+   - max 값은 UI 스케일용 (각 나라별 “표시 한계” 느낌) */
+function renderGauge(kind, value){
+  const arc = document.getElementById(`${kind}-arc`);
+  const val = document.getElementById(`${kind}-value`);
+  if (!arc || !val) return;
+
+  if (value == null || isNaN(value)){
+    arc.style.background = '#e9ecef';
+    val.textContent = '--';
+    return;
+  }
+  val.textContent = String(value);
+
+  // 게이지 각도(0~180deg)
+  const scaleMax = (kind==='pm25') ? 150 : 200;
+  const pct  = clamp((value/scaleMax)*100, 0, 100);
+  const angle = (pct/100)*180;
+
+  const g = getGrade(kind, value);  // 색상은 기준으로
+  arc.style.background =
+    `conic-gradient(${g.bg} 0deg, ${g.bg} ${angle}deg, #e9ecef ${angle}deg, #e9ecef 180deg)`;
+}
+
+function renderMain(air){
+  if (!air) return;
+
+  // 등급(초미세먼지 우선 → 없으면 미세먼지)
+  const mainGrade = (air.pm25!=null) ? getGrade('pm25', air.pm25)
+                   : (air.pm10!=null) ? getGrade('pm10', air.pm10)
+                   : { label:'—', bg:'#adb5bd' };
+
+  // 요약 텍스트/라벨
+  if (el.summaryGrade){
+    el.summaryGrade.textContent = mainGrade.label;
+    el.summaryGrade.style.color = mainGrade.bg;
+  }
+  setText('hero-desc', air.cai_value!=null ? `지수 ${air.cai_value}` : '오늘의 대기질 총평입니다.');
+  setText('station-name', air.station?.name || air.name || '알 수 없음');
+
+  const ts = air.display_ts ? new Date(air.display_ts).toLocaleString('ko-KR') : '—';
+  setText('display-ts', `기준: ${ts}`);
+
+  // 반원 게이지
+  renderSemiGauge(el.pm10Gauge, air.pm10, 200); // PM10 스케일(표시 한계 200)
+  renderSemiGauge(el.pm25Gauge, air.pm25, 150); // PM2.5 스케일(표시 한계 150)
+
+  // 하단 선형 막대 (O3/NO2/SO2/CO)
+  renderLinearBars(air);
+}
+
+function renderSemiGauge(gauge, value, max){
+  if (!gauge?.arc || !gauge?.value){
+    // id로도 동작 가능하도록 폴백
+    const kind = (gauge && gauge.kind) || ''; // 선택 사항
+    const arc = document.getElementById(`${kind}-arc`);
+    const val = document.getElementById(`${kind}-value`);
+    if (!arc || !val) return;
+    gauge = { arc, value: val };
   }
 
-  const breaks = std.breaks[metric];
-  let level = breaks.findIndex(b => value <= b);
-  if (level === -1) level = breaks.length;
+  if (value == null || isNaN(value)){
+    gauge.arc.style.background = '#e9ecef';
+    gauge.value.textContent = '--';
+    return;
+  }
 
-  return std.bands[level];
+  gauge.value.textContent = String(value);
+
+  // 각도(0~180deg)
+  const pct   = clamp((value / (max||100)) * 100, 0, 100);
+  const angle = (pct / 100) * 180;
+
+  // 어떤 오염물인지 추정(엘리먼트 id로 구분)
+  const id = gauge.value.id || '';
+  const pollutant = id.includes('pm25') ? 'pm25' : 'pm10';
+  const g = getGrade(pollutant, value); // STANDARDS 기반 색상
+
+  gauge.arc.style.background =
+    `conic-gradient(${g.bg} 0deg, ${g.bg} ${angle}deg, #e9ecef ${angle}deg, #e9ecef 180deg)`;
 }
 
+function renderLinearBars(data){
+  const wrap = el.linearBarsContainer || document.getElementById('linear-bars-container');
+  if (!wrap) return;
 
-function renderMain(air) {
-    const pm10Grade = getGrade('pm10', air.pm10);
-    
-    el.summaryGrade.textContent = pm10Grade.label;
-    el.summaryGrade.style.color = pm10Grade.bg;
-    el.summaryText.textContent = "오늘의 대기질 총평입니다."; // TODO: 메시지 시스템 연동
-    el.currentLocation.textContent = air.station?.name || air.name || '알 수 없음';
-    el.timestamp.textContent = `기준: ${new Date(air.display_ts).toLocaleString('ko-KR')}`;
-
-    // 반원 게이지 렌더링
-    renderSemiGauge(el.pm10Gauge, air.pm10, 150); // '나쁨' 기준을 max로
-    renderSemiGauge(el.pm25Gauge, air.pm25, 75); // '나쁨' 기준을 max로
-
-    // 선형 막대 렌더링
-    renderLinearBars(air);
-}
-
-
-
-function renderSemiGauge(gauge, value, max) {
-    if (value === null || value === undefined) {
-      gauge.value.textContent = '-';
-      gauge.arc.style.background = '#e9ecef';
-      return;
-    }
-    gauge.value.textContent = value;
-    const grade = getGrade(gauge === el.pm10Gauge ? 'pm10' : 'pm25', value);
-    const percentage = Math.min(100, (value / max) * 100);
-    const angle = (percentage / 100) * 180;
-    gauge.arc.style.background = `conic-gradient(${grade.bg} 0deg, ${grade.bg} ${angle}deg, #e9ecef ${angle}deg, #e9ecef 180deg)`;
-}
-
-
-
-
-function renderLinearBars(data) {
-  if (!el.linearBarsContainer) return;
-
-  el.linearBarsContainer.innerHTML = '';
-
+  wrap.innerHTML = '';
   const pollutants = [
-    { key: 'o3',  label: '오존',      max: 0.15 },
-    { key: 'no2', label: '이산화질소', max: 0.10 },
-    { key: 'so2', label: '아황산가스', max: 0.05 },
-    { key: 'co',  label: '일산화탄소', max: 15   },
+    { key:'o3',  label:'오존(O₃)',        max:0.15 },
+    { key:'no2', label:'이산화질소(NO₂)', max:0.10 },
+    { key:'so2', label:'아황산가스(SO₂)', max:0.05 },
+    { key:'co',  label:'일산화탄소(CO)',  max:15   },
   ];
 
-  pollutants.forEach(p => {
+  pollutants.forEach(p=>{
     const v = data?.[p.key];
     if (v == null) return;
+    const pct = clamp((v / p.max) * 100, 0, 100);
 
-    const pct = Math.max(0, Math.min(100, (v / p.max) * 100));
     const item = document.createElement('div');
     item.className = 'linear-bar-item';
     item.innerHTML = `
       <div class="bar-label">${p.label}</div>
       <div class="bar-wrapper"><div class="bar-fill" style="width:${pct}%;"></div></div>
-      <div class="bar-value">${v}</div>
-    `;
-    el.linearBarsContainer.appendChild(item);
+      <div class="bar-value">${v}</div>`;
+    wrap.appendChild(item);
   });
 }
 
@@ -239,17 +340,19 @@ el.currentBtn && el.currentBtn.addEventListener('click', () => {
 
 
 // --- 메인 로직 ---
-async function updateAll(lat, lon) {
-    try {
-        const airData = await fetchNearestAir(lat, lon);
-        renderMain(airData);
-        const fc = await fetchForecast(lat, lon);
-    renderForecast(fc.daily || []);
-    } catch (error) {
-        console.error("데이터 업데이트 중 오류:", error);
-        el.summaryText.textContent = '데이터를 불러오는 데 실패했습니다.';
-    }
+async function updateAll(lat, lon){
+  try{
+    const air = await fetchNearestAir(lat, lon);
+    renderMain(air);
+
+    const fc = await fetchForecast(lat, lon);
+    renderForecast(fc);
+  }catch(e){
+    console.error(e);
+    setText('hero-desc', '데이터를 불러오는 데 실패했습니다.');
+  }
 }
+
 
 
 // --- 초기화 및 이벤트 리스너 ---
