@@ -23,75 +23,98 @@
     main {
       padding: 1rem;
     }
-    /* Updated Header for back button */
     .settings-topbar {
+      position: sticky;
+      top: var(--safe-top);
+      z-index: 10;
       display: flex;
       align-items: center;
-      padding: 0 1rem;
+      padding: 0 0.5rem;
       height: 56px;
       border-bottom: 1px solid var(--border-color);
+      background-color: color-mix(in srgb, var(--bg-color) 85%, transparent);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-    .settings-header h1 {
-      font-size: 1.2rem;
+    .settings-topbar h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
       margin: 0;
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
     }
     .settings-section {
-      margin-top: 2rem;
-      margin-bottom: 2rem;
+      margin-top: 2.5rem;
+      margin-bottom: 2.5rem;
     }
     .settings-section h2 {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
+      font-weight: 700;
       margin-bottom: 1rem;
-      border-left: 3px solid var(--text-color);
+      border-left: 4px solid var(--primary-color);
       padding-left: 0.75rem;
     }
     .radio-group label {
-      display: block;
+      display: flex;
+      align-items: center;
       background-color: var(--card-bg);
       padding: 1rem;
       border-radius: 12px;
-      margin-bottom: 0.5rem;
-      border: 1px solid var(--border-color);
+      margin-bottom: 0.75rem;
+      border: 2px solid var(--border-color);
       cursor: pointer;
       transition: all 0.2s ease-in-out;
     }
+    .radio-group label:hover {
+      border-color: var(--primary-color);
+    }
     .radio-group label:has(input:checked) {
-      border-color: var(--text-color);
-      background-color: rgba(var(--text-color-rgb, 33,37,41), 0.1);
+      border-color: var(--primary-color);
+      background-color: color-mix(in srgb, var(--primary-color) 10%, var(--card-bg));
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color) 15%, transparent);
     }
     .radio-group input {
-      margin-right: 0.5rem;
+      margin-right: 0.75rem;
     }
     .section-description {
       font-size: 0.9rem;
       color: var(--subtle-text-color);
       margin-top: 0.5rem;
-      padding: 0.75rem;
-      background-color: var(--bg-color);
+      padding: 0.75rem 1rem;
+      background-color: color-mix(in srgb, var(--subtle-text-color) 8%, transparent);
       border-radius: 8px;
     }
     .data-story p {
-        line-height: 1.6;
+        line-height: 1.7;
+        font-size: 0.95rem;
     }
     .badge-info {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 0.75rem;
-        margin-top: 0.5rem;
+        margin-top: 1rem;
     }
     .badge-example {
+        flex-shrink: 0;
+        margin-top: 2px;
         padding: 0.25rem 0.6rem;
         border-radius: 99px;
         font-size: 0.8rem;
         font-weight: 500;
         border: 1px solid var(--border-color);
+        background-color: var(--bg-color);
     }
-    .icon-button { /* Reusing from main styles */
+    .icon-button {
         width: 44px; height: 44px; border: none; background: none; color: var(--text-color);
         cursor: pointer; display: grid; place-items: center; border-radius: 50%;
+    }
+    .icon-button svg {
+      width: 24px;
+      height: 24px;
+    }
+    footer {
+        padding: 2rem 0;
     }
   </style>
 </head>
