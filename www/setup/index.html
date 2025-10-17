@@ -2,173 +2,147 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>설정 · HUDADAK 미세먼지 피하기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>설정 · HUDADAK</title>
 
-  <!-- PWA / 상태표시줄 -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#ffffff" id="meta-theme-color" />
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" id="meta-theme-color">
 
- 
-  <!-- 초기 테마/포인트 컬러 적용(깜빡임 방지) -->
-<script>
-(function(){
-  try{
-    // 테마 부트: data-theme = 'light' | 'dark' | (없음=system)
-    const THEME_KEY='app-theme';
-    const t = localStorage.getItem(THEME_KEY) || 'system';
-    if (t === 'light' || t === 'dark') {
-      document.documentElement.setAttribute('data-theme', t);
-    } else {
-      document.documentElement.removeAttribute('data-theme');
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    /* Settings-specific styles */
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
     }
-
-    // meta theme-color 동기화 (배경색 기준)
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = (t === 'dark') || (t === 'system' && prefersDark);
-    const meta = document.querySelector('#meta-theme-color');
-    if (meta) meta.setAttribute('content', isDark ? '#0b0d12' : '#ffffff');
-
-    // (마이그레이션) 기존에 저장된 사용자 포인트 컬러가 있으면 무시/정리
-    localStorage.removeItem('app-accent');
-  }catch(_){}
-})();
-</script>
-
-  <link rel="stylesheet" href="/styles.css" />
-  <style>  
-    body{ background:var(--bg); color:var(--fg); padding-top:var(--safe-top); }
-    .topbar{ height:56px; display:flex; align-items:center; padding:0 12px; }
-    main{ padding:16px; }
-
+    body {
+      padding-top: var(--safe-top);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    main {
+      padding: 1rem;
+    }
+    .settings-header {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .settings-header h1 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+    .settings-section {
+      margin-bottom: 2rem;
+    }
+    .settings-section h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      border-left: 3px solid var(--text-color);
+      padding-left: 0.75rem;
+    }
+    .radio-group label {
+      display: block;
+      background-color: var(--card-bg);
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+    .radio-group label:has(input:checked) {
+      border-color: var(--text-color);
+      background-color: rgba(var(--text-color-rgb, 33,37,41), 0.1);
+    }
+    .radio-group input {
+      margin-right: 0.5rem;
+    }
+    .section-description {
+      font-size: 0.9rem;
+      color: var(--subtle-text-color);
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      background-color: var(--bg-color);
+      border-radius: 8px;
+    }
+    .data-story p {
+        line-height: 1.6;
+    }
+    .badge-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    .badge-example {
+        padding: 0.25rem 0.6rem;
+        border-radius: 99px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border: 1px solid var(--border-color);
+    }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <a class="icon-btn left" href="../index.html" aria-label="뒤로">←</a>
-  </header>
 
   <main>
-    <h1>HUDADAK 미세먼지 피하기</h1>
+    <div class="settings-header">
+      <h1>HUDADAK</h1>
+      <p>미세먼지 피하기</p>
+    </div>
 
-    <!-- 1) 앱 소개 -->
-    <section class="card">
-      <h2>앱 소개</h2>
-      <p class="muted">방대한 데이터로 평가하는 후다닥. 쉽고 간단하게 체크하는 미세먼지.</p>
-      <ul>
-        <li>실측: PM10/PM2.5/오존/NO₂/SO₂/CO, 통합대기지수(CAI)</li>
-        <li>예보: 등급(Level), 원인(Cause), 태그(Tags) → 화면의 뱃지로 표시</li>
-        <li>주소/현위치: 동 단위 표기, 검색/공유 지원</li>
-      </ul>
-    </section>
-
-    <!-- 2) 평가 기준 (하나로 통합) -->
-<!-- setup/index.html 내부 적절한 위치에 추가 -->
-<section class="card">
-  <h2>표시 기준</h2>
-  <div class="row">
-    <label><input type="radio" name="aq_standard" value="KOR"> 대한민국 CAI</label>
-    <label><input type="radio" name="aq_standard" value="WHO24"> WHO 2단계</label>
-    <label><input type="radio" name="aq_standard" value="WHO8"> WHO 8단계</label>
-  </div>
-  <p id="std-explain" class="muted" style="margin-top:8px"></p>
-  <details style="margin-top:8px">
-    <summary>세부 경계값 보기</summary>
-    <pre style="white-space:pre-wrap;margin-top:8px">
-PM10 (WHO8): 15,30,45,50,75,100,150 μg/m³
-PM2.5 (WHO8): 5,10,15,25,37.5,50,75 μg/m³
-CAI (KOR): PM10 ≤30/≤80/≤150/>150, PM2.5 ≤15/≤35/≤75/>75
-    </pre>
-  </details>
-</section>
-
-<section class="card">
-  <h2>데이터 출처</h2>
-  <ul class="muted">
-    <li>실측/모델: Open-Meteo, 자체 수집소스</li>
-    <li>표시 기준: 대한민국 CAI, WHO 2021 가이드라인</li>
-  </ul>
-</section>
-
-<script type="module">
-  import { STANDARDS } from '/js/standards.js';
-  const radios = document.querySelectorAll('input[name="aq_standard"]');
-  const box = document.getElementById('std-explain');
-  const KEY='aq_standard';
-  const explain = {
-    KOR:  STANDARDS.KOR.label + ' — 국내 CAI 4단계.',
-    WHO24:STANDARDS.WHO24.label + ' — 권고 이내/초과 2단계.',
-    WHO8: STANDARDS.WHO8.label + ' — 세분화 8단계.',
-  };
-  function apply(v){ localStorage.setItem(KEY,v); box.textContent = explain[v] || ''; }
-  const saved = localStorage.getItem(KEY) || 'WHO8';
-  radios.forEach(r=>{ r.checked = (r.value===saved); r.addEventListener('change',e=>apply(e.target.value)); });
-  apply(saved);
-</script>
-
-
-    <!-- 3) 테마(라이트/다크/시스템) -->
-    <section class="card">
-      <h2>테마</h2>
-      <div class="row">
-        <label><input type="radio" name="theme" value="system"> 시스템 기본</label>
-        <label><input type="radio" name="theme" value="light"> 라이트</label>
-        <label><input type="radio" name="theme" value="dark"> 다크</label>
+    <section class="settings-section">
+      <h2>표시 기준 설정</h2>
+      <div class="radio-group" id="standard-options">
+        <label>
+          <input type="radio" name="aqi-standard" value="KOR"> 대한민국 환경부 (CAI)
+        </label>
+        <label>
+          <input type="radio" name="aqi-standard" value="WHO8"> WHO 권고 (8단계)
+        </label>
       </div>
-      <p class="muted" style="margin-top:8px">시스템 기본은 기기 설정(라이트/다크)에 따라 자동 전환됩니다.</p>
+      <p id="standard-description" class="section-description">
+        표시 기준은 게이지와 막대 그래프의 색상 및 등급에 적용됩니다.
+      </p>
     </section>
 
+    <section class="settings-section data-story">
+      <h2>이 앱의 특별한 이야기</h2>
+      <p>
+        <strong>후다닥</strong>은 단순한 미세먼지 앱이 아닙니다. 국내 측정망 데이터뿐만 아니라, 전 세계의 기상 모델과 위성 데이터를 종합하여 가장 정확하고 신뢰도 높은 정보를 제공하기 위해 노력합니다.
+      </p>
+      <p>
+        저희는 Open-Meteo의 고급 기상 모델을 통해 대기의 흐름을 예측하고, 위성으로 관측된 에어로졸 데이터를 분석하여 현재 위치에 가장 가까운 최적의 데이터를 찾아냅니다. 이를 통해 측정소가 없는 지역의 대기 질까지 추정하여 정보의 공백을 최소화합니다.
+      </p>
+    </section>
+      
+    <section class="settings-section">
+      <h2>예보 뱃지 안내</h2>
+      <p>
+        메인 화면의 예보 카드에는 예측의 신뢰도와 주요 원인을 나타내는 뱃지가 표시됩니다.
+      </p>
+      <div class="badge-info">
+        <span class="badge-example">신뢰도 높음</span>
+        <p>예측 모델의 신뢰도가 높을 때 표시됩니다.</p>
+      </div>
+      <div class="badge-info">
+        <span class="badge-example">대기 정체</span>
+        <p>바람이 거의 없어 오염물질이 정체될 때 표시됩니다.</p>
+      </div>
+    </section>
 
-    <footer class="site-footer">
-      <a href="../termsofuse.html">이용약관</a> · Owner: 2e-studio
+    <footer>
+      <p style="text-align: center; font-size: 0.8rem; color: var(--subtle-text-color);">
+        Owner: 2e-studio<br>
+        <a href="../termsofuse.html" style="color: var(--subtle-text-color);">이용약관</a>
+      </p>
     </footer>
+
   </main>
 
-  <!-- 설정 로직 -->
-  <script type="module">
-    // ===== 평가 기준 =====
-    const STD_KEY='aq_standard';
-   const stdExplain = {
-KOR:  "대한민국 CAI 4단계(좋음/보통/나쁨/매우나쁨) 기준으로 표시합니다.",
-WHO24:"WHO 2021 24시간 권고(AQG) 기준. 권고 이내/초과 2단계로 단순 표시합니다.",
-WHO8: "WHO 2021 기준을 8단계로 세분화(AQG 이하 3칸 + IT-4~IT-1 4칸 + 초과최상 1칸)하여 표시합니다.",
- };
-      const stdBox = document.getElementById('std-explain');
-    function applyStd(v){
-      localStorage.setItem(STD_KEY, v);
-      stdBox.textContent = stdExplain[v] || '';
-      // 현재 화면 내 미터/배지 재도색 훅 (있다면 호출)
-      window.repaintByStandard?.(v);
-    }
-    const savedStd = localStorage.getItem(STD_KEY) || 'KOR';
-    stdRadios.forEach(r => { r.checked = (r.value===savedStd); r.addEventListener('change', e=>applyStd(e.target.value)); });
-    applyStd(savedStd);
+  <script type="module" src="setup.js"></script>
 
-
-    
-    // ===== 테마 =====
-    const THEME_KEY = 'app-theme';
-    const themeRadios = document.querySelectorAll('input[name="theme"]');
-    function syncMetaTheme(){
-      const isDark = document.documentElement.getAttribute('data-theme')==='dark'
-        || (!document.documentElement.hasAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      const meta = document.querySelector('#meta-theme-color');
-      meta?.setAttribute('content', isDark ? '#0b0d12' : '#ffffff');
-    }
-    function applyTheme(v){
-      if (v==='light' || v==='dark') document.documentElement.setAttribute('data-theme', v);
-      else document.documentElement.removeAttribute('data-theme'); // system
-      localStorage.setItem(THEME_KEY, v);
-      syncMetaTheme();
-    }
-    const savedTheme = localStorage.getItem(THEME_KEY) || 'system';
-    themeRadios.forEach(r => { r.checked=(r.value===savedTheme); r.addEventListener('change', e=>applyTheme(e.target.value)); });
-    applyTheme(savedTheme);
-    // system일 때 OS 변경 반영
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(THEME_KEY)||'system')==='system') syncMetaTheme(); });
-
-  </script>
 </body>
 </html>
+
