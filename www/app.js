@@ -40,7 +40,6 @@ function scoreFrom(air) {
 }
 
 // 예보: 먼저 백엔드 /forecast 시도, 실패하면 Open-Meteo(날씨+공기질)로 5일 구성
-// 반환: { daily:[ {date, icon, desc, tmin, tmax, pm25, pm10, horizon} ... ] }
 async function fetchForecast(lat, lon){
   // 1) 백엔드 시도
   try{
@@ -76,7 +75,7 @@ async function fetchForecast(lat, lon){
   // 시간별 AQ를 날짜별로 모아 간단 집계(최댓값; 평균 원하면 'mean'으로 바꿔)
   const idx   = aq?.hourly?.time ?? [];
   const byDay = {}; // { 'YYYY-MM-DD': { pm10:[], pm25:[] } }
-  for (let i=0;i<idx.length;i++){
+  for (let i = 0; i < idx.length; i++) {
     const d = String(idx[i]).slice(0,10);
     (byDay[d] ||= { pm10:[], pm25:[] });
     if (aq?.hourly?.pm10?.[i]  != null) byDay[d].pm10.push(aq.hourly.pm10[i]);
