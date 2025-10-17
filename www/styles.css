@@ -144,7 +144,71 @@ main {
 .hero-summary .text { font-size: 1rem; color: var(--subtle-text-color); margin: 0.25rem 0 0; }
 .meta-info { display: flex; justify-content: center; gap: 1rem; font-size: 0.85rem; color: var(--subtle-text-color); margin-top: 1rem; }
 
-.forecast-card { /* ... existing styles if needed */ }
+/* 전체 카드 컨테이너 스타일 */
+.forecast-card {
+  /* 가로 정렬을 위해 flex 사용 (여러 카드를 나란히 놓을 때 유용) */
+  display: inline-block; 
+  
+  /* 카드 안의 내용들을 세로 중앙 정렬하기 위해 flex 사용 */
+  display: flex;
+  flex-direction: column; /* 아이템을 세로로 쌓음 */
+  align-items: center;   /* 가로축 중앙 정렬 */
+  
+  /* 카드 크기 및 여백 */
+  width: 120px;
+  padding: 20px 10px; /* 위아래 20px, 좌우 10px 여백 */
+  margin: 10px;       /* 카드 바깥 여백 */
+  
+  /* 디자인 */
+  background-color: #f0f8ff; /* 연한 하늘색 배경 */
+  border-radius: 12px;       /* 모서리를 둥글게 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 은은한 그림자 효과 */
+  
+  /* 폰트 */
+  font-family: 'Pretendard', sans-serif; /* 깔끔한 폰트 (없으면 기본 폰트) */
+  color: #333; /* 기본 글자색 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+}
+
+/* 요일(.forecast-day) 스타일 */
+.forecast-card .forecast-day {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 10px 0; /* 위, 좌우 여백은 없고 아래에만 10px */
+}
+
+/* 날씨 아이콘(.forecast-icon) 스타일 */
+.forecast-card .forecast-icon {
+  font-size: 40px; /* 이모지 또는 아이콘 폰트 크기 */
+  margin-bottom: 10px; /* 아이콘 아래 여백 */
+}
+
+/* 온도(.forecast-temp) 스타일 */
+.forecast-card .forecast-temp {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+/* 최고 온도(<strong> 태그)를 강조 */
+.forecast-card .forecast-temp strong {
+  font-weight: 900; /* 더 굵게 */
+  color: #111; /* 더 진한 색으로 */
+}
+
+/* 날씨 설명(.forecast-desc) 스타일 */
+.forecast-card .forecast-desc {
+  font-size: 14px;
+  color: #667;
+  margin: 0; /* 여백 없음 */
+}
+
+/* (선택) 카드에 마우스를 올렸을 때 효과 */
+.forecast-card:hover {
+  transform: translateY(-5px); /* 살짝 위로 올라가는 효과 */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 그림자를 더 진하게 */
+  transition: all 0.2s ease-in-out; /* 부드러운 전환 효과 */
+}
 
 .gauge-display { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0; }
 .semi-circle-gauge { text-align: center; }
