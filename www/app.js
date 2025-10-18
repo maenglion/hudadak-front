@@ -82,98 +82,110 @@ function setupTabs(){
 }
 
 // ===== 게이지(통합색 한 색) =====
+// ============ SVG 게이지 유틸 ============
+// SVG 한 번만 주입 (div 도넛 숨김)
 function ensureGaugeSVG() {
   const host = document.querySelector('.concentric-gauge');
-  if (!host || host.querySelector('svg.cg-svg')) return host;
+  if (!host) return null;
+  let svg = host.querySelector('svg.cg-svg');
+  if (svg) return host;
 
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(svgNS, 'svg');
+  const NS = 'http://www.w3.org/2000/svg';
+  svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('class', 'cg-svg');
   svg.setAttribute('viewBox', '0 0 260 260');
 
-  // 바깥 링
-  const rOuter = 115; // 반지름
+  // 공통 파라미터: 두께/간격
+  const THICK = 20;   // 링 두께(두 링 동일)
+  const GAP   = 12;   // 두 링 사이 간격
+
   const cx = 130, cy = 130;
-  const outerTrack = document.createElementNS(svgNS, 'circle');
-  outerTrack.setAttribute('class', 'cg-track');
-  outerTrack.setAttribute('cx', cx); outerTrack.setAttribute('cy', cy); outerTrack.setAttribute('r', rOuter);
+  const rOuter = 110;                       // 바깥 반지름
+  const rInner = rOuter - THICK - GAP;      // 안쪽 반지름 = 두께+간격만큼 안쪽
 
-  const outerArc = document.createElementNS(svgNS, 'circle');
-  outerArc.setAttribute('class', 'cg-arc cg-outer-arc');
-  outerArc.setAttribute('cx', cx); outerArc.setAttribute('cy', cy); outerArc.setAttribute('r', rOuter);
+  // 트랙/아크 생성 헬퍼
+  const mkCircle = (cls, r) => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('class', cls);
+    c.setAttribute('cx', cx);
+    c.setAttribute('cy', cy);
+    c.setAttribute('r',  r);
+    c.setAttribute('stroke-width', THICK); // 두께 통일
+    return c;
+  };
 
+  // 바깥 링
+  const outerTrack = mkCircle('cg-track cg-outer-track', rOuter);
+  const outerArc   = mkCircle('cg-arc   cg-outer-arc',   rOuter);
   // 안쪽 링
-  const rInner = 85;
-  const innerTrack = document.createElementNS(svgNS, 'circle');
-  innerTrack.setAttribute('class', 'cg-track cg-inner-track');
-  innerTrack.setAttribute('cx', cx); innerTrack.setAttribute('cy', cy); innerTrack.setAttribute('r', rInner);
-
-  const innerArc = document.createElementNS(svgNS, 'circle');
-  innerArc.setAttribute('class', 'cg-arc cg-inner-arc');
-  innerArc.setAttribute('cx', cx); innerArc.setAttribute('cy', cy); innerArc.setAttribute('r', rInner);
+  const innerTrack = mkCircle('cg-track cg-inner-track', rInner);
+  const innerArc   = mkCircle('cg-arc   cg-inner-arc',   rInner);
 
   svg.append(outerTrack, outerArc, innerTrack, innerArc);
   host.appendChild(svg);
-  host.classList.add('use-svg'); // 기존 div 도넛 숨김
+  host.classList.add('use-svg'); // div 도넛 감추기(네가 styles.css에 넣어둔 룰 사용)
   return host;
 }
 
-// 진짜로 그려주는 함수
-function setArc(circleEl, progress /*0~1*/, color, opts = {}) {
+// 라운드 캡 + 시작각/노치 제어
+function setArc(circleEl, progress /*0~1*/, color, { offsetDeg=-90, notchDeg=14 } = {}) {
   const r = parseFloat(circleEl.getAttribute('r'));
   const C = 2 * Math.PI * r;
 
-  // 옵션: 시작 각도·노치(빈틈) 각도
-  const offsetDeg = opts.offsetDeg ?? -90; // 12시 방향 = -90deg
-  const notchDeg  = opts.notchDeg  ?? 14;  // 항상 남길 빈틈 (예: 14°)
-  const notchFrac = notchDeg / 360;
-
-  // 노치를 항상 유지하려면, 실제 그릴 수 있는 최대 길이는 (1 - notchFrac)
+  const notchFrac = notchDeg / 360;             // 항상 남길 빈틈
   const eff = Math.max(0, Math.min(1, progress)) * (1 - notchFrac);
   const filled = C * eff;
 
-  // 원의 시작 위치(오프셋)
   const offset = C * (offsetDeg / 360);
-
   circleEl.style.stroke = color;
   circleEl.setAttribute('stroke-dasharray', `${filled} ${C}`);
   circleEl.setAttribute('stroke-dashoffset', String(offset));
 }
 
-// 통합색 1개로 두 링을 같이 칠하는 렌더러
+// ============ 게이지 렌더(통합 색 1개) ============
+// 기존 renderGauge 전체를 이걸로 교체
 function renderGauge({ pm10, pm25, name, display_ts, badges, cai_grade }) {
-  // SVG 준비
   const host = ensureGaugeSVG();
+  if (!host) return;
   const center = document.querySelector('.gauge-center-text');
 
-  // 통합 색상(국내 4단계)
-  const g = cai_grade ?? caiGradeKOR(pm10, pm25);
-  const band = STANDARDS.KOR.bands[g - 1];
+  // 등급/색
+  const g    = cai_grade ?? caiGradeKOR(pm10, pm25);
+  const band = STANDARDS.KOR.bands[g-1];
   const color = band?.bg || '#3CB371';
 
-  // 퍼센트
-  const p10 = Math.max(0, Math.min(1, (pm10 ?? 0) / 150)); // PM10 0~150
-  const p25 = Math.max(0, Math.min(1, (pm25 ?? 0) / 75));  // PM2.5 0~75
+  // 퍼센트(0~1)
+  const p10 = Math.max(0, Math.min(1, (pm10 ?? 0) / 150));
+  const p25 = Math.max(0, Math.min(1, (pm25 ?? 0) / 75));
 
   // 요소
   const svg = host.querySelector('svg.cg-svg');
   const outerArc = svg.querySelector('.cg-outer-arc');
   const innerArc = svg.querySelector('.cg-inner-arc');
 
-  // 원하는 꺾쇠(노치) 위치 맞추기:
-  //  - 바깥링은 대략 300° 시작(-60°)처럼 보이게, 안쪽은 살짝 앞당겨 차별
-  setArc(outerArc, p10, color, { offsetDeg: -60, notchDeg: 14 });
-  setArc(innerArc, p25, color, { offsetDeg: -30, notchDeg: 14 });
+  // 시작 각/노치(원하는 꺾쇠 위치로 조정 가능)
+  setArc(outerArc, p10, color, { offsetDeg: -60, notchDeg: 14 }); // 바깥
+  setArc(innerArc, p25, color, { offsetDeg: -30, notchDeg: 14 }); // 안쪽
 
   // 중앙/라벨
   center.innerHTML = `
     <div class="grade-big">${band?.label || '—'}</div>
-    <div class="pm-summary">PM2.5 ${pm25 != null ? pm25.toFixed(1) : '—'} · PM10 ${pm10 != null ? pm10.toFixed(1) : '—'} <em>µg/m³</em></div>
-    <div class="badges">${(badges || []).join(' · ')}</div>
+    <div class="pm-summary">PM2.5 ${pm25!=null?pm25.toFixed(1):'—'} · PM10 ${pm10!=null?pm10.toFixed(1):'—'} <em>µg/m³</em></div>
+    <div class="badges">${(badges||[]).join(' · ')}</div>
   `;
-  document.getElementById('pm10-value').innerHTML = `${pm10 != null ? pm10.toFixed(1) : '--'} <em>µg/m³</em>`;
-  document.getElementById('pm25-value').innerHTML = `${pm25 != null ? pm25.toFixed(1) : '--'} <em>µg/m³</em>`;
+  $('#pm10-value').innerHTML = `${pm10!=null?pm10.toFixed(1):'--'} <em>µg/m³</em>`;
+  $('#pm25-value').innerHTML = `${pm25!=null?pm25.toFixed(1):'--'} <em>µg/m³</em>`;
+
+  // 히어로 그라데이션 연동(선택)
+  const hero = $('.hero-section');
+  if (hero) {
+    hero.classList.remove('grade-1','grade-2','grade-3','grade-4');
+    hero.classList.add(`grade-${g}`);
+  }
+  $('#forecast-note')?.textContent = '';
+  $('.timestamp')?.replaceChildren(document.createTextNode(`${display_ts || ''} 업데이트`));
 }
+
 
 // ===== 보조수치 바(O3/NO2/SO2/CO) =====
 function renderGasBars({o3, no2, so2, co}){
@@ -246,6 +258,42 @@ function renderForecastGrid(f){
 
   $('#forecast-note')?.textContent = `발행: ${f.issued_at || ''} · 구간: ${f.horizon || ''}`;
 }
+
+function setupTabs(){
+  const btns = $$('.tab-button');
+  const panes = $$('.tab-content');
+  btns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = btn.dataset.tab; // "air-quality" | "weather-forecast"
+      btns.forEach(b=>b.classList.toggle('active', b===btn));
+      panes.forEach(p=>p.classList.toggle('active', p.id === `tab-${target}`));
+    });
+  });
+}
+
+// 로고/버튼으로 설정 패널 열기/닫기 (있을 때만)
+function setupSettingsPanel(){
+  const openEl  = document.getElementById('settings-btn')
+              || document.getElementById('app-logo')
+              || document.querySelector('.brand, .logo, .header-logo');
+  const panel   = document.getElementById('settings-panel');
+  const dim     = document.getElementById('settings-backdrop');
+  const toggle = () => {
+    const open = !panel?.classList.contains('is-open');
+    panel?.classList.toggle('is-open', open);
+    dim?.classList.toggle('is-visible', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
+  openEl?.addEventListener('click', toggle);
+  dim?.addEventListener('click', toggle);
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  setupTabs();
+  setupSettingsPanel();
+  // … 기존 initLocation() 호출 등 나머지 초기화는 그대로 두면 됨
+});
+
 
 // ===== 메인 바인딩 =====
 function renderMain(air){
