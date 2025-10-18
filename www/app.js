@@ -68,18 +68,7 @@ async function fetchNearestFallback(lat, lon){
   };
 }
 
-// ===== 탭 =====
-function setupTabs(){
-  const btns = $$('.tab-button');
-  const panes = $$('.tab-content');
-  btns.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const target = btn.dataset.tab; // "air-quality" | "weather-forecast"
-      btns.forEach(b=>b.classList.toggle('active', b===btn));
-      panes.forEach(p=>p.classList.toggle('active', p.id === `tab-${target}`));
-    });
-  });
-}
+
 
 // ===== 게이지(통합색 한 색) =====
 // ============ SVG 게이지 유틸 ============
@@ -182,8 +171,11 @@ function renderGauge({ pm10, pm25, name, display_ts, badges, cai_grade }) {
     hero.classList.remove('grade-1','grade-2','grade-3','grade-4');
     hero.classList.add(`grade-${g}`);
   }
-  $('#forecast-note')?.textContent = '';
-  $('.timestamp')?.replaceChildren(document.createTextNode(`${display_ts || ''} 업데이트`));
+  const noteEl = $('#forecast-note');
+ if (noteEl) noteEl.textContent = '';
+
+ const tsEl = $('.timestamp');
+ if (tsEl) tsEl.replaceChildren(document.createTextNode(`${display_ts || ''} 업데이트`));
 }
 
 
@@ -256,7 +248,8 @@ function renderForecastGrid(f){
     grid.appendChild(item);
   });
 
-  $('#forecast-note')?.textContent = `발행: ${f.issued_at || ''} · 구간: ${f.horizon || ''}`;
+  const noteEl = $('#forecast-note');
+if (noteEl) noteEl.textContent = `발행: ${f.issued_at || ''} · 구간: ${f.horizon || ''}`;
 }
 
 function setupTabs(){
@@ -352,6 +345,32 @@ async function doSearch(q){
   }
 }
 
+async function resolvePlaceName(lat, lon){
+  // 1) 백엔드 카카오 리버스 지오코딩
+  try{
+    const r = await fetch(`${API_BASE}/geo/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, {cache:'no-store'});
+    if (r.ok){
+      const j = await r.json(); // {lat, lon, address, source}
+      if (j?.address) return j.address;
+    }
+  }catch(_e){ /* silently fallback */ }
+
+  // 2) Open-Meteo geocoding 폴백(가장 가까운 행정명)
+  try{
+    const u = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=ko&count=1`;
+    const j = await fetch(u, {cache:'no-store'}).then(r=>r.json());
+    const hit = j?.results?.[0];
+    if (hit){
+      // 예: "인천 송도동" 스타일
+      return [hit.admin1, hit.name].filter(Boolean).join(' ');
+    }
+  }catch(_e){}
+
+  // 3) 그래도 없으면 좌표로 표시
+  return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+}
+
+
 // ===== 업데이트 =====
 async function updateAll(lat, lon){
   try{
@@ -366,9 +385,17 @@ async function updateAll(lat, lon){
 
     renderMain(air);
     renderForecastGrid(fc);
+      const place = await resolvePlaceName(lat, lon);
+    const inp = document.getElementById('location-input');
+    if (inp) inp.value = place;
+
+    const stationEl = document.getElementById('station-name');
+    if (stationEl) stationEl.textContent = place || (air.name || air.station?.name || '—');
+
   }catch(err){
     console.error('updateAll error:', err);
-    setText('hero-desc', '데이터를 불러오지 못했습니다.');
+    const desc = document.getElementById('hero-desc');
+    if (desc) desc.textContent = '데이터를 불러오지 못했습니다.';
   }
 }
 
