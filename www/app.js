@@ -6,10 +6,8 @@ import { colorFor } from './js/color-scale.js';
 console.log('[app] boot');
 
 // ===== 설정 =====
-const API_BASE =
-  window.__API_BASE__ ||
-  new URLSearchParams(location.search).get('api') ||
-  (location.hostname === 'localhost' ? 'http://127.0.0.1:8080' : '');
+const API_BASE = window.__API_BASE__ || new URLSearchParams(location.search).get('api') || (location.hostname === 'localhost' ? 'http://127.0.0.1:8080' : '');
+if (!API_BASE) console.warn('API_BASE is empty, using relative paths');
 const STANDARD = 'KOR';           // 통합색은 국내 4단계 기준
 
 // ===== 셀렉터/유틸 =====
