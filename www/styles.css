@@ -205,6 +205,18 @@ body {
 .gauge-labels .label-value{font-size:13px; color:#2b2b2b}
 .gauge-labels .label-value em{font-style:normal; color:#7a7a7a; font-size:11px; margin-left:2px}
 
+/* SVG 게이지: 기존 conic-gradient 버전은 감추고 이걸 씀 */
+.concentric-gauge { position: relative; width: 280px; margin: 16px auto 4px; }
+.concentric-gauge.use-svg .gauge-outer,
+.concentric-gauge.use-svg .gauge-inner { display: none; } /* div 도넛 숨김 */
+
+.cg-svg { position:absolute; inset:0; width:260px; height:260px; margin:0 auto; display:block; }
+.cg-track { fill:none; stroke:#e9edf2; stroke-width:22; }
+.cg-arc   { fill:none; stroke:#3cb371; stroke-width:22; stroke-linecap:round; transition:stroke-dasharray .8s ease, stroke .3s ease; }
+
+/* 안쪽 링은 반지름/두께만 다르게 */
+.cg-inner-track, .cg-inner-arc { stroke-width:22; }
+
 
 /* --- 나머지 스타일은 기존 코드 유지 --- */
 .linear-bar-item { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }

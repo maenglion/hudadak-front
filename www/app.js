@@ -82,41 +82,97 @@ function setupTabs(){
 }
 
 // ===== 게이지(통합색 한 색) =====
-function renderGauge({pm10, pm25, name, display_ts, badges, cai_grade}){
-  const outer = $('#pm10-gauge');  // 바깥( PM10 )
-  const inner = $('#pm25-gauge');  // 안쪽( PM2.5 )
-  const center = $('.gauge-center-text');
+function ensureGaugeSVG() {
+  const host = document.querySelector('.concentric-gauge');
+  if (!host || host.querySelector('svg.cg-svg')) return host;
 
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('class', 'cg-svg');
+  svg.setAttribute('viewBox', '0 0 260 260');
+
+  // 바깥 링
+  const rOuter = 115; // 반지름
+  const cx = 130, cy = 130;
+  const outerTrack = document.createElementNS(svgNS, 'circle');
+  outerTrack.setAttribute('class', 'cg-track');
+  outerTrack.setAttribute('cx', cx); outerTrack.setAttribute('cy', cy); outerTrack.setAttribute('r', rOuter);
+
+  const outerArc = document.createElementNS(svgNS, 'circle');
+  outerArc.setAttribute('class', 'cg-arc cg-outer-arc');
+  outerArc.setAttribute('cx', cx); outerArc.setAttribute('cy', cy); outerArc.setAttribute('r', rOuter);
+
+  // 안쪽 링
+  const rInner = 85;
+  const innerTrack = document.createElementNS(svgNS, 'circle');
+  innerTrack.setAttribute('class', 'cg-track cg-inner-track');
+  innerTrack.setAttribute('cx', cx); innerTrack.setAttribute('cy', cy); innerTrack.setAttribute('r', rInner);
+
+  const innerArc = document.createElementNS(svgNS, 'circle');
+  innerArc.setAttribute('class', 'cg-arc cg-inner-arc');
+  innerArc.setAttribute('cx', cx); innerArc.setAttribute('cy', cy); innerArc.setAttribute('r', rInner);
+
+  svg.append(outerTrack, outerArc, innerTrack, innerArc);
+  host.appendChild(svg);
+  host.classList.add('use-svg'); // 기존 div 도넛 숨김
+  return host;
+}
+
+// 진짜로 그려주는 함수
+function setArc(circleEl, progress /*0~1*/, color, opts = {}) {
+  const r = parseFloat(circleEl.getAttribute('r'));
+  const C = 2 * Math.PI * r;
+
+  // 옵션: 시작 각도·노치(빈틈) 각도
+  const offsetDeg = opts.offsetDeg ?? -90; // 12시 방향 = -90deg
+  const notchDeg  = opts.notchDeg  ?? 14;  // 항상 남길 빈틈 (예: 14°)
+  const notchFrac = notchDeg / 360;
+
+  // 노치를 항상 유지하려면, 실제 그릴 수 있는 최대 길이는 (1 - notchFrac)
+  const eff = Math.max(0, Math.min(1, progress)) * (1 - notchFrac);
+  const filled = C * eff;
+
+  // 원의 시작 위치(오프셋)
+  const offset = C * (offsetDeg / 360);
+
+  circleEl.style.stroke = color;
+  circleEl.setAttribute('stroke-dasharray', `${filled} ${C}`);
+  circleEl.setAttribute('stroke-dashoffset', String(offset));
+}
+
+// 통합색 1개로 두 링을 같이 칠하는 렌더러
+function renderGauge({ pm10, pm25, name, display_ts, badges, cai_grade }) {
+  // SVG 준비
+  const host = ensureGaugeSVG();
+  const center = document.querySelector('.gauge-center-text');
+
+  // 통합 색상(국내 4단계)
   const g = cai_grade ?? caiGradeKOR(pm10, pm25);
-  const band = STANDARDS.KOR.bands[g-1];
-  const color = band?.bg || '#888';
+  const band = STANDARDS.KOR.bands[g - 1];
+  const color = band?.bg || '#3CB371';
 
-  const p10 = pct(pm10, 150);
-  const p25 = pct(pm25, 75);
+  // 퍼센트
+  const p10 = Math.max(0, Math.min(1, (pm10 ?? 0) / 150)); // PM10 0~150
+  const p25 = Math.max(0, Math.min(1, (pm25 ?? 0) / 75));  // PM2.5 0~75
 
-  // conic-gradient로 채움 (마스크 CSS 필수!)
-  outer.style.background = `conic-gradient(${color} ${p10}%, #e9edf2 0)`;
-  inner.style.background = `conic-gradient(${color} ${p25}%, #e9edf2 0)`;
+  // 요소
+  const svg = host.querySelector('svg.cg-svg');
+  const outerArc = svg.querySelector('.cg-outer-arc');
+  const innerArc = svg.querySelector('.cg-inner-arc');
 
+  // 원하는 꺾쇠(노치) 위치 맞추기:
+  //  - 바깥링은 대략 300° 시작(-60°)처럼 보이게, 안쪽은 살짝 앞당겨 차별
+  setArc(outerArc, p10, color, { offsetDeg: -60, notchDeg: 14 });
+  setArc(innerArc, p25, color, { offsetDeg: -30, notchDeg: 14 });
+
+  // 중앙/라벨
   center.innerHTML = `
     <div class="grade-big">${band?.label || '—'}</div>
-    <div class="pm-summary">PM2.5 ${pm25!=null?pm25.toFixed(1):'—'} · PM10 ${pm10!=null?pm10.toFixed(1):'—'} <em>µg/m³</em></div>
-    <div class="badges">${(badges||[]).join(' · ')}</div>
+    <div class="pm-summary">PM2.5 ${pm25 != null ? pm25.toFixed(1) : '—'} · PM10 ${pm10 != null ? pm10.toFixed(1) : '—'} <em>µg/m³</em></div>
+    <div class="badges">${(badges || []).join(' · ')}</div>
   `;
-
-  $('#pm10-value').innerHTML = `${pm10!=null?pm10.toFixed(1):'--'} <em>µg/m³</em>`;
-  $('#pm25-value').innerHTML = `${pm25!=null?pm25.toFixed(1):'--'} <em>µg/m³</em>`;
-
-  // 히어로 그라데이션 연동(선택)
-  const hero = $('.hero-section');
-  if (hero) {
-    hero.classList.remove('grade-1','grade-2','grade-3','grade-4');
-    hero.classList.add(`grade-${g}`);
-  }
-
-  // 타임스탬프
-  $('#forecast-note')?.textContent = '';
-  $('.timestamp')?.replaceChildren(document.createTextNode(`${display_ts || ''} 업데이트`));
+  document.getElementById('pm10-value').innerHTML = `${pm10 != null ? pm10.toFixed(1) : '--'} <em>µg/m³</em>`;
+  document.getElementById('pm25-value').innerHTML = `${pm25 != null ? pm25.toFixed(1) : '--'} <em>µg/m³</em>`;
 }
 
 // ===== 보조수치 바(O3/NO2/SO2/CO) =====
