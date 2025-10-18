@@ -13,7 +13,6 @@ const API_BASE =
 const STANDARD = 'KOR';           // 통합색은 국내 4단계 기준
 
 // ===== 셀렉터/유틸 =====
-const $  = (q, el=document) => el.querySelector(q);
 const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
 const clamp01 = (t) => Math.max(0, Math.min(1, t));
 const pct = (v, max) => (v==null ? 0 : Math.round(clamp01(v / max) * 100));
@@ -37,7 +36,7 @@ function scoreFrom(air){
 
 // ===== API =====
 async function fetchNearest(lat=37.57, lon=126.98){
-  const u = new URL('/nearest', API_BASE);
+  const u = new URL('/backend/nearest', API_BASE);  // '/nearest' → '/backend/nearest'
   u.searchParams.set('lat', lat);
   u.searchParams.set('lon', lon);
   const res = await fetch(u, {cache:'no-store'});
@@ -56,10 +55,7 @@ async function fetchForecast(lat=37.57, lon=126.98, horizon=24){
 
 // 서버 실패 시 최소 폴백(현재시각만 Open-Meteo에서 픽)
 async function fetchNearestFallback(lat, lon){
-  const url = 'https://air-quality-api.open-meteo.com/v1/air-quality'
-    `?latitude=${lat}&longitude=${lon}`
-    `&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide`
-    `&timezone=Asia%2FSeoul`;
+const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&timezone=Asia%2FSeoul`;
   const j = await fetch(url, {cache:'no-store'}).then(r=>r.json());
   const i = (j.hourly?.time?.length || 1) - 1;
   const pick = (k)=> j.hourly?.[k]?.[i] ?? null;
