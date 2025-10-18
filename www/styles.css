@@ -152,17 +152,23 @@ body {
   margin: 12px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  position: relative;  /* 카드가 자식을 contain하도록 (이미 추가됨) */
+  overflow: hidden;    /* (이미 추가됨) */
+  min-width: 300px;    /* 추가: 게이지(280px)를 담을 최소 너비 보장 */
 }
 .card h4 { margin: 0 0 16px 0; font-family: var(--font-p7); }
 
-
 /* === concentric (PM10 밖 · PM2.5 안) 도넛 게이지 === */
 .concentric-gauge{
-  width: 280px; margin: 16px auto 4px;
+  width: 100%;         /* 수정: 부모(.card) 너비에 맞춤 (max 280px) */
+  max-width: 280px;    /* 추가: 최대 280px로 제한 */
+  margin: 16px auto 4px;
+  position: relative;  /* 추가: 자식 absolute 기준점 */
 }
 .gauge-outer, .gauge-inner{
-  position: relative;
-  width: 260px; height: 260px; margin: 0 auto;
+  position: absolute;  /* 수정: relative → absolute로 중첩 강화 */
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   border-radius: 50%;
   background: #e9edf2; /* 초기 트랙색 */
   /* 도넛(링)으로 뚫는 마스크: 두께만 바꿔도 모양 유지 */
@@ -178,9 +184,8 @@ body {
 /* 안쪽 링은 살짝 안쪽으로 들여앉히기 + 같은 두께 */
 .gauge-inner{
   --thickness: 22px;
-  width: 200px; height: 200px;
-  top: 30px; left: 30px;  /* (260-200)/2 */
-  position: absolute;
+  width: calc(100% - 60px); height: calc(100% - 60px);  /* 수정: 비율 유지 */
+  top: 30px; left: 30px;  /* (260-200)/2 유지 */
   background: #e9edf2;
   border-radius: 50%;
   transition: background 0.6s ease 0.05s;
@@ -206,17 +211,15 @@ body {
 .gauge-labels .label-value em{font-style:normal; color:#7a7a7a; font-size:11px; margin-left:2px}
 
 /* SVG 게이지: 기존 conic-gradient 버전은 감추고 이걸 씀 */
-.concentric-gauge { position: relative; width: 280px; margin: 16px auto 4px; }
 .concentric-gauge.use-svg .gauge-outer,
 .concentric-gauge.use-svg .gauge-inner { display: none; } /* div 도넛 숨김 */
 
-.cg-svg { position:absolute; inset:0; width:260px; height:260px; margin:0 auto; display:block; }
+.cg-svg { position:absolute; top:0; left:50%; transform: translateX(-50%); width:260px; height:260px; } /* 수정: 중앙 정렬 */
 .cg-track { fill:none; stroke:#e9edf2; stroke-width:22; }
 .cg-arc   { fill:none; stroke:#3cb371; stroke-width:22; stroke-linecap:round; transition:stroke-dasharray .8s ease, stroke .3s ease; }
 
 /* 안쪽 링은 반지름/두께만 다르게 */
 .cg-inner-track, .cg-inner-arc { stroke-width:22; }
-
 
 /* --- 나머지 스타일은 기존 코드 유지 --- */
 .linear-bar-item { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }
@@ -230,8 +233,15 @@ body {
 .forecast-icon { font-size: 28px; }
 .forecast-temp { text-align: right; font-size: 16px; }
 .forecast-desc { grid-column: 3; text-align: right; font-size: 14px; color: var(--text-secondary); margin-top: -8px; }
-.muted { color: var(--text-muted); font-size: 12px; margin-top: 12px; display: block; }
+.muted { color: var(--text-muted); font-size: 12px; margin-top: 8px; }  /* 수정: margin 조정 */
 
+/* 추가: 모바일 responsive (스크린샷처럼 좁은 화면 대응) */
+@media (max-width: 480px) {
+  .card { padding: 12px; margin: 8px; min-width: auto; }  /* 카드 축소 */
+  .concentric-gauge { max-width: 100%; }  /* 게이지 화면에 맞춤 */
+  .cg-svg { width: 100%; height: auto; }  /* SVG 반응형 */
+  .gauge-labels { flex-direction: column; }  /* 라벨 세로 배치 방지 overlapping */
+}
 /* --- 설정 패널 스타일 (전체 교체) --- */
 #settings-panel {
   position: fixed;
