@@ -156,46 +156,55 @@ body {
 .card h4 { margin: 0 0 16px 0; font-family: var(--font-p7); }
 
 
-/* --- 동심원 게이지 (이중원 구현) --- */
-.concentric-gauge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 24px 0;
+/* === concentric (PM10 밖 · PM2.5 안) 도넛 게이지 === */
+.concentric-gauge{
+  width: 280px; margin: 16px auto 4px;
 }
-.gauge-outer {
+.gauge-outer, .gauge-inner{
   position: relative;
-  width: 250px;
-  height: 250px;
+  width: 260px; height: 260px; margin: 0 auto;
   border-radius: 50%;
-  background: var(--pm10-gauge-bg, #e9ecef); /* JS에서 색상 제어 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background 0.5s;
+  background: #e9edf2; /* 초기 트랙색 */
+  /* 도넛(링)으로 뚫는 마스크: 두께만 바꿔도 모양 유지 */
+  --thickness: 22px;
+  -webkit-mask: radial-gradient(circle at 50% 50%,
+    transparent calc(50% - var(--thickness)),
+    #000 calc(50% - var(--thickness) + 1px));
+          mask: radial-gradient(circle at 50% 50%,
+    transparent calc(50% - var(--thickness)),
+    #000 calc(50% - var(--thickness) + 1px));
+  transition: background 0.6s ease;
 }
-.gauge-inner {
-  /* JS에서 색상 제어를 위해 남겨둡니다 */
-  background: var(--pm25-gauge-bg, #e9ecef);
-}
-.gauge-center-text {
-  /* 이중원 구현: 바깥원의 70% 크기 + 흰색 테두리 */
-  position: relative;
-  width: 70%; 
-  height: 70%;
+/* 안쪽 링은 살짝 안쪽으로 들여앉히기 + 같은 두께 */
+.gauge-inner{
+  --thickness: 22px;
+  width: 200px; height: 200px;
+  top: 30px; left: 30px;  /* (260-200)/2 */
+  position: absolute;
+  background: #e9edf2;
   border-radius: 50%;
-  background: var(--bg-card);
-  border: 10px solid #fff; /* 안쪽 원과 바깥 원 사이의 간격 */
-  box-shadow: 0 0 10px rgba(0,0,0,0.1); /* 입체감 */
+  transition: background 0.6s ease 0.05s;
 }
 
-/* 게이지 라벨은 기존 스타일 유지 */
-.gauge-labels { display: flex; justify-content: space-around; width: 100%; }
-.label-item { text-align: center; }
-.label-title { font-size: 14px; color: var(--text-secondary); }
-.label-value { display: block; font-size: 20px; font-family: var(--font-p7); margin-top: 4px; }
-.label-value em { font-style: normal; font-size: 12px; font-family: var(--font-p5); color: var(--text-muted); }
+/* 중앙 텍스트 */
+.gauge-center-text{
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; pointer-events: none;
+}
+.gauge-center-text .grade-big{font-weight:800; font-size:22px; line-height:1.15}
+.gauge-center-text .pm-summary{font-size:12px; color:#666; margin-top:4px}
+.gauge-center-text .badges{font-size:12px; color:#444; margin-top:4px}
+
+/* 하단 라벨 영역(이미 있으니 최소만) */
+.gauge-labels{
+  display:flex; justify-content:space-between; gap:12px; margin-top:14px;
+}
+.gauge-labels .label-title{display:block; font-size:13px; color:#2b2b2b; margin-bottom:4px}
+.gauge-labels .label-value{font-size:13px; color:#2b2b2b}
+.gauge-labels .label-value em{font-style:normal; color:#7a7a7a; font-size:11px; margin-left:2px}
+
 
 /* --- 나머지 스타일은 기존 코드 유지 --- */
 .linear-bar-item { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }

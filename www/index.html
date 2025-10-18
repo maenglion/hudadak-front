@@ -10,6 +10,30 @@
 
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/paper-log/Paperlog-font/Paperlog.css" />
+
+  <style>
+    /* 게이지 기본 스타일 (styles.css와 충돌 없이 최소만) */
+    .panel{width:280px;margin:24px auto;padding:18px 16px;background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+    .title{font-weight:700;font-size:16px;margin:0 0 10px}
+    .meta{font-size:12px;color:#666;margin-top:8px}
+    .gauge-container{position:relative;width:240px;height:240px;margin:8px auto 0}
+    .gauge-svg{width:100%;height:100%}
+    .track{fill:none;stroke:#e6e6e6;stroke-width:20;transform:rotate(-90deg);transform-origin:50% 50%}
+    .ring{fill:none;stroke-linecap:round;stroke-width:20;stroke-dasharray:0 1;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dasharray 1.0s ease}
+    .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+    .main-reading{font-weight:800;font-size:24px;line-height:1.1}
+    .sub-reading{font-size:12px;color:#666}
+    .badge{margin-top:6px;font-size:12px;color:#444}
+
+    /* 보조수치 바 */
+    .bar-wrap{width:320px;margin:18px auto 8px;display:flex;flex-direction:column;gap:10px}
+    .bar-row{display:flex;align-items:center;gap:10px}
+    .bar-label{min-width:64px;font-size:12px;color:#333}
+    .bar-progress{position:relative;flex:1;height:14px;background:#eee;border-radius:8px;overflow:hidden}
+    .bar-fill{height:100%;width:0%;background:#2196F3;border-radius:8px;transition:width 1.0s ease}
+    .bar-value{min-width:72px;text-align:right;font-size:12px;color:#333}
+  </style>
+
 </head>
 <body>
  <div class="app-container">
