@@ -6,7 +6,10 @@ import { colorFor } from './js/color-scale.js';
 console.log('[app] boot');
 
 // ===== 설정 =====
-const API_BASE = location.origin; // 같은 도메인/포트에서 API 띄웠으면 OK
+const API_BASE =
+  window.__API_BASE__ ||
+  new URLSearchParams(location.search).get('api') ||
+  (location.hostname === 'localhost' ? 'http://127.0.0.1:8080' : '');
 const STANDARD = 'KOR';           // 통합색은 국내 4단계 기준
 
 // ===== 셀렉터/유틸 =====
@@ -53,7 +56,10 @@ async function fetchForecast(lat=37.57, lon=126.98, horizon=24){
 
 // 서버 실패 시 최소 폴백(현재시각만 Open-Meteo에서 픽)
 async function fetchNearestFallback(lat, lon){
-  const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,pm10,o3,no2,so2,co&timezone=Asia%2FSeoul`;
+  const url = 'https://air-quality-api.open-meteo.com/v1/air-quality'
+    `?latitude=${lat}&longitude=${lon}`
+    `&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide`
+    `&timezone=Asia%2FSeoul`;
   const j = await fetch(url, {cache:'no-store'}).then(r=>r.json());
   const i = (j.hourly?.time?.length || 1) - 1;
   const pick = (k)=> j.hourly?.[k]?.[i] ?? null;
@@ -62,12 +68,14 @@ async function fetchNearestFallback(lat, lon){
     name: `Open-Meteo(${lat.toFixed(2)},${lon.toFixed(2)})`,
     display_ts: j.hourly?.time?.[i] || '',
     pm10: pick('pm10'), pm25: pick('pm2_5'),
-    o3: pick('o3'), no2: pick('no2'), so2: pick('so2'), co: pick('co'),
+    o3: pick('ozone'),
+    no2: pick('nitrogen_dioxide'),
+    so2: pick('sulphur_dioxide'),
+    co: pick('carbon_monoxide'),
     badges: ['위성/모델 분석'],
     station: { name:'Open-Meteo', provider:'OPENMETEO', kind:'model', lat, lon }
   };
 }
-
 
 
 // ===== 게이지(통합색 한 색) =====
@@ -157,31 +165,26 @@ function renderGauge({ pm10, pm25, display_ts, badges, cai_grade }) {
   setArc(innerArc, p25, color, { offsetDeg: -30, notchDeg: 14 }); // 안쪽
 
   // 중앙/라벨
-  center.innerHTML = `
-    <div class="grade-big">${band?.label || '—'}</div>
-    <div class="pm-summary">PM2.5 ${pm25!=null?pm25.toFixed(1):'—'} · PM10 ${pm10!=null?pm10.toFixed(1):'—'} <em>µg/m³</em></div>
-    <div class="badges">${(badges||[]).join(' · ')}</div>
-  `;
-  $('#pm10-value').innerHTML = `${pm10!=null?pm10.toFixed(1):'--'} <em>µg/m³</em>`;
-  $('#pm25-value').innerHTML = `${pm25!=null?pm25.toFixed(1):'--'} <em>µg/m³</em>`;
+center.innerHTML = `
+  <div class="grade-big">${band?.label || '—'}</div>
+  <div class="pm-summary">PM2.5 ${pm25!=null?pm25.toFixed(1):'—'} · PM10 ${pm10!=null?pm10.toFixed(1):'—'} <em>µg/m³</em></div>
+  <div class="badges">${(badges||[]).join(' · ')}</div>
+`;
+const pm10El = document.getElementById('pm10-value');
+if (pm10El) pm10El.innerHTML = `${pm10!=null?pm10.toFixed(1):'--'} <em>µg/m³</em>`;
+const pm25El = document.getElementById('pm25-value');
+if (pm25El) pm25El.innerHTML = `${pm25!=null?pm25.toFixed(1):'--'} <em>µg/m³</em>`;
 
-  // 히어로 그라데이션 연동(선택)
-  const hero = $('.hero-section');
-  if (hero) {
-    hero.classList.remove('grade-1','grade-2','grade-3','grade-4');
-    hero.classList.add(`grade-${g}`);
-  }
-  const noteEl = $('#forecast-note');
- if (noteEl) noteEl.textContent = '';
-
- const tsEl = $('.timestamp');
- if (tsEl) tsEl.replaceChildren(document.createTextNode(`${display_ts || ''} 업데이트`));
+const noteEl = document.getElementById('forecast-note');
+if (noteEl) noteEl.textContent = '';
+const tsEl = document.querySelector('.timestamp');
+if (tsEl) tsEl.replaceChildren(document.createTextNode(`${display_ts || ''} 업데이트`));
 }
 
 
 // ===== 보조수치 바(O3/NO2/SO2/CO) =====
 function renderGasBars({o3, no2, so2, co}){
-  const wrap = $('#linear-bars-container');
+  const wrap = document.getElementById('linear-bars-container');
   if (!wrap) return;
   wrap.innerHTML = '';
 
@@ -220,9 +223,9 @@ function renderGasBars({o3, no2, so2, co}){
 
 // ===== 예보 그리드(백엔드 /forecast 기준: hourly) =====
 function renderForecastGrid(f){
-  const grid = $('#forecast-grid');
+  const grid = document.getElementById('forecast-grid');
   if (!grid) return;
-  grid.innerHTML = '';
+  grid.innerHTML = ''; 
 
   (f.hourly || []).forEach(h=>{
     const item = document.createElement('div');
@@ -248,8 +251,8 @@ function renderForecastGrid(f){
     grid.appendChild(item);
   });
 
-  const noteEl = $('#forecast-note');
-if (noteEl) noteEl.textContent = `발행: ${f.issued_at || ''} · 구간: ${f.horizon || ''}`;
+  const note = document.getElementById('forecast-note');
+  if (note) note.textContent = `발행: ${f.issued_at || ''} · 구간: ${f.horizon || ''}`;
 }
 
 function setupTabs(){
@@ -292,21 +295,22 @@ window.addEventListener('DOMContentLoaded', ()=>{
 function renderMain(air){
   if (!air) return;
 
-  // 헤더 요약
   const mainGrade =
-    (air.pm25!=null) ? { bg: colorFor({standard:STANDARD,metric:'pm25',value:air.pm25})?.bg, label: STANDARDS.KOR.bands[caiGradeKOR(air.pm10, air.pm25)-1]?.label }
-  : (air.pm10!=null) ? { bg: colorFor({standard:STANDARD,metric:'pm10',value:air.pm10})?.bg, label: STANDARDS.KOR.bands[caiGradeKOR(air.pm10, air.pm25)-1]?.label }
+    (air.pm25!=null) ? { bg: colorFor({standard:'KOR',metric:'pm25',value:air.pm25})?.bg,
+                         label: STANDARDS.KOR.bands[caiGradeKOR(air.pm10, air.pm25)-1]?.label }
+  : (air.pm10!=null) ? { bg: colorFor({standard:'KOR',metric:'pm10',value:air.pm10})?.bg,
+                         label: STANDARDS.KOR.bands[caiGradeKOR(air.pm10, air.pm25)-1]?.label }
   : { bg:'#adb5bd', label:'—' };
 
-  const gradeEl = $('#hero-grade-label');
-  const scoreEl = $('#hero-score');
-  const descEl  = $('#hero-desc');
+  const gradeEl = document.getElementById('hero-grade-label');
+  const scoreEl = document.getElementById('hero-score');
+  const descEl  = document.getElementById('hero-desc');
   if (gradeEl){ gradeEl.textContent = mainGrade.label; gradeEl.style.color = mainGrade.bg || '#222'; }
   if (scoreEl){ scoreEl.textContent = String(scoreFrom(air)).padStart(2,'0'); }
-  if (descEl){ descEl.textContent = air.cai_value!=null ? `지수 ${air.cai_value}` : '오늘의 대기질 총평입니다.'; }
+  if (descEl){ descEl.textContent = (air.cai_value!=null) ? `지수 ${air.cai_value}` : '오늘의 대기질 총평입니다.'; }
 
-  const stationEl = $('#station-name');
-  if (stationEl) stationEl.textContent = `${air.station?.name || air.name || '—'}`;
+  const stationEl = document.getElementById('station-name');
+  if (stationEl){ stationEl.textContent = air.station?.name || air.name || '—'; }
 
   // 게이지 + 보조바
   renderGauge(air);
@@ -385,7 +389,9 @@ async function updateAll(lat, lon){
 
     renderMain(air);
     renderForecastGrid(fc);
-      const place = await resolvePlaceName(lat, lon);
+    // ▼ 주소 자동 채우기
+    
+    const place = await resolvePlaceName(lat, lon);
     const inp = document.getElementById('location-input');
     if (inp) inp.value = place;
 
