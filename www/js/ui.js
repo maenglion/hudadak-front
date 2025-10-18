@@ -6,9 +6,10 @@ import { colorFor } from './color-scale.js';
 let STANDARD = 'KOR';                 // 'KOR' | 'WHO24' | 'WHO5' | 'WHO8'
 const API_BASE = location.origin;     // 같은 포트에서 API 띄웠다면 그대로 사용
 
+
 // ===== 유틸 =====
 const $  = (q, el=document) => el.querySelector(q);
-const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
+
 const circumference = (r) => 2 * Math.PI * r;
 function setRingProgress(circle, value, max){
   const r = parseFloat(circle.getAttribute('r'));

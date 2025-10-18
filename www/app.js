@@ -14,7 +14,7 @@ const $  = (q, el=document) => el.querySelector(q);
 const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
 const clamp01 = (t) => Math.max(0, Math.min(1, t));
 const pct = (v, max) => (v==null ? 0 : Math.round(clamp01(v / max) * 100));
-const setText = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+
 
 // ===== 국내 4단계 통합등급(1~4) =====
 function caiGradeKOR(pm10, pm25){
@@ -133,7 +133,7 @@ function setArc(circleEl, progress /*0~1*/, color, { offsetDeg=-90, notchDeg=14 
 
 // ============ 게이지 렌더(통합 색 1개) ============
 // 기존 renderGauge 전체를 이걸로 교체
-function renderGauge({ pm10, pm25, name, display_ts, badges, cai_grade }) {
+function renderGauge({ pm10, pm25, display_ts, badges, cai_grade }) {
   const host = ensureGaugeSVG();
   if (!host) return;
   const center = document.querySelector('.gauge-center-text');
