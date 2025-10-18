@@ -6,8 +6,18 @@ import { colorFor } from './js/color-scale.js';
 console.log('[app] boot');
 
 // ===== 설정 =====
-const API_BASE = window.__API_BASE__ || new URLSearchParams(location.search).get('api') || (location.hostname === 'localhost' ? 'http://127.0.0.1:8080' : '');
-if (!API_BASE) console.warn('API_BASE is empty, using relative paths');
+const API_BASE = window.__API_BASE__ || new URLSearchParams(location.search).get('api') || (location.hostname === 'localhost' ? 'http://127.0.0.1:8080' : '/backend');
+if (!API_BASE) console.warn('API_BASE is empty, using relative paths'); // 이 줄 추가
+
+// 경로 조립 유틸 (상대/절대 모두 지원)
+const api = (path) => {
+  if (!API_BASE) {
+    console.warn('API_BASE is empty, falling back to relative path:', path);
+    return path;
+  }
+  return API_BASE.startsWith('http') ? `${API_BASE}${path}` : `${API_BASE}${path}`;
+};
+
 const STANDARD = 'KOR';           // 통합색은 국내 4단계 기준
 
 // ===== 셀렉터/유틸 =====
@@ -34,42 +44,44 @@ function scoreFrom(air){
 
 // ===== API =====
 async function fetchNearest(lat=37.57, lon=126.98){
-  const u = new URL('/backend/nearest', API_BASE);  // '/nearest' → '/backend/nearest'
-  u.searchParams.set('lat', lat);
-  u.searchParams.set('lon', lon);
-  const res = await fetch(u, {cache:'no-store'});
+  const u = `${api('/nearest')}?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+  const res = await fetch(u, { cache:'no-store' });
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 async function fetchForecast(lat=37.57, lon=126.98, horizon=24){
-  const u = new URL('/forecast', API_BASE);
-  u.searchParams.set('lat', lat);
-  u.searchParams.set('lon', lon);
-  u.searchParams.set('horizon', horizon);
-  const res = await fetch(u, {cache:'no-store'});
+  const u = `${api('/forecast')}?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&horizon=${horizon}`;
+  const res = await fetch(u, { cache:'no-store' });
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
 // 서버 실패 시 최소 폴백(현재시각만 Open-Meteo에서 픽)
+// 서버 실패 시 최소 폴백(현재시각만 Open-Meteo에서 픽)
 async function fetchNearestFallback(lat, lon){
-const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&timezone=Asia%2FSeoul`;
-  const j = await fetch(url, {cache:'no-store'}).then(r=>r.json());
+const url = 'https://air-quality-api.open-meteo.com/v1/air-quality' +
+  '?latitude=' + lat + '&longitude=' + lon +
+  '&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide' +
+  '&timezone=Asia%2FSeoul';
+  const j = await fetch(url, { cache:'no-store' }).then(r=>r.json());
   const i = (j.hourly?.time?.length || 1) - 1;
   const pick = (k)=> j.hourly?.[k]?.[i] ?? null;
+
   return {
     provider: 'OPENMETEO',
     name: `Open-Meteo(${lat.toFixed(2)},${lon.toFixed(2)})`,
     display_ts: j.hourly?.time?.[i] || '',
-    pm10: pick('pm10'), pm25: pick('pm2_5'),
-    o3: pick('ozone'),
+    pm10: pick('pm10'),
+    pm25: pick('pm2_5'),
+    o3:  pick('ozone'),
     no2: pick('nitrogen_dioxide'),
     so2: pick('sulphur_dioxide'),
-    co: pick('carbon_monoxide'),
+    co:  pick('carbon_monoxide'),
     badges: ['위성/모델 분석'],
     station: { name:'Open-Meteo', provider:'OPENMETEO', kind:'model', lat, lon }
   };
 }
+
 
 
 // ===== 게이지(통합색 한 색) =====
@@ -245,9 +257,11 @@ function renderForecastGrid(f){
     grid.appendChild(item);
   });
 
+
+  
   const note = document.getElementById('forecast-note');
   if (note) note.textContent = `발행: ${f.issued_at || ''} · 구간: ${f.horizon || ''}`;
-}
+} 
 
 function setupTabs(){
   const btns = $$('.tab-button');
@@ -303,13 +317,15 @@ function renderMain(air){
   if (scoreEl){ scoreEl.textContent = String(scoreFrom(air)).padStart(2,'0'); }
   if (descEl){ descEl.textContent = (air.cai_value!=null) ? `지수 ${air.cai_value}` : '오늘의 대기질 총평입니다.'; }
 
+  // ❗️여기서는 place 안 씀 — updateAll()에서 역지오코딩 후 다시 세팅함
   const stationEl = document.getElementById('station-name');
-  if (stationEl){ stationEl.textContent = air.station?.name || air.name || '—'; }
+  if (stationEl) stationEl.textContent = air.station?.name || air.name || '—';
 
-  // 게이지 + 보조바
+  // 게이지 + 보조바 (함수 **안**에 있어야 함)
   renderGauge(air);
   renderGasBars(air);
 }
+
 
 // ===== 검색/지오 =====
 async function geocode(q){
