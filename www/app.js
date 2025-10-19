@@ -6,17 +6,20 @@ import { colorFor } from './js/color-scale.js';
 console.log('[app] boot');
 
 // ===== 설정 =====
-const API_BASE = window.__API_BASE__ || new URLSearchParams(location.search).get('api') || (location.hostname === 'localhost' ? 'http://127.0.0.1:8080' : '/backend');
-if (!API_BASE) console.warn('API_BASE is empty, using relative paths'); // 이 줄 추가
+// ===== API BASE =====
+const API_BASE = window.__API_BASE__ || new URLSearchParams(location.search).get('api') || ''; // '' 이면 상대경로
 
-// 경로 조립 유틸 (상대/절대 모두 지원)
-const api = (path) => {
-  if (!API_BASE) {
-    console.warn('API_BASE is empty, falling back to relative path:', path);
-    return path;
-  }
-  return API_BASE.startsWith('http') ? `${API_BASE}${path}` : `${API_BASE}${path}`;
-};
+function api(path) {
+  if (!API_BASE) return path;              // '/nearest'
+  if (API_BASE.startsWith('http')) return `${API_BASE}${path}`;
+  return `${API_BASE}${path}`;             // '/backend/nearest'
+}
+
+async function getJSON(url, opt={}) {
+  const r = await fetch(url, { cache:'no-store', ...opt });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
 
 const STANDARD = 'KOR';           // 통합색은 국내 4단계 기준
 
@@ -43,42 +46,40 @@ function scoreFrom(air){
 }
 
 // ===== API =====
-async function fetchNearest(lat=37.57, lon=126.98){
+async function fetchNearest(lat, lon) {
   const u = `${api('/nearest')}?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
-  const res = await fetch(u, { cache:'no-store' });
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return getJSON(u);
 }
-async function fetchForecast(lat=37.57, lon=126.98, horizon=24){
+
+async function fetchForecast(lat, lon, horizon=24) {
   const u = `${api('/forecast')}?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&horizon=${horizon}`;
-  const res = await fetch(u, { cache:'no-store' });
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return getJSON(u);
 }
 
 // 서버 실패 시 최소 폴백(현재시각만 Open-Meteo에서 픽)
-// 서버 실패 시 최소 폴백(현재시각만 Open-Meteo에서 픽)
-async function fetchNearestFallback(lat, lon){
-const url = 'https://air-quality-api.open-meteo.com/v1/air-quality' +
-  '?latitude=' + lat + '&longitude=' + lon +
-  '&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide' +
-  '&timezone=Asia%2FSeoul';
-  const j = await fetch(url, { cache:'no-store' }).then(r=>r.json());
-  const i = (j.hourly?.time?.length || 1) - 1;
-  const pick = (k)=> j.hourly?.[k]?.[i] ?? null;
-
+async function fetchNearestFallback(lat, lon) {
+  const url =
+    `https://air-quality-api.open-meteo.com/v1/air-quality` +
+    `?latitude=${lat}&longitude=${lon}` +
+    `&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide` +
+    `&timezone=Asia%2FSeoul`;
+  const j = await getJSON(url);
+  const h = j?.hourly || {};
+  const t = h.time || [];
+  const i = t.length ? Math.max(0, t.length - 1) : 0;
+  const pick = k => (h[k] && h[k][i]) ?? null;
   return {
     provider: 'OPENMETEO',
-    name: `Open-Meteo(${lat.toFixed(2)},${lon.toFixed(2)})`,
-    display_ts: j.hourly?.time?.[i] || '',
-    pm10: pick('pm10'),
-    pm25: pick('pm2_5'),
-    o3:  pick('ozone'),
-    no2: pick('nitrogen_dioxide'),
-    so2: pick('sulphur_dioxide'),
-    co:  pick('carbon_monoxide'),
-    badges: ['위성/모델 분석'],
-    station: { name:'Open-Meteo', provider:'OPENMETEO', kind:'model', lat, lon }
+    name: `OpenMeteo(${(+lat).toFixed(2)},${(+lon).toFixed(2)})`,
+    station_id: 0,
+    display_ts: t[i] ? (t[i].length===16 ? `${t[i]}:00` : t[i]) : null,
+    pm10: pick('pm10'), pm25: pick('pm2_5'),
+    o3: pick('ozone'), no2: pick('nitrogen_dioxide'),
+    so2: pick('sulphur_dioxide'), co: pick('carbon_monoxide'),
+    unit_pm10:'µg/m³', unit_pm25:'µg/m³',
+    source_kind:'model', lat, lon,
+    station:{name:'Open-Meteo', provider:'OPENMETEO', kind:'model'},
+    badges:['위성/모델 분석'],
   };
 }
 
@@ -87,144 +88,111 @@ const url = 'https://air-quality-api.open-meteo.com/v1/air-quality' +
 // ===== 게이지(통합색 한 색) =====
 // ============ SVG 게이지 유틸 ============
 // SVG 한 번만 주입 (div 도넛 숨김)
-function ensureGaugeSVG() {
-  const host = document.querySelector('.concentric-gauge');
-  if (!host) return null;
-  let svg = host.querySelector('svg.cg-svg');
-  if (svg) return host;
+function ensureGaugeSvg() {
+  const wrap = document.querySelector('#tab-air-quality .concentric-gauge');
+  if (!wrap) return null;
+  wrap.classList.add('use-svg');
 
-  const NS = 'http://www.w3.org/2000/svg';
-  svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('class', 'cg-svg');
-  svg.setAttribute('viewBox', '0 0 260 260');
+  let svg = wrap.querySelector('svg.cg-svg');
+  if (svg) return svg;
 
-  // 공통 파라미터: 두께/간격
-  const THICK = 20;   // 링 두께(두 링 동일)
-  const GAP   = 12;   // 두 링 사이 간격
+  const ns = 'http://www.w3.org/2000/svg';
+  svg = document.createElementNS(ns,'svg');
+  svg.classList.add('cg-svg');
+  svg.setAttribute('viewBox','0 0 260 260');
+  wrap.prepend(svg);
 
-  const cx = 130, cy = 130;
-  const rOuter = 110;                       // 바깥 반지름
-  const rInner = rOuter - THICK - GAP;      // 안쪽 반지름 = 두께+간격만큼 안쪽
+  // 바깥 트랙/아크 (r=90, 두께 CSS에서 22)
+  const ot = document.createElementNS(ns,'circle');
+  ot.setAttribute('cx','130'); ot.setAttribute('cy','130'); ot.setAttribute('r','90');
+  ot.setAttribute('class','cg-track');
+  svg.appendChild(ot);
 
-  // 트랙/아크 생성 헬퍼
-  const mkCircle = (cls, r) => {
-    const c = document.createElementNS(NS, 'circle');
-    c.setAttribute('class', cls);
-    c.setAttribute('cx', cx);
-    c.setAttribute('cy', cy);
-    c.setAttribute('r',  r);
-    c.setAttribute('stroke-width', THICK); // 두께 통일
-    return c;
-  };
+  const oa = document.createElementNS(ns,'circle');
+  oa.setAttribute('cx','130'); oa.setAttribute('cy','130'); oa.setAttribute('r','90');
+  oa.setAttribute('class','cg-arc'); oa.id='cg-outer-arc';
+  svg.appendChild(oa);
 
-  // 바깥 링
-  const outerTrack = mkCircle('cg-track cg-outer-track', rOuter);
-  const outerArc   = mkCircle('cg-arc   cg-outer-arc',   rOuter);
-  // 안쪽 링
-  const innerTrack = mkCircle('cg-track cg-inner-track', rInner);
-  const innerArc   = mkCircle('cg-arc   cg-inner-arc',   rInner);
+  // 안쪽 트랙/아크 (r=60, 같은 두께)
+  const it = document.createElementNS(ns,'circle');
+  it.setAttribute('cx','130'); it.setAttribute('cy','130'); it.setAttribute('r','60');
+  it.setAttribute('class','cg-track cg-inner-track');
+  svg.appendChild(it);
 
-  svg.append(outerTrack, outerArc, innerTrack, innerArc);
-  host.appendChild(svg);
-  host.classList.add('use-svg'); // div 도넛 감추기(네가 styles.css에 넣어둔 룰 사용)
-  return host;
+  const ia = document.createElementNS(ns,'circle');
+  ia.setAttribute('cx','130'); ia.setAttribute('cy','130'); ia.setAttribute('r','60');
+  ia.setAttribute('class','cg-arc cg-inner-arc'); ia.id='cg-inner-arc';
+  svg.appendChild(ia);
+
+  return svg;
 }
 
 // 라운드 캡 + 시작각/노치 제어
-function setArc(circleEl, progress /*0~1*/, color, { offsetDeg=-90, notchDeg=14 } = {}) {
+function setArc(circleEl, ratio, color) {
   const r = parseFloat(circleEl.getAttribute('r'));
   const C = 2 * Math.PI * r;
-
-  const notchFrac = notchDeg / 360;             // 항상 남길 빈틈
-  const eff = Math.max(0, Math.min(1, progress)) * (1 - notchFrac);
-  const filled = C * eff;
-
-  const offset = C * (offsetDeg / 360);
-  circleEl.style.stroke = color;
-  circleEl.setAttribute('stroke-dasharray', `${filled} ${C}`);
-  circleEl.setAttribute('stroke-dashoffset', String(offset));
+  const p = Math.max(0, Math.min(1, ratio)) * C;
+  circleEl.setAttribute('stroke-dasharray', `${p} ${C - p}`);
+  circleEl.setAttribute('transform', `rotate(-90 130 130)`);
+  if (color) circleEl.setAttribute('stroke', color);
 }
 
 // ============ 게이지 렌더(통합 색 1개) ============
 // 기존 renderGauge 전체를 이걸로 교체
-function renderGauge({ pm10, pm25, display_ts, badges, cai_grade }) {
-  const host = ensureGaugeSVG();
-  if (!host) return;
-  const center = document.querySelector('.gauge-center-text');
+function renderGauge(air){
+  const svg = ensureGaugeSvg();
+  if (!svg) return;
 
-  // 등급/색
-  const g    = cai_grade ?? caiGradeKOR(pm10, pm25);
-  const band = STANDARDS.KOR.bands[g-1];
+  const g = (air.cai_grade!=null) ? air.cai_grade : caiGradeKOR(air.pm10, air.pm25);
+  const band = STANDARDS.KOR.bands[(g||2)-1];
   const color = band?.bg || '#3CB371';
 
-  // 퍼센트(0~1)
-  const p10 = Math.max(0, Math.min(1, (pm10 ?? 0) / 150));
-  const p25 = Math.max(0, Math.min(1, (pm25 ?? 0) / 75));
+  const p10 = (air.pm10 ?? 0) / 150;  // 0~1
+  const p25 = (air.pm25 ?? 0) / 75;
 
-  // 요소
-  const svg = host.querySelector('svg.cg-svg');
-  const outerArc = svg.querySelector('.cg-outer-arc');
-  const innerArc = svg.querySelector('.cg-inner-arc');
+  setArc(svg.querySelector('#cg-outer-arc'), p10, color);
+  setArc(svg.querySelector('#cg-inner-arc'), p25, color);
 
-  // 시작 각/노치(원하는 꺾쇠 위치로 조정 가능)
-  setArc(outerArc, p10, color, { offsetDeg: -60, notchDeg: 14 }); // 바깥
-  setArc(innerArc, p25, color, { offsetDeg: -30, notchDeg: 14 }); // 안쪽
-
-  // 중앙/라벨
-center.innerHTML = `
-  <div class="grade-big">${band?.label || '—'}</div>
-  <div class="pm-summary">PM2.5 ${pm25!=null?pm25.toFixed(1):'—'} · PM10 ${pm10!=null?pm10.toFixed(1):'—'} <em>µg/m³</em></div>
-  <div class="badges">${(badges||[]).join(' · ')}</div>
-`;
-const pm10El = document.getElementById('pm10-value');
-if (pm10El) pm10El.innerHTML = `${pm10!=null?pm10.toFixed(1):'--'} <em>µg/m³</em>`;
-const pm25El = document.getElementById('pm25-value');
-if (pm25El) pm25El.innerHTML = `${pm25!=null?pm25.toFixed(1):'--'} <em>µg/m³</em>`;
-
-const noteEl = document.getElementById('forecast-note');
-if (noteEl) noteEl.textContent = '';
-const tsEl = document.querySelector('.timestamp');
-if (tsEl) tsEl.replaceChildren(document.createTextNode(`${display_ts || ''} 업데이트`));
+  const center = document.querySelector('.gauge-center-text');
+  if (center){
+    center.innerHTML = `
+      <div class="grade-big">${band?.label || '—'}</div>
+      <div class="pm-summary">PM2.5 ${air.pm25!=null?air.pm25.toFixed(1):'—'} · PM10 ${air.pm10!=null?air.pm10.toFixed(1):'—'} <em>µg/m³</em></div>
+      <div class="badges">${(air.badges||[]).join(' · ')}</div>
+    `;
+  }
+  const pm10Val = document.getElementById('pm10-value');
+  const pm25Val = document.getElementById('pm25-value');
+  if (pm10Val) pm10Val.innerHTML = `${air.pm10!=null?air.pm10.toFixed(1):'--'} <em>µg/m³</em>`;
+  if (pm25Val) pm25Val.innerHTML = `${air.pm25!=null?air.pm25.toFixed(1):'--'} <em>µg/m³</em>`;
 }
 
 
 // ===== 보조수치 바(O3/NO2/SO2/CO) =====
-function renderGasBars({o3, no2, so2, co}){
+function renderGasBars(air){
   const wrap = document.getElementById('linear-bars-container');
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  const rows = [
-    { key:'o3',  label:'오존 O₃',        value:o3  },
-    { key:'no2', label:'이산화질소 NO₂', value:no2 },
-    { key:'so2', label:'아황산가스 SO₂', value:so2 },
-    { key:'co',  label:'일산화탄소 CO',  value:co  },
+  const metas = [
+    { key:'o3',  label:'오존 O₃',       max:240 },
+    { key:'no2', label:'이산화질소 NO₂', max:200 },
+    { key:'so2', label:'아황산가스 SO₂', max:150 },
+    { key:'co',  label:'일산화탄소 CO',  max:1200 },
   ];
 
-  const maxByKey = {
-    o3:  (STANDARDS.KOR?.breaks?.o3  ?? [60,120,180,240])[3] || 240,
-    no2: (STANDARDS.KOR?.breaks?.no2 ?? [50,100,200,400])[3] || 400,
-    so2: (STANDARDS.KOR?.breaks?.so2 ?? [20,80,150,300])[3] || 300,
-    co:  (STANDARDS.KOR?.breaks?.co  ?? [300,600,900,1200])[3] || 1200,
-  };
-
-  rows.forEach(({key,label,value})=>{
-    const row  = document.createElement('div'); row.className = 'bar-row';
-    const lab  = document.createElement('span'); lab.className='bar-label';   lab.textContent = label;
-    const prog = document.createElement('div');  prog.className='bar-progress';
-    const fill = document.createElement('div');  fill.className='bar-fill';
-    prog.appendChild(fill);
-    const val  = document.createElement('span'); val.className='bar-value';
-    val.textContent = (value==null ? '—' : `${Math.round(value)} µg/m³`);
-
-    const max = maxByKey[key];
-    fill.style.width = `${pct(value, max)}%`;
-    const band = colorFor({ standard: STANDARD, metric: key, value });
-    fill.style.background = band?.bg || '#7e7e7e';
-
-    row.append(lab, prog, val);
-    wrap.appendChild(row);
-  });
+  for (const m of metas){
+    const v = air[m.key];
+    const pct = (v==null) ? 0 : Math.max(0, Math.min(1, v/m.max));
+    const item = document.createElement('div');
+    item.className = 'linear-bar-item';
+    item.innerHTML = `
+      <div class="bar-label">${m.label}</div>
+      <div class="bar-wrapper"><div class="bar-fill" style="width:${(pct*100).toFixed(0)}%"></div></div>
+      <div class="bar-value">${v!=null?`${Math.round(v)} µg/m³`:'—'}</div>
+    `;
+    wrap.appendChild(item);
+  }
 }
 
 // ===== 예보 그리드(백엔드 /forecast 기준: hourly) =====
@@ -359,60 +327,44 @@ async function doSearch(q){
   }
 }
 
-async function resolvePlaceName(lat, lon){
-  // 1) 백엔드 카카오 리버스 지오코딩
-  try{
-    const r = await fetch(`${API_BASE}/geo/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, {cache:'no-store'});
-    if (r.ok){
-      const j = await r.json(); // {lat, lon, address, source}
-      if (j?.address) return j.address;
+async function resolvePlaceName(lat, lon) {
+  try {
+    if (API_BASE) {
+      const u = `${api('/geo/reverse')}?lat=${lat}&lon=${lon}`;
+      const j = await getJSON(u);
+      return j?.address || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
     }
-  }catch(_e){ /* silently fallback */ }
-
-  // 2) Open-Meteo geocoding 폴백(가장 가까운 행정명)
-  try{
-    const u = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=ko&count=1`;
-    const j = await fetch(u, {cache:'no-store'}).then(r=>r.json());
-    const hit = j?.results?.[0];
-    if (hit){
-      // 예: "인천 송도동" 스타일
-      return [hit.admin1, hit.name].filter(Boolean).join(' ');
-    }
-  }catch(_e){}
-
-  // 3) 그래도 없으면 좌표로 표시
+  } catch(_) {}
+  // 외부 역지오(OM) CORS 막히면 좌표로 폴백
   return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
 }
 
 
 // ===== 업데이트 =====
 async function updateAll(lat, lon){
-  try{
-    let air;
-    try {
-      air = await fetchNearest(lat, lon);     // 정상 경로
-    } catch(err) {
-      console.warn('[nearest] backend failed → fallback', err);
-      air = await fetchNearestFallback(lat, lon);
-    }
-    const fc = await fetchForecast(lat, lon, 24); // 백엔드 예보 사용
+  let air, f;
+  try { air = await fetchNearest(lat, lon); }
+  catch(e){ console.warn('[nearest] backend failed → fallback', e); air = await fetchNearestFallback(lat, lon); }
 
-    renderMain(air);
-    renderForecastGrid(fc);
-    // ▼ 주소 자동 채우기
-    
-    const place = await resolvePlaceName(lat, lon);
-    const inp = document.getElementById('location-input');
-    if (inp) inp.value = place;
+  try { f = await fetchForecast(lat, lon, 24); }
+  catch(e){ console.warn('[forecast] backend failed', e); }
 
-    const stationEl = document.getElementById('station-name');
-    if (stationEl) stationEl.textContent = place || (air.name || air.station?.name || '—');
+  // 위치 라벨
+  const place = await resolvePlaceName(lat, lon);
+  const stationEl = document.getElementById('station-name');
+  if (stationEl) stationEl.textContent = place || (air.name || air.station?.name || '—');
 
-  }catch(err){
-    console.error('updateAll error:', err);
-    const desc = document.getElementById('hero-desc');
-    if (desc) desc.textContent = '데이터를 불러오지 못했습니다.';
-  }
+  // 히어로
+  const tsEl = document.querySelector('.timestamp');
+  if (tsEl) tsEl.textContent = air.display_ts ? `${air.display_ts} 업데이트` : '';
+
+  // 카드 렌더
+  renderGauge(air);
+  renderGasBars(air);
+
+  // 예보 요약 라벨(있으면)
+  const note = document.getElementById('forecast-note');
+  if (f && note) note.textContent = `발행: ${f.issued_at || ''} · 구간: ${f.horizon || ''}`;
 }
 
 // ===== 초기화/바인딩 =====
