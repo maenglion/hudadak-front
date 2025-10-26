@@ -150,15 +150,15 @@ function ensureGaugeSVG() {
 
   // 바깥
   const track1 = document.createElementNS(svg.namespaceURI,'circle');
-  Object.assign(track1,{cx:130, cy:130, r:100}); track1.setAttribute('class','cg-track');
+ + track1.setAttribute('cx','130'); track1.setAttribute('cy','130'); track1.setAttribute('r','100'); track1.setAttribute('class','cg-track');
   const arc1 = document.createElementNS(svg.namespaceURI,'circle');
-  Object.assign(arc1,{cx:130, cy:130, r:100}); arc1.setAttribute('class','cg-arc cg-outer-arc');
+  track2.setAttribute('cx','130'); track2.setAttribute('cy','130'); track2.setAttribute('r','68');  track2.setAttribute('class','cg-track cg-inner-track');
 
   // 안쪽
   const track2 = document.createElementNS(svg.namespaceURI,'circle');
-  Object.assign(track2,{cx:130, cy:130, r:68}); track2.setAttribute('class','cg-track cg-inner-track');
+ arc1.setAttribute('cx','130');   arc1.setAttribute('cy','130');   arc1.setAttribute('r','100');   arc1.setAttribute('class','cg-arc cg-outer-arc');
   const arc2 = document.createElementNS(svg.namespaceURI,'circle');
-  Object.assign(arc2,{cx:130, cy:130, r:68}); arc2.setAttribute('class','cg-arc cg-inner-arc');
+arc2.setAttribute('cx','130');   arc2.setAttribute('cy','130');   arc2.setAttribute('r','68');    arc2.setAttribute('class','cg-arc cg-inner-arc');
 
   svg.append(track1, arc1, track2, arc2);
   wrap.appendChild(svg);
