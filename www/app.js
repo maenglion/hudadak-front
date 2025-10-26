@@ -138,40 +138,44 @@ async function fetchForecast(lat, lon, horizon=24) {
 
 // ===== 게이지(통합색 한 색) =====
 // ============ SVG 게이지 유틸 ============
-// SVG 한 번만 주입 (div 도넛 숨김)
+// ============ SVG 게이지 유틸 ============
+// SVG 한 번만 주입 (div .concentric-gauge 안에 생성)
 function ensureGaugeSVG() {
   const wrap = document.querySelector('.concentric-gauge');
-  if (!wrap || wrap.classList.contains('use-svg')) return;
-  wrap.classList.add('use-svg');
+  if (!wrap) return;
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class','cg-svg');
-  svg.setAttribute('viewBox','0 0 260 260');
+  // 이미 만들어졌으면 재사용
+  let svg = wrap.querySelector('svg.cg-svg');
+  if (svg) return svg;
 
-  // 바깥
-  const track1 = document.createElementNS(svg.namespaceURI,'circle');
- + track1.setAttribute('cx','130'); track1.setAttribute('cy','130'); track1.setAttribute('r','100'); track1.setAttribute('class','cg-track');
-  const arc1 = document.createElementNS(svg.namespaceURI,'circle');
-  track2.setAttribute('cx','130'); track2.setAttribute('cy','130'); track2.setAttribute('r','68');  track2.setAttribute('class','cg-track cg-inner-track');
+  svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'cg-svg');
+  svg.setAttribute('viewBox', '0 0 260 260');
 
-  // 안쪽
-  const track2 = document.createElementNS(svg.namespaceURI,'circle');
- arc1.setAttribute('cx','130');   arc1.setAttribute('cy','130');   arc1.setAttribute('r','100');   arc1.setAttribute('class','cg-arc cg-outer-arc');
-  const arc2 = document.createElementNS(svg.namespaceURI,'circle');
-arc2.setAttribute('cx','130');   arc2.setAttribute('cy','130');   arc2.setAttribute('r','68');    arc2.setAttribute('class','cg-arc cg-inner-arc');
+  // 바깥 트랙/아크
+  const track1 = document.createElementNS(svg.namespaceURI, 'circle');
+  track1.setAttribute('class', 'cg-track');
+  track1.setAttribute('cx', '130'); track1.setAttribute('cy', '130'); track1.setAttribute('r', '100');
+
+  const arc1 = document.createElementNS(svg.namespaceURI, 'circle');
+  arc1.setAttribute('class', 'cg-arc cg-outer-arc');
+  arc1.setAttribute('cx', '130'); arc1.setAttribute('cy', '130'); arc1.setAttribute('r', '100');
+
+  // 안쪽 트랙/아크
+  const track2 = document.createElementNS(svg.namespaceURI, 'circle');
+  track2.setAttribute('class', 'cg-track cg-inner-track');
+  track2.setAttribute('cx', '130'); track2.setAttribute('cy', '130'); track2.setAttribute('r', '68');
+
+  const arc2 = document.createElementNS(svg.namespaceURI, 'circle');
+  arc2.setAttribute('class', 'cg-arc cg-inner-arc');
+  arc2.setAttribute('cx', '130'); arc2.setAttribute('cy', '130'); arc2.setAttribute('r', '68');
 
   svg.append(track1, arc1, track2, arc2);
   wrap.appendChild(svg);
+  return svg;
 }
-function setArc(el, percent, color='#3CB371'){
-  const r = Number(el.getAttribute('r'));
-  const C = 2 * Math.PI * r;
-  const on = Math.max(0, Math.min(1, percent)) * C;
-  el.style.strokeDasharray = `${on} ${C - on}`;
-  el.style.transform = 'rotate(-90deg)';
-  el.style.transformOrigin = '50% 50%';
-  el.style.stroke = color;
-}
+
+
 function renderGauge(data){
   ensureGaugeSVG();
   const {pm10, pm25, display_ts, badges, cai_grade} = data;
