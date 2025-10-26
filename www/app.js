@@ -156,24 +156,56 @@ function ensureGaugeSVG() {
   const track1 = document.createElementNS(svg.namespaceURI, 'circle');
   track1.setAttribute('class', 'cg-track');
   track1.setAttribute('cx', '130'); track1.setAttribute('cy', '130'); track1.setAttribute('r', '100');
+ track1.setAttribute('fill', 'none');
+track1.setAttribute('stroke', '#e9eef3');
+track1.setAttribute('stroke-width', '22');
 
   const arc1 = document.createElementNS(svg.namespaceURI, 'circle');
   arc1.setAttribute('class', 'cg-arc cg-outer-arc');
   arc1.setAttribute('cx', '130'); arc1.setAttribute('cy', '130'); arc1.setAttribute('r', '100');
+arc1.setAttribute('fill', 'none');
+arc1.setAttribute('stroke', '#3CB371');
+arc1.setAttribute('stroke-width', '22');
+arc1.setAttribute('stroke-linecap', 'round');
+arc1.style.strokeDasharray = '0 9999';
 
   // 안쪽 트랙/아크
   const track2 = document.createElementNS(svg.namespaceURI, 'circle');
   track2.setAttribute('class', 'cg-track cg-inner-track');
   track2.setAttribute('cx', '130'); track2.setAttribute('cy', '130'); track2.setAttribute('r', '68');
+track2.setAttribute('fill', 'none');
+track2.setAttribute('stroke', '#e9eef3');
+track2.setAttribute('stroke-width', '18');
 
   const arc2 = document.createElementNS(svg.namespaceURI, 'circle');
   arc2.setAttribute('class', 'cg-arc cg-inner-arc');
   arc2.setAttribute('cx', '130'); arc2.setAttribute('cy', '130'); arc2.setAttribute('r', '68');
+  arc2.setAttribute('fill', 'none');
+arc2.setAttribute('stroke', '#3CB371');
+arc2.setAttribute('stroke-width', '18');
+arc2.setAttribute('stroke-linecap', 'round');
+arc2.style.strokeDasharray = '0 9999';
 
   svg.append(track1, arc1, track2, arc2);
   wrap.appendChild(svg);
   return svg;
 }
+
+ function setArc(el, percent, color='#3CB371'){
+
+if (!el) return;
+const rAttr = el.getAttribute('r');
+if (!rAttr) return;
+const r = Number(rAttr);
+   const C = 2 * Math.PI * r;
+   const on = Math.max(0, Math.min(1, percent)) * C;
+   el.style.strokeDasharray = `${on} ${C - on}`;
+   el.style.transform = 'rotate(-90deg)';
+   el.style.transformOrigin = '50% 50%';
+   el.style.stroke = color;
+ el.setAttribute('fill','none');
+ el.setAttribute('stroke-linecap','round');
+ }
 
 
 function renderGauge(data){
