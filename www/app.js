@@ -3,8 +3,6 @@
 import { STANDARDS } from './js/standards.js';
 import { colorFor } from './js/color-scale.js';
 
-console.log('[app] boot');
-
 // ===== 설정 =====
 // ===== API BASE =====
 const API_BASE = (window.__API_BASE__ ?? '').trim(); // 예: '/backend' or 'https://…'
@@ -26,27 +24,6 @@ const OM_WX = 'https://api.open-meteo.com/v1/forecast';
 function debounce(fn, delay=300){
   let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), delay); };
 }
-
-// 2) 자동검색 핸들러 (기존 코드에 추가)
-const inputEl = document.getElementById('location-input');
-if (inputEl) {
-  const autoSearch = debounce(async () => {
-    const q = inputEl.value.trim();
-    if (q.length < 2) return;           // 너무 짧으면 무시
-    try {
-      const g = await geocode(q);       // 이미 너가 만든 geocode(q): /geo/address → {lat,lon,address}
-      if (g?.address) inputEl.value = g.address;  // 주소 정제
-      await updateAll(g.lat, g.lon);    // ✅ 가장 가까운 관측소까지 포함해서 갱신
-    } catch(e) {
-      // 조용히 무시(사용자 타이핑 중 에러 토스트 불필요)
-      console.debug('[autoSearch]', e);
-    }
-  }, 350); // 300~500ms 추천
-
-  inputEl.addEventListener('input', autoSearch);
-}
-
-
 
 async function getJSON(url, opt={}) {
   const r = await fetch(url, { cache:'no-store', ...opt });
@@ -75,8 +52,6 @@ const nowKSTHour = () => {
   // "YYYY-MM-DDTHH:MM"
   return `${k.toISOString().slice(0,13)}:${k.toISOString().slice(14,16)}`;
 };
-
-
 
 // ===== 국내 4단계 통합등급(1~4) =====
 function caiGradeKOR(pm10, pm25){
@@ -160,35 +135,6 @@ async function fetchForecast(lat, lon, horizon=24) {
     };
   }
 }
-
-// 서버 실패 시 최소 폴백(현재시각만 Open-Meteo에서 픽)
-async function fetchNearestFallback(lat, lon) {
-  const url =
-    `https://air-quality-api.open-meteo.com/v1/air-quality` +
-    `?latitude=${lat}&longitude=${lon}` +
-    `&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide` +
-    `&timezone=Asia%2FSeoul`;
-  const j = await getJSON(url);
-  const h = j?.hourly || {};
-  const t = h.time || [];
-  const i = t.length ? Math.max(0, t.length - 1) : 0;
-  const pick = k => (h[k] && h[k][i]) ?? null;
-  return {
-    provider: 'OPENMETEO',
-    name: `OpenMeteo(${(+lat).toFixed(2)},${(+lon).toFixed(2)})`,
-    station_id: 0,
-    display_ts: t[i] ? (t[i].length===16 ? `${t[i]}:00` : t[i]) : null,
-    pm10: pick('pm10'), pm25: pick('pm2_5'),
-    o3: pick('ozone'), no2: pick('nitrogen_dioxide'),
-    so2: pick('sulphur_dioxide'), co: pick('carbon_monoxide'),
-    unit_pm10:'µg/m³', unit_pm25:'µg/m³',
-    source_kind:'model', lat, lon,
-    station:{name:'Open-Meteo', provider:'OPENMETEO', kind:'model'},
-    badges:['위성/모델 분석'],
-  };
-}
-
-
 
 // ===== 게이지(통합색 한 색) =====
 // ============ SVG 게이지 유틸 ============
@@ -324,35 +270,9 @@ function bindTabs() {
 
   // 초기 활성 탭 결정: HTML에 active가 없으면 첫 탭으로
   const initial = document.querySelector('.tab-button.active')?.dataset.tab
-               || btns[0]?.dataset.tab;
+                  || btns[0]?.dataset.tab;
   if (initial) activate(initial);
 }
-
-
-
-// 로고/버튼으로 설정 패널 열기/닫기 (있을 때만)
-function setupSettingsPanel(){
-  const openEl  = document.getElementById('settings-btn')
-              || document.getElementById('app-logo')
-              || document.querySelector('.brand, .logo, .header-logo');
-  const panel   = document.getElementById('settings-panel');
-  const dim     = document.getElementById('settings-backdrop');
-  const toggle = () => {
-    const open = !panel?.classList.contains('is-open');
-    panel?.classList.toggle('is-open', open);
-    dim?.classList.toggle('is-visible', open);
-    document.body.style.overflow = open ? 'hidden' : '';
-  };
-  openEl?.addEventListener('click', toggle);
-  dim?.addEventListener('click', toggle);
-}
-
-window.addEventListener('DOMContentLoaded', ()=>{
-  bindTabs();
-  setupSettingsPanel();
-  // … 기존 initLocation() 호출 등 나머지 초기화는 그대로 두면 됨
-});
-
 
 // ===== 메인 바인딩 =====
 function renderMain(air){
@@ -378,7 +298,8 @@ function renderMain(air){
 
   // 게이지 + 보조바 (함수 **안**에 있어야 함)
   renderGauge(air);
-  renderGasBars(air);
+  // ✅ 수정: 존재하지 않는 renderGasBars 대신 renderLinearBars 호출
+  renderLinearBars(air);
 }
 
 
@@ -423,8 +344,6 @@ async function resolvePlaceName(lat, lon){
   }
 }
 
-
-
 // ===== 업데이트 =====
 async function updateAll(lat, lon){
   const air = await fetchNearest(lat,lon);
@@ -438,38 +357,45 @@ async function updateAll(lat, lon){
   renderForecast(f);
 }
 
-window.addEventListener('DOMContentLoaded', async ()=>{
-  console.log('[app] boot');
-   const lat = 37.4112, lon = 126.6221; // 초기 좌표(송도 근처). 필요시 geolocation 연동
-  updateAll(lat,lon).catch(e=>console.error('updateAll error:', e));
-});
-
 // ===== 초기화/바인딩 =====
 function bindUIEvents(){
   // 설정 패널(있으면만)
-  const settingsBtn      = document.getElementById('settings-btn');
+  const settingsBtn      = document.getElementById('settings-btn') || document.getElementById('app-logo') || document.querySelector('.brand, .logo, .header-logo');
   const settingsPanel    = document.getElementById('settings-panel');
   const settingsBackdrop = document.getElementById('settings-backdrop');
 
-  const openSettings = () => {
-    settingsPanel?.classList.add('is-open');
-    settingsBackdrop?.classList.add('is-visible');
-    settingsBtn?.setAttribute('aria-expanded','true');
-    document.body.style.overflow = 'hidden';
-  };
-  const closeSettings = () => {
-    settingsPanel?.classList.remove('is-open');
-    settingsBackdrop?.classList.remove('is-visible');
-    settingsBtn?.setAttribute('aria-expanded','false');
-    document.body.style.overflow = '';
+  const toggleSettings = () => {
+    const isOpen = !settingsPanel?.classList.contains('is-open');
+    settingsPanel?.classList.toggle('is-open', isOpen);
+    settingsBackdrop?.classList.toggle('is-visible', isOpen);
+    settingsBtn?.setAttribute('aria-expanded', String(isOpen));
+    document.body.style.overflow = isOpen ? 'hidden' : '';
   };
 
-  settingsBtn?.addEventListener('click', openSettings);
-  settingsBackdrop?.addEventListener('click', closeSettings);
+  settingsBtn?.addEventListener('click', toggleSettings);
+  settingsBackdrop?.addEventListener('click', toggleSettings);
 
   // 검색 인풋 엔터
   const inp = document.getElementById('location-input');
   inp?.addEventListener('keydown', (e)=>{ if (e.key==='Enter') doSearch(inp.value||''); });
+  
+  // 2) 자동검색 핸들러 (기존 코드에 추가)
+  if (inp) {
+    const autoSearch = debounce(async () => {
+      const q = inp.value.trim();
+      if (q.length < 2) return;        // 너무 짧으면 무시
+      try {
+        const g = await geocode(q);      // 이미 너가 만든 geocode(q): /geo/address → {lat,lon,address}
+        if (g?.address) inp.value = g.address;  // 주소 정제
+        await updateAll(g.lat, g.lon);   // ✅ 가장 가까운 관측소까지 포함해서 갱신
+      } catch(e) {
+        // 조용히 무시(사용자 타이핑 중 에러 토스트 불필요)
+        console.debug('[autoSearch]', e);
+      }
+    }, 350); // 300~500ms 추천
+
+    inp.addEventListener('input', autoSearch);
+  }
 
   // 현재위치 버튼
   const currentBtn = document.getElementById('current-btn');
@@ -491,7 +417,10 @@ function initLocation(){
   }
 }
 
+// ✅ 수정: 모든 DOMContentLoaded를 하나로 통합하여 실행 순서 보장
 window.addEventListener('DOMContentLoaded', ()=>{
+  console.log('[app] boot');
+  bindTabs();
   bindUIEvents();
   initLocation();
 });
