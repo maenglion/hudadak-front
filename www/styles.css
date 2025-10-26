@@ -8,16 +8,19 @@
   --border-color: #dee2e6;
   
   /* Paperlog 폰트 변수 추가 */
-  --font-p5: 'Paperlog-Medium';
-  --font-p7: 'Paperlog-Bold';
-  --font-p8: 'Paperlog-ExtraBold';
-  --font-p9: 'Paperlog-Black';
+  --font-p7: 'Paperlog 7', 'Paperlog', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+  --font-p5: 'Paperlog 5', 'Paperlog', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+  --font-p8: 'Paperlog-ExtraBold','Paperlog', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+  --font-p9: 'Paperlog-Black','Paperlog', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
 }
+
+body { font-family: var(--font-p5); }
+.header-logo, .tab-button, .forecast-day { font-family: var(--font-p7); }
+
 
 /* 기본 스타일 */
 body {
   margin: 0;
-  font-family: var(--font-p5), sans-serif;
   background-color: var(--bg);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -160,10 +163,7 @@ body {
 
 /* === concentric (PM10 밖 · PM2.5 안) 도넛 게이지 === */
 .concentric-gauge{
-  width: 100%;         /* 수정: 부모(.card) 너비에 맞춤 (max 280px) */
-  max-width: 280px;    /* 추가: 최대 280px로 제한 */
-  margin: 16px auto 4px;
-  position: relative;  /* 추가: 자식 absolute 기준점 */
+width: 100%; max-width: 280px; height: 280px; margin: 16px auto 4px; position: relative;
 }
 .gauge-outer, .gauge-inner{
   position: absolute;  /* 수정: relative → absolute로 중첩 강화 */
@@ -189,6 +189,8 @@ body {
   background: #e9edf2;
   border-radius: 50%;
   transition: background 0.6s ease 0.05s;
+  position:absolute;
+  inset: 0;
 }
 
 /* 중앙 텍스트 */
