@@ -6,12 +6,6 @@
 * {
   margin: 0;
   padding: 0;
-  
-  /* [중요!]
-     width: 412px; 를 정할 때,
-     padding이나 border가 그 크기 '안'으로 포함되도록 계산 방식을 바꿉니다.
-     (이걸 안 하면 412px + padding 만큼 뚱뚱해집니다)
-  */
   box-sizing: border-box; 
 }
 
@@ -25,22 +19,30 @@ html, body {
    [1] 피그마 코드 시작
    ======================================== */
 
-/* .Main-container를 body처럼 사용하고 
-   PC 화면에서는 가운데 정렬되도록 수정합니다.
-*/
 .Main-container {
   width: 412px;
   min-height: 100vh;
   background-color: #F5F5F5; 
-  
-  /* [추가] PC 브라우저에서 볼 때
-    412px 상자가 가운데 오도록 정렬합니다.
-  */
   margin-left: auto;
   margin-right: auto;
 }
 
+/* [추가] App-header의 기본 뼈대 */
+.App-header {
+  width: 412px;
+  height: 566px;
+  /* (padding은 내부 요소들이 flex로 정렬될 것이므로 여기선 뺍니다) */
+}
 
+/* '좋음' (excellent) [추가됨] */
+.App-header--excellent {
+  background-image: linear-gradient(to bottom, #23a0e5, #a0cdf8);
+}
+
+/* '양호' (good) [추가됨] */
+.App-header--good {
+  background-image: linear-gradient(to bottom, #30b8de, #a0e6d9);
+}
 
 /* '보통' (fair) */
 .App-header--fair {
@@ -62,7 +64,7 @@ html, body {
   background-image: linear-gradient(to bottom, #df7f59 27%, #e4bb8b);
 }
 
-/* '위험' (hazardous) - 어제 찾으신 것 */
+/* '위험' (hazardous) */
 .App-header--hazardous {
   background-image: linear-gradient(to bottom, #71395e 27%, #d4a5a5);
 }
@@ -73,410 +75,284 @@ html, body {
 }
 
 
-.status-title {
-  /* '7Bold'는 'Bold' (굵게)를 의미하며, 
-    표준 CSS에서는 숫자 700으로 씁니다.
-  */
-  font-weight: 700;
-  font-family: "Paperlogy"; /* 제플린이 알려준 폰트 이름 */
-  font-size: 50px;
-  color: #ffffff;
-  text-align: center; }
-
-.status-score {
-  font-weight: 500; /* 5Medium */
-  font-family: "Paperlogy";
-  font-size: 28px;
-  
-  /* [사용자님 확인] 흰색 80% */
-  color: rgba(255, 255, 255, 0.8); /* #ffffffcc */
-  text-align: center;
-  
-  /* '위험' 텍스트와의 상단 여백 */
-  margin-top: 62px; 
-}
-
-.status-description {
-  font-family: "KoPubDotum";
-  font-weight: 700; /* Bold */
-  font-size: 26px;
-  
- color: #333333; 
-  text-align: center;
-
-  /* '65점' 텍스트와의 상단 여백입니다. */
-  margin-top: 58px;
-
-  /* [사용자님 요청 사항]
-    최대 너비를 380px로 제한합니다.
-    이 너비를 넘어가면 자동으로 줄바꿈됩니다.
-  */
-  max-width: 380px;
-  
-  /* 이 380px 너비의 박스를 부모(412px) 안에서 
-    가운데 정렬하기 위해 좌우 마진을 'auto'로 줍니다.
-  */
-  margin-left: auto;
-  margin-right: auto;
-}
+/* ========================================
+   [1-1] App-header 내부 요소
+   ======================================== */
 
 .header-top-row {
   display: flex;
-  justify-content: space-between; /* 양쪽 끝으로 보내기 */
-  align-items: center; /* 세로 중앙 정렬 */
-  padding-left: 26px;  /* 제플린 X: 26px 참조 */
-  padding-right: 26px; /* 제플린 X: 26px 참조 */
-  padding-top: 71px;     /* 제플린 Y: 70.9px 참조 */
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 26px;
+  padding-right: 26px;
+  padding-top: 71px;
 }
 
-/* [업데이트된 부분] 'HUDADAK' 로고 텍스트 스타일 */
 .logo-text {
   font-family: "Paperlogy";
-  /* '8ExtraBold'는 표준 CSS에서 숫자 800입니다. */
   font-weight: 800; 
   font-size: 20px;
   color: #ffffff; 
 }
 
-/* 알림 아이콘 스타일 */
 .notification-icon {
   width: 42px;
   height: 42px;
 }
 
 .location-button {
-  /* 크기 */
   width: 230px;
   height: 40px;
-
-  /* 테두리 (4px, 흰색, 둥글게) */
   border: 4px solid #ffffff;
   border-radius: 40px;
-  box-sizing: border-box; /* 테두리(4px)를 크기(40px) 안에 포함시킵니다 */
-  
-  /* 배경은 투명 (테두리만 있으니까) */
+  box-sizing: border-box;
   background-color: transparent;
-  
-  /* 위치 (가운데 정렬) 
-     부모(412px) - 자신(230px) / 2 = 91px. (X: 91px와 일치)
-     좌우 마진을 auto로 주면 자동으로 가운데 정렬됩니다.
-  */
   margin-left: auto;
   margin-right: auto;
-
-  /* 간격 (Spacing)
-     Y: 152px. 
-     위쪽 로고 행(header-top-row)이 끝나는 지점(Y=71+42=113px)에서
-     152px까지의 거리입니다. 
-     margin-top = 152px - 113px = 39px
-  */
   margin-top: 39px;
-
-  /* 텍스트 스타일 (Paperlogy, 5Medium, 22px, #ffffff, center) */
   font-family: "Paperlogy";
-  font-weight: 500; /* 5Medium */
+  font-weight: 500;
   font-size: 22px;
   color: #ffffff;
-  
-  /* 텍스트를 버튼의 완벽한 중앙에 놓기 위한 Flexbox 설정 */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .timestamp-row {
-  /* 세 텍스트를 가로로 나란히, 가운데 정렬합니다 */
   display: flex;
   justify-content: center;
   align-items: center;
-
-  /* 공통 폰트 스타일 */
   font-family: "Paperlogy";
   font-size: 18px;
   color: #ffffff;
-
-  /* 상단 여백 (이전과 동일) */
   margin-top: 12px;
 }
 
-/* 날짜 텍스트 (가는 굵기) */
 .timestamp-date {
-  font-weight: 300; /* 3Light */
+  font-weight: 300;
 }
 
-/* 오전/오후 텍스트 (중간 굵기) */
 .timestamp-ampm {
-  font-weight: 500; /* 5Medium (시간과 동일한 굵기) */
-  
-  /* [사용자님 요청] 날짜와 12px 간격 */
+  font-weight: 500;
   margin-left: 12px;
 }
 
-/* 시간 텍스트 (중간 굵기) */
 .timestamp-clock {
-  font-weight: 500; /* 5Medium */
-
-  /* [사용자님 요청] 오전/오후와 2px 간격 */
+  font-weight: 500;
   margin-left: 2px;
 }
 
+.status-title {
+  font-weight: 700;
+  font-family: "Paperlogy";
+  font-size: 50px;
+  color: #ffffff;
+  text-align: center; 
+}
+
+.status-score {
+  font-weight: 500;
+  font-family: "Paperlogy";
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  margin-top: 62px; 
+}
+
+.status-description {
+  font-family: "KoPubDotum";
+  font-weight: 700;
+  font-size: 26px;
+  color: #333333; 
+  text-align: center;
+  margin-top: 58px;
+  max-width: 380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ========================================
+   [1-2] 기준 바 & 탭 메뉴
+   ======================================== */
+
 .standard-bar {
-  /* 제플린이 알려준 크기와 배경색은 맞습니다 */
   width: 412px;
   height: 40px;
   background-color: #333237;
-
-  /* padding 대신 Flexbox로 텍스트를 중앙 정렬합니다 */
   display: flex;
-  align-items: center;    /* 세로 중앙 */
-  justify-content: center; /* 가로 중앙 */
+  align-items: center;
+  justify-content: center;
 }
 
-/* "기준" 텍스트 스타일 */
 .standard-label {
   font-family: "Paperlogy";
-  font-weight: 700; /* 7Bold */
+  font-weight: 700;
   font-size: 16px;
-  color: #949494; /* 사용자님이 알려주신 회색 */
+  color: #949494;
 }
 
-/* "WHO(8단계)" 또는 "CAI(4단계)" 텍스트의 [공통 스타일] */
 .standard-value {
   font-family: "Paperlogy";
-  font-weight: 700; /* 7Bold */
+  font-weight: 700;
   font-size: 16px;
-
-  /* "기준" 텍스트와의 8px 간격 */
   margin-left: 8px;
 }
 
-/* [상태 1: WHO일 때 색상] */
 .standard-value--who {
   color: #B2A760; 
 }
 
-/* [상태 2: CAI일 때 색상] */
 .standard-value--cai {
   color: #82A1BF;
 }
 
-/* "공기질" / "기상예보" 탭을 감싸는 전체 바 */
 .tab-navigation {
   width: 412px;
   height: 88px;
-  background-color: #fff; /* 흰색 배경 */
+  background-color: #fff;
   display: flex;
-  
-  /* [수정] 1. 'position: relative'을 추가하여 
-     밑줄을 띄울 '기준점'으로 삼습니다.
-  */
   position: relative; 
-  
-  /* [수정] 2. 탭 바의 맨 아래에 
-     '비활성' 상태의 전체 밑줄을 추가합니다.
-  */
   border-bottom: 4px solid #ededed; 
 }
 
-/* "공기질", "기상예보" 각각의 탭 아이템 (공통 스타일) */
 .tab-item {
-  flex-grow: 1; /* 50% 너비 */
+  flex-grow: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  
-  /* 공통 폰트 스타일 */
   font-family: "Paperlogy";
   font-weight: 700;
   font-size: 28px;
-  
-  /* 기본 상태 (선택 안 됨) 텍스트 색상 */
   color: #949494;
-  
   cursor: pointer;
-  
-  /* [삭제] border-bottom: 4px solid transparent; 
-     (이전 방식 삭제) 
-  */
 }
 
-/* '선택됨' 상태의 탭 스타일 */
 .tab-item--active {
-  color: #333333; /* 선택됨 텍스트 색상 */
-  
-  /* [삭제] border-bottom: 4px solid #b0d4cb; 
-     (이전 방식 삭제) 
-  */
+  color: #333333;
 }
 
-/* [추가] 3. '활성' 상태를 표시하는 초록색 밑줄
-   .tab-navigation의 가상 자식(::after)으로 만듭니다.
-*/
 .tab-navigation::after {
-  content: ''; /* 가상 요소는 content가 필수 */
-  position: absolute; /* .tab-navigation을 기준으로 절대 위치 */
-  
-  /* 부모의 border-bottom 위에 정확히 겹치도록 */
+  content: '';
+  position: absolute;
   bottom: -4px; 
   height: 4px;  
-  
-  width: 50%;   /* 탭이 2개이므로 50% 너비 */
-  
-  /* [확정] 활성 탭 밑줄 색상 */
+  width: 50%;
   background-color: #b0d4cb; 
-
-  /* 기본 위치 (첫 번째 탭: 공기질) */
   left: 0; 
-  
-  /* (나중에 app.js로 이 'left' 값을 '50%'로 바꾸면
-    '기상예보' 탭으로 밑줄이 이동합니다) */
   transition: left 0.3s ease; 
 }
 
+/* ========================================
+   [2] 탭 콘텐츠 (공기질/기상예보)
+   ======================================== */
+
+.tab-content {
+  padding-top: 46px;
+}
+
+.tab-content.hidden {
+  display: none;
+}
+
+/* ========================================
+   [2-1] 공기질 탭
+   ======================================== */
+
 .air-quality-card {
   width: 380px;
-  /* height: 638px; <-- 높이는 내용물에 맞게 자동으로 늘어나도록 삭제합니다. */
   margin-left: auto;
   margin-right: auto;
   background-color: #ffffff; 
-  
   display: flex;
   flex-direction: column;
   align-items: center; 
-  
-  /* [수정] 자식 요소들(미세먼지, 게이지, 초미세먼지) 사이에
-    46px의 세로 간격을 줍니다.
-  */
   gap: 46px; 
-padding-top: 46px;
+  padding-top: 46px;
   padding-bottom: 46px;
 }
 
-/* 게이지 전체를 감싸는 320px짜리 컨테이너 */
 .gauge-container {
   width: 320px;
   height: 320px;
-  
-  /* 카드 안에서 가운데 정렬 */
   margin-left: auto;
   margin-right: auto;
-  
-  /* [핵심] 원형으로 만듭니다 */
   border-radius: 50%;
-  
-  /* [핵심] 
-    '원뿔형 그라데이션'으로 파이 차트를 만듭니다.
-    (예시: 65%를 초록색(#b0d4cb)으로 채우고, 
-     나머지는 트랙 색상(#ededed)으로 채움)
-  */
   background-image: conic-gradient(
     #b0d4cb 0% 65%, 
     #ededed 65% 100%
   );
-  
-  /* 안쪽 원을 중앙에 배치하기 위한 Flexbox */
   display: flex;
   align-items: center;
   justify-content: center;
-  
-  /* (디자인에 따라 게이지 위쪽 여백이 필요할 수 있습니다) */
-  /* margin-top: 30px; */
 }
 
-/* 게이지의 '구멍' 역할을 하는 260px짜리 흰색 원 */
 .gauge-center {
-  /* 게이지 두께가 30px이므로, 
-    (320px - 30px - 30px) = 260px 
-  */
   width: 260px; 
   height: 260px;
   border-radius: 50%;
-  
-  /* 카드의 배경색(흰색)과 똑같이 칠해서 '구멍'처럼 보이게 합니다 */
   background-color: #ffffff;
-  
-  /* '.pm25' (안쪽 회색 원)을 중앙에 배치하기 위한 Flexbox */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* .pm25 (게이지 안쪽 220px짜리 회색 원) */
 .gauge-inner-circle {
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  
-  /* d9d9d9 색상에 40% 투명도를 적용 (opacity: 0.4) */
   background-color: rgba(217, 217, 217, 0.4);
-  
-  /* "inner shadow" 적용 */
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); 
+} /* [수정] 닫는 중괄호 } 추가 */
 
-/* "미세먼지", "나쁨" 정보가 들어갈 컴포넌트 박스 */
 .air-info-box {
-  /* (위치는 나중에 잡습니다. 일단 내용물 스타일부터 만듭니다) */
-  width: 200px; /* (제플린 스펙 .components-pm10 참고) */
+  width: 200px;
 }
 
-/* "미세먼지" + "뱃지" 상단 행 */
 .air-info-header {
   display: flex;
   align-items: center;
-  gap: 10px; /* "미세먼지와 forecast badge는 10px" */
+  gap: 10px;
 }
 
-/* "미세먼지" 텍스트 */
 .air-info-title {
   font-family: "Paperlogy";
-  font-weight: 500; /* 5Medium */
+  font-weight: 500;
   font-size: 20px;
   color: #787878;
 }
 
-/* 초록색 체크 뱃지 (SVG 에셋) */
 .air-info-badge {
-  width: 30px; /* (제플린 스펙 .forecast-badges 참고) */
+  width: 30px;
   height: 30px;
 }
 
-/* "나쁨" + "135" + "유닛" 하단 행 */
 .air-info-reading {
-  /* Flexbox로 요소들을 세로 정렬 (baseline) */
   display: flex;
-  align-items: baseline; /* 폰트 크기가 다를 땐 baseline이 좋습니다 */
-  
-  /* "미세먼지" 행과의 간격 (스펙 .Frame-60의 gap: 2px 참고) */
+  align-items: baseline;
   margin-top: 2px; 
 }
 
-/* "나쁨" 텍스트 */
 .air-info-status {
   font-family: "Paperlogy";
-  font-weight: 700; /* 7Bold */
+  font-weight: 700;
   font-size: 24px;
   color: #333333;
 }
 
-/* "135" 수치 텍스트 */
 .air-info-value {
   font-family: "Paperlogy";
-  font-weight: 500; /* 5Medium */
+  font-weight: 500;
   font-size: 14px;
   color: #949494;
-  
-  /* "나쁨" 텍스트와의 간격 (스펙 .PM10-level-container의 gap: 8px 참고) */
   margin-left: 8px;
 }
 
-/* "µg/m³" 유닛 텍스트 */
 .air-info-unit {
   font-family: "Paperlogy";
-  font-weight: 500; /* 5Medium */
+  font-weight: 500;
   font-size: 14px;
   color: #949494;
-  
-  /* "135" 수치와의 간격 (스펙 .PM10-level-value-container의 gap: 6px 참고) */
   margin-left: 6px;
 }
 
@@ -486,9 +362,9 @@ padding-top: 46px;
   margin-left: auto;
   margin-right: auto;
   background-color: #ffffff;
-  padding-top: 56px; }
+  padding-top: 56px; 
+} /* [수정] 닫는 중괄호 } 추가 */
 
-/* "기타 공기지표" 제목 텍스트 (변경 없음) */
 .gas-info-title {
   font-family: "Paperlogy";
   font-weight: 700;
@@ -497,463 +373,150 @@ padding-top: 46px;
   text-align: center;
 }
 
-/* "아황산가스" 등 목록을 감싸는 리스트 (변경 없음) */
 .gas-info-list {
   margin-top: 42px;
-  padding-left: 26px; /* (380px - 328px) / 2 */
+  padding-left: 26px;
   padding-right: 26px;
 }
   
- /* [대대적 수정] "아황산가스" 등 개별 항목 박스 */
 .gas-info-item {
-  /* [사용자님 확인] 실제 카드 크기 */
   width: 328px;
   height: 90px;
-  
-  /* [사용자님 확인] 항목 사이 간격 22px */
   margin-bottom: 22px; 
-  
-  /* [제플린 스펙] 카드 스타일 */
   background-color: #fff;
   border-radius: 8px;
-  
-  /* [제플린 스펙] 카드 내부 패딩 */
   padding: 15px 8px;
-  box-sizing: border-box; /* 패딩을 크기에 포함 */
-
-  /* [사용자님 확인] 카드 그림자 (#b7b7b799) */
+  box-sizing: border-box;
   box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
-  
-  /* [제플린 스펙] 내부 요소(헤더, 바) 정렬 */
   display: flex;
   flex-direction: column;
-  gap: 12px; /* (헤더와 바 사이의 간격) */
+  gap: 12px;
 }
 
+/* [추가] gas-info-item 내부 스타일 */
+.gas-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gas-item-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gas-item-title {
+  font-family: "Paperlogy";
+  font-weight: 700;
+  font-size: 22px;
+  color: #333333;
+}
+
+.gas-item-badge {
+  width: 24px;
+  height: 24px;
+}
+
+.gas-item-reading-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.gas-item-formula {
+  font-family: "Paperlogy";
+  font-weight: 700;
+  font-size: 18px;
+  color: #333333;
+}
+
+.gas-item-value {
+  font-family: "Paperlogy";
+  font-weight: 500;
+  font-size: 14px;
+  color: #949494;
+}
+
+.gas-item-unit {
+  font-family: "Paperlogy";
+  font-weight: 500;
+  font-size: 14px;
+  color: #949494;
+}
+/* --- [가스 바 스타일] --- */
 
 .gas-item-bar-container {
-  width: 312px; /* (제플린 스펙 .linearbar 참고) */
+  width: 312px;
   height: 24px;
   background-color: #ededed;
   border-radius: 12px;
   box-shadow: inset 0px 4px 4px 0px #d9d9d9;
   position: relative;
   overflow: hidden;
-  
-  /* [수정] gap: 12px로 대체되었으므로 margin-top 삭제 */
-  /* margin-top: 14px; <-- 삭제 */
-  
-  /* (328px 패딩(8+8) 안에 312px이므로 중앙 정렬) */
   margin-left: auto;
   margin-right: auto; 
 }
 
-/* [프로그레스 바] - 실제 값 (색상 바) */
 .gas-item-bar-value {
   height: 100%;
   border-radius: 12px;
-  /* (width는 app.js가 style="width: 47%" 처럼 넣어줄 겁니다) */
-  width: 47%; /* (임시: 146px / 312px) */
-  
+  width: 47%; /* (임시) */
   position: absolute;
   top: 0;
   left: 0;
-  
-  /* (그림자는 값 바에도 동일하게 적용) */
   box-shadow: inset 0px 4px 4px 0px #d9d9d9;
 }
 
-/* --- 🎨 [요청하신 가스별 바 색상] --- */
-
-/* 1. 아황산가스 (SO₂) - (제공해주신 색상) */
 .gas-bar--so2 {
   background-color: #59c5a9;
 }
-
-/* 2. 일산화탄소 (CO) - (제안) */
 .gas-bar--co {
-  background-color: #59a6c5; /* (시원한 파란색 계열) */
+  background-color: #59a6c5;
 }
-
-/* 3. 오존 (O₃) - (제안) */
 .gas-bar--o3 {
-  background-color: #c5c259; /* (경고성 노란색 계열) */
+  background-color: #c5c259;
 }
-
-/* 4. 이산화질소 (NO₂) - (제안) */
 .gas-bar--no2 {
-  background-color: #c57b59; /* (위험성 주황/갈색 계열) */
-}
-
-/* 1. 화면 전체를 덮는 어두운 반투명 배경 (오버레이) */
-.slide-menu-overlay {
-  /* [중요] 화면에 고정 */
-  position: fixed; 
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  
-  /* [사용자님 요청] #303030b3 */
-  background-color: rgba(48, 48, 48, 0.7); 
-
-  /* (평소엔 숨겨두고 JS로 .hidden 클래스를 제거해 보여줍니다) */
-  /* display: none; */ 
-}
-
-/* 2. 실제 메뉴 내용물 (왼쪽에서 나오는 322px 너비) */
-.slide-menu-content {
-  width: 322px;
-  height: 100%; /* 화면 세로 길이 꽉 채움 */
-  
-  /* [스펙] 배경색 */
-  background-color: #333237;
-  
-  /* [스펙] 로고/메뉴를 세로로 쌓음 */
-  display: flex;
-  flex-direction: column; 
-}
-
-/* 3. 메뉴 안의 "HUDADAK" 로고 */
-.slide-menu-logo {
-  /* [스펙] Paperlogy, 8ExtraBold, 20px, #ffffff */
-  font-family: "Paperlogy";
-  font-weight: 800;
-  font-size: 20px;
-  color: #ffffff;
-  
-  /* [스펙] Y: 72px, X: 26px (padding으로 구현) */
-  padding-top: 72px;
-  padding-left: 26px;
-}
-
-/* 4. 메뉴 항목들("표시기준 설정" 등)을 감싸는 리스트 */
-.slide-menu-nav {
-  /* [스펙] 로고와 21px 간격 */
-  margin-top: 21px; 
-}
-
-/* [수정] 5. "표시기준 설정" 등 개별 메뉴 항목 */
-.menu-item {
-  /* ... (기존 width, height, padding, border-bottom) ... */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer; /* 클릭 가능하도록 */
-  transition: background-color 0.2s ease; /* 부드러운 효과 */
-}
-
-/* 6. 메뉴 텍스트 (예: "표시기준 설정") */
-.menu-item-text {
-  /* [사용자님 확인] 기본 폰트 스타일 */
-  font-family: "Paperlogy";
-  font-weight: 700; /* 7Bold */
-  font-size: 24px;
-  color: #949494;  /* [사용자님 확인] 기본 색상 */
-  
-  transition: color 0.2s ease;
-}
-
-/* 7. 메뉴 화살표 아이콘 (역 삼각형) */
-.menu-item-arrow {
-  width: 24px;
-  height: 14px;
-  transition: transform 0.3s ease, filter 0.3s ease; /* 부드러운 효과 */
-}
-
-
-/* --- [추가] 클릭 시 활성화 스타일 --- */
-
-/* [추가] 8. 클릭된 메뉴의 텍스트 */
-.menu-item.active .menu-item-text {
-  color: #6dcbb3; /* [사용자님 확인] 클릭 시 글씨 색 */
-}
-
-/* [추가] 9. 클릭된 메뉴의 화살표 */
-.menu-item.active .menu-item-arrow {
-  transform: rotate(180deg);
-  filter: invert(78%) sepia(19%) saturate(1067%) hue-rotate(107deg) brightness(88%) contrast(92%);
-}
-
-/* [추가] 10. 하위 메뉴 박스 (평소엔 숨겨짐) */
-.sub-menu-box {
-  background-color: #3f3e4a;
-  padding: 24px 26px; /* 상하 여백(임의) / 좌우 여백(메뉴와 동일) */
-  display: none; /* 평소엔 숨김 */
-}
-
-/* [추가] 11. 'active' 클래스가 붙으면 하위 메뉴 보이기 */
-.sub-menu-box.active {
-  display: block;
-}
-
-/* [추가] 12. 라디오 버튼 옵션 (환경부, WHO) */
-.radio-option {
-  display: flex;
-  align-items: center;
-  gap: 10px; /* [사용자님 요청] 라디오 버튼과 10px 간격 */
-  margin-bottom: 20px; /* (옵션 사이 임의 간격) */
-  cursor: pointer;
-}
-.radio-option:last-child {
-  margin-bottom: 0;
-}
-
-/* [추가] 13. (실제 <input type="radio">는 숨깁니다) */
-.radio-option input[type="radio"] {
-  display: none; 
-}
-
-/* [추가] 14. 가상 라디오 버튼 (14x14) */
-.radio-button::before {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background-color: transparent;
-  border: 2px solid #d9d9d9; /* (기본 회색) */
-  box-sizing: border-box;
-}
-
-/* [추가] 15. (선택된 상태) 가상 라디오 버튼 */
-.radio-option input[type="radio"]:checked + .radio-button::before {
-  background-color: #6dcbb3; /* [사용자님 요청] 선택 시 색상 */
-  border-color: #6dcbb3;
-}
-
-/* [추가] 16. 텍스트 그룹 (2줄) */
-.radio-text-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px; /* [사용자님 요청] 두 글자 간격 4px */
-}
-
-/* [추가] 17. "환경부(4단계)" 텍스트 */
-.radio-title {
-  font-family: "Paperlogy";
-  font-weight: 500; /* 5Medium */
-  font-size: 22px;
-  color: #d9d9d9; /* [사용자님 요청] 기본 색상 */
-}
-
-/* [추가] 18. "가장 일반적인 기준" 텍스트 */
-.radio-description {
-  font-family: "Paperlogy";
-  font-weight: 500; /* 5Medium */
-  font-size: 16px;
-  color: #787878; /* [사용자님 요청] 기본 색상 */
-}
-
-/* [추가] 19. (선택된 상태) 텍스트 색상 변경 */
-.radio-option input[type="radio"]:checked ~ .radio-text-group .radio-title {
-  color: #6dcbb3; /* [사용자님 요청] 선택 시 색상 */
-}
-.radio-option input[type="radio"]:checked ~ .radio-text-group .radio-description {
-  color: #728883; /* [사용자님 요청] 선택 시 색상 */
-}
-
-/* [추가] "예보 뱃지 안내" 등의 설명 텍스트 */
-.sub-menu-description {
-  font-family: "Paperlogy";
-  font-weight: 700; /* 7Bold */
-  font-size: 18px;
-  line-height: 25px; /* 줄 간격 */
-  color: #b3b2b5;
-}
-
-/* ========================================
-   [4] 검색 오버레이 (화면 전체를 덮음)
-   ======================================== */
-
-/* 1. 화면 전체를 덮는 어두운 반투명 배경 (오버레이) */
-.search-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  
-  /* [사용자님 요청] 어두운 배경 (#303030b3와 동일하게) */
-  background-color: rgba(48, 48, 48, 0.7); 
-  
-  /* z-index: 슬라이드 메뉴(100)보다 위(101)에 있어야 함 */
-  z-index: 101; 
-
-  /* (평소엔 숨겨둡니다) */
-  display: none; 
-}
-
-/* 2. 검색창 + 리스트를 감싸는 위젯 */
-.search-widget {
-  /* [중요] 원래 .location-button이 있던 위치에 고정합니다.
-     Y: 152px (header-padding(71) + top-row(42) + loc-margin(39))
-  */
-  position: absolute;
-  top: 152px; 
-  
-  /* 가로 중앙 정렬 */
-  left: 50%;
-  transform: translateX(-50%);
-  
-  /* [스펙] 너비 230px */
-  width: 230px; 
-}
-
-/* 3. 검색 입력창 (input) */
-.search-input-box {
-  width: 100%; /* 230px */
-  height: 40px;
-  
-  /* [스펙] #f9f9f9 배경, 4px 흰색 테두리, 둥글게 */
-  background-color: #f9f9f9;
-  border: 4px solid #ffffff;
-  border-radius: 40px;
-  box-sizing: border-box; /* 테두리를 크기에 포함 */
-  
-  /* 텍스트 스타일 */
-  padding: 0 20px; /* 텍스트가 테두리에 붙지 않게 */
-  font-family: "Paperlogy";
-  font-size: 18px; /* (리스트 폰트와 동일하게 임의 지정) */
-  color: #000000;
-  outline: none; /* 클릭 시 파란 테두리 제거 */
-}
-
-/* 4. "지역, 위치를 입력하세요" 플레이스홀더 */
-.search-input-box::placeholder {
-  color: #949494;
-  font-family: "Paperlogy";
-  font-weight: 300; /* (Light, 임의 지정) */
-}
-
-/* 5. 검색 결과 리스트 컨테이너 */
-.search-results-list {
-  width: 100%; /* 230px */
-  
-  /* [스펙] 검색창과 4px 간격 */
-  margin-top: 4px; 
-  
-  /* 리스트의 둥근 모서리 (이미지 참고) */
-  border-radius: 16px; /* (임의 지정) */
-  background-color: #f9f9f9;
-  overflow: hidden; /* 둥근 모서리 유지를 위해 */
-}
-
-/* 6. 검색 결과 개별 항목 */
-.search-result-item {
-  width: 100%;
-  min-height: 34px; /* [스펙] 기본 높이, 두 줄 처리를 위해 min-height */
-  
-  /* [스펙] 하단 2px 테두리 */
-  border-bottom: 2px solid #d9d9d9;
-  
-  /* 텍스트를 중앙에 (두 줄일 경우도 대비) */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 10px; /* 상하좌우 여백 */
-  box-sizing: border-box;
-  
-  /* [스펙] 폰트 스타일 */
-  font-family: "Paperlogy";
-  font-weight: 300; /* 3Light */
-  font-size: 18px;
-  color: #000000;
-  text-align: center;
-  
-  cursor: pointer;
-}
-
-/* [스펙] 리스트의 마지막 항목은 하단 테두리 제거 */
-.search-result-item:last-child {
-  border-bottom: none;
-}
-
-/* [스펙] 마우스 올리거나 선택 시 */
-.search-result-item:hover,
-.search-result-item.selected {
-  background-color: #edeeee;
+  background-color: #c57b59;
 }
 
 
 /* ========================================
-   [2] 탭 콘텐츠를 감싸는 래퍼(Wrapper)
+   [2-2] 기상예보 탭
    ======================================== */
 
-/* "공기질" / "기상예보" 탭 내용을 감싸는 부모 */
-.tab-content {
-  /* [사용자님 요청] 탭 메뉴(nav)와 46px 간격 
-    첫 번째 카드가 46px 떨어지도록 패딩을 줍니다.
-  */
-  padding-top: 46px;
-  
-  /* (이 클래스는 "공기질" 카드들과 "기상예보" 카드들을
-    각각 묶어주는 부모 div에 사용할 겁니다)
-  */
-}
-
-/* JS로 숨겨질 탭을 위한 클래스 */
-.tab-content.hidden {
-  display: none;
-}
-
-
-/* ========================================
-   [2-2] 기상예보 탭 카드 스타일
-   ======================================== */
-
-/* "5일치 예보"의 각 하루치 카드 */
 .forecast-card {
   width: 380px;
-  
-  /* [사용자님 요청] 카드끼리 30px 간격 */
   margin-bottom: 30px; 
-  
-  /* 카드 안에서 가운데 정렬 */
   margin-left: auto;
   margin-right: auto;
-  
-  /* [스펙] 카드 스타일 */
   background-color: #fff;
   border-radius: 16px;
   box-shadow: 0 4px 8px 0 rgba(136, 136, 136, 0.15);
-  
-  /* [스펙] 내부 여백 */
   padding: 29px 16px 30px;
-  box-sizing: border-box; /* 패딩을 크기에 포함 */
-  
-  /* [스펙] "text 길이에 따라 길어질 수 있음"
-     height: 216px; <-- 고정 높이를 쓰지 않습니다.
-  */
+  box-sizing: border-box;
 }
 
-/* 카드 상단 행 (날짜 + 뱃지) */
 .forecast-card-header {
   display: flex;
-  justify-content: space-between; /* 양쪽 끝으로 */
-  align-items: center; /* 세로 중앙 정렬 */
-  
-  /* (이미지 기준 90px 간격) */
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* "2025.10.30.수" 날짜 텍스트 */
 .forecast-date {
   font-family: "Paperlogy";
-  font-weight: 700; /* 7Bold */
+  font-weight: 700;
   font-size: 22px;
   color: #555555;
 }
 
-/* "AI" 뱃지 (스펙 참고) */
 .forecast-badge-ai {
-  /* (뱃지 크기에 맞게 조절) */
   width: 30px; 
   height: 30px;
   border-radius: 50%;
   background-color: #7a2ede;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  
-  /* 임시로 텍스트 중앙 정렬 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -961,31 +524,251 @@ padding-top: 46px;
   font-weight: bold;
 }
 
-/* 카드 하단 행 (아이콘 + 설명) */
 .forecast-card-body {
   display: flex;
-  align-items: center; /* 세로 중앙 정렬 */
-  
-  /* [사용자님 요청] 아이콘과 텍스트 사이 26px 간격 */
+  align-items: center;
   gap: 26px; 
-  
-  /* (날짜 행과의 간격) */
   margin-top: 20px; 
 }
 
-/* 날씨 아이콘 (80x80) */
 .forecast-icon {
   width: 80px;
   height: 80px;
-  flex-shrink: 0; /* 아이콘이 찌그러지지 않게 함 */
+  flex-shrink: 0;
 }
 
-/* "대체로 맑지만..." 설명 텍스트 */
 .forecast-description {
   font-family: "Paperlogy";
-  font-weight: 500; /* 5Medium */
+  font-weight: 500;
   font-size: 20px;
   color: #6d6d6d;
+} /* [수정] 맨 끝의 불필요한 } 삭제 */
+
+
+/* ========================================
+   [3] 슬라이드 메뉴 (오버레이)
+   ======================================== */
+
+.slide-menu-overlay {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(48, 48, 48, 0.7); 
+  z-index: 100; /* [추가] */
+  display: none; /* [추가] */
 }
 
+.slide-menu-content {
+  width: 322px;
+  height: 100%;
+  background-color: #333237;
+  display: flex;
+  flex-direction: column; 
+}
+
+.slide-menu-logo {
+  font-family: "Paperlogy";
+  font-weight: 800;
+  font-size: 20px;
+  color: #ffffff;
+  padding-top: 72px;
+  padding-left: 26px;
+}
+
+.slide-menu-nav {
+  margin-top: 21px; 
+}
+
+.menu-item {
+  /* [추가] 빠졌던 width/height/border */
+  width: 322px;
+  height: 80px;
+  padding-left: 26px;
+  padding-right: 26px;
+  box-sizing: border-box;
+  border-bottom: 2px solid #6d6d6d;
+  /* --- */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+} /* [수정] 닫는 중괄호 } 추가 */
+
+.menu-item-text {
+  font-family: "Paperlogy";
+  font-weight: 700;
+  font-size: 24px;
+  color: #949494;
+  transition: color 0.2s ease;
+}
+
+.menu-item-arrow {
+  width: 24px;
+  height: 14px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.menu-item.active .menu-item-text {
+  color: #6dcbb3;
+}
+
+.menu-item.active .menu-item-arrow {
+  transform: rotate(180deg);
+  filter: invert(78%) sepia(19%) saturate(1067%) hue-rotate(107deg) brightness(88%) contrast(92%);
+}
+
+.sub-menu-box {
+  background-color: #3f3e4a;
+  padding: 24px 26px;
+  display: none;
+}
+
+.sub-menu-box.active {
+  display: block;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+.radio-option:last-child {
+  margin-bottom: 0;
+}
+
+.radio-option input[type="radio"] {
+  display: none; 
+}
+
+.radio-button::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 2px solid #d9d9d9;
+  box-sizing: border-box;
+}
+
+.radio-option input[type="radio"]:checked + .radio-button::before {
+  background-color: #6dcbb3;
+  border-color: #6dcbb3;
+}
+
+.radio-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radio-title {
+  font-family: "Paperlogy";
+  font-weight: 500;
+  font-size: 22px;
+  color: #d9d9d9;
+}
+
+.radio-description {
+  font-family: "Paperlogy";
+  font-weight: 500;
+  font-size: 16px;
+  color: #787878;
+}
+
+.radio-option input[type="radio"]:checked ~ .radio-text-group .radio-title {
+  color: #6dcbb3;
+}
+.radio-option input[type="radio"]:checked ~ .radio-text-group .radio-description {
+  color: #728883;
+}
+
+.sub-menu-description {
+  font-family: "Paperlogy";
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 25px;
+  color: #b3b2b5;
+}
+
+/* ========================================
+   [4] 검색 오버레이
+   ======================================== */
+
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(48, 48, 48, 0.7); 
+  z-index: 101; 
+  display: none; 
+}
+
+.search-widget {
+  position: absolute;
+  top: 152px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 230px; 
+}
+
+.search-input-box {
+  width: 100%;
+  height: 40px;
+  background-color: #f9f9f9;
+  border: 4px solid #ffffff;
+  border-radius: 40px;
+  box-sizing: border-box;
+  padding: 0 20px;
+  font-family: "Paperlogy";
+  font-size: 18px;
+  color: #000000;
+  outline: none;
+}
+
+.search-input-box::placeholder {
+  color: #949494;
+  font-family: "Paperlogy";
+  font-weight: 300;
+}
+
+.search-results-list {
+  width: 100%;
+  margin-top: 4px; 
+  border-radius: 16px;
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+.search-result-item {
+  width: 100%;
+  min-height: 34px;
+  border-bottom: 2px solid #d9d9d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  box-sizing: border-box;
+  font-family: "Paperlogy";
+  font-weight: 300;
+  font-size: 18px;
+  color: #000000;
+  text-align: center;
+  cursor: pointer;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover,
+.search-result-item.selected {
+  background-color: #edeeee;
 }
