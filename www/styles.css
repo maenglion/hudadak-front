@@ -365,20 +365,21 @@ html, body {
 
 /* --- 안쪽 링 (PM2.5) --- */
 .ring-pm25 {
-  width: var(--ring-inner); /* 220px */
-  height: var(--ring-inner);
-  z-index: 2; /* PM10 링 위에 위치 */
+width: 270px; /* 220px -> 270px (두께 25px 확보) */
+  height: 270px;
+  border-radius: 50%;
 }
 
 /* --- 가장 안쪽 하얀 구멍 (원래 gauge-center 역할) --- */
 .gauge-rings::before { /* 가상 요소로 구현 */
   content: '';
   position: absolute;
-  width: var(--ring-center); /* 160px */
-  height: var(--ring-center);
+  /* 270px - (25px 갭) - (25px 두께) = 220px */
+  width: 220px; 
+  height: 220px;
   border-radius: 50%;
-  background-color: #ffffff; /* [제플린] #ffffff */
-  z-index: 3; /* 모든 링 위에 위치 */
+  background-color: #ffffff; 
+  z-index: 3;
 }
 
 /* --- 게이지 채워지는 부분 --- */
@@ -621,8 +622,8 @@ html, body {
 
 .gas-info-list {
   margin-top: 42px;
-  padding-left: 0px;
-  padding-right: 0px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
   
 .gas-info-item {
