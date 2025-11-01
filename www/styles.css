@@ -455,7 +455,7 @@ html, body {
   transform: translateX(-50%);
   text-align: center; 
   --pm10-line-start: 32px;   /* 라벨 아래에서 선이 시작되는 위치 */
-  --pm10-line-len: 100px;    /* 아래로 얼마나 내려갈지 */
+  --pm10-line-len: 80px;    /* 아래로 얼마나 내려갈지 */
   --pm10-dot-size: 10px;
 }
 
@@ -512,9 +512,9 @@ html, body {
   bottom: 48px;
   left: 77px;
   text-align: left;
-   --pm25-line-len: 130px;    /* 위로 얼마나 올릴지 */
+   --pm25-line-len: 110px;    /* 위로 얼마나 올릴지 */
   --pm25-dot-size: 10px;
-  --pm25-line-offset-x: 8px; /* 글자에서 오른쪽으로 얼마나 뺄지 */
+  --pm25-line-offset-x: 12px; /* 글자에서 오른쪽으로 얼마나 뺄지 */
 }
 
 .components-pm25 .pm25 { /* Frame-64 역할 */
