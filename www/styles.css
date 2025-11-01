@@ -564,6 +564,184 @@ padding-top: 46px;
   background-color: #c57b59; /* (위험성 주황/갈색 계열) */
 }
 
+/* 1. 화면 전체를 덮는 어두운 반투명 배경 (오버레이) */
+.slide-menu-overlay {
+  /* [중요] 화면에 고정 */
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  
+  /* [사용자님 요청] #303030b3 */
+  background-color: rgba(48, 48, 48, 0.7); 
+
+  /* (평소엔 숨겨두고 JS로 .hidden 클래스를 제거해 보여줍니다) */
+  /* display: none; */ 
+}
+
+/* 2. 실제 메뉴 내용물 (왼쪽에서 나오는 322px 너비) */
+.slide-menu-content {
+  width: 322px;
+  height: 100%; /* 화면 세로 길이 꽉 채움 */
+  
+  /* [스펙] 배경색 */
+  background-color: #333237;
+  
+  /* [스펙] 로고/메뉴를 세로로 쌓음 */
+  display: flex;
+  flex-direction: column; 
+}
+
+/* 3. 메뉴 안의 "HUDADAK" 로고 */
+.slide-menu-logo {
+  /* [스펙] Paperlogy, 8ExtraBold, 20px, #ffffff */
+  font-family: "Paperlogy";
+  font-weight: 800;
+  font-size: 20px;
+  color: #ffffff;
+  
+  /* [스펙] Y: 72px, X: 26px (padding으로 구현) */
+  padding-top: 72px;
+  padding-left: 26px;
+}
+
+/* 4. 메뉴 항목들("표시기준 설정" 등)을 감싸는 리스트 */
+.slide-menu-nav {
+  /* [스펙] 로고와 21px 간격 */
+  margin-top: 21px; 
+}
+
+/* [수정] 5. "표시기준 설정" 등 개별 메뉴 항목 */
+.menu-item {
+  /* ... (기존 width, height, padding, border-bottom) ... */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer; /* 클릭 가능하도록 */
+  transition: background-color 0.2s ease; /* 부드러운 효과 */
+}
+
+/* 6. 메뉴 텍스트 (예: "표시기준 설정") */
+.menu-item-text {
+  /* [사용자님 확인] 기본 폰트 스타일 */
+  font-family: "Paperlogy";
+  font-weight: 700; /* 7Bold */
+  font-size: 24px;
+  color: #949494;  /* [사용자님 확인] 기본 색상 */
+  
+  transition: color 0.2s ease;
+}
+
+/* 7. 메뉴 화살표 아이콘 (역 삼각형) */
+.menu-item-arrow {
+  width: 24px;
+  height: 14px;
+  transition: transform 0.3s ease, filter 0.3s ease; /* 부드러운 효과 */
+}
+
+
+/* --- [추가] 클릭 시 활성화 스타일 --- */
+
+/* [추가] 8. 클릭된 메뉴의 텍스트 */
+.menu-item.active .menu-item-text {
+  color: #6dcbb3; /* [사용자님 확인] 클릭 시 글씨 색 */
+}
+
+/* [추가] 9. 클릭된 메뉴의 화살표 */
+.menu-item.active .menu-item-arrow {
+  transform: rotate(180deg);
+  filter: invert(78%) sepia(19%) saturate(1067%) hue-rotate(107deg) brightness(88%) contrast(92%);
+}
+
+/* [추가] 10. 하위 메뉴 박스 (평소엔 숨겨짐) */
+.sub-menu-box {
+  background-color: #3f3e4a;
+  padding: 24px 26px; /* 상하 여백(임의) / 좌우 여백(메뉴와 동일) */
+  display: none; /* 평소엔 숨김 */
+}
+
+/* [추가] 11. 'active' 클래스가 붙으면 하위 메뉴 보이기 */
+.sub-menu-box.active {
+  display: block;
+}
+
+/* [추가] 12. 라디오 버튼 옵션 (환경부, WHO) */
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* [사용자님 요청] 라디오 버튼과 10px 간격 */
+  margin-bottom: 20px; /* (옵션 사이 임의 간격) */
+  cursor: pointer;
+}
+.radio-option:last-child {
+  margin-bottom: 0;
+}
+
+/* [추가] 13. (실제 <input type="radio">는 숨깁니다) */
+.radio-option input[type="radio"] {
+  display: none; 
+}
+
+/* [추가] 14. 가상 라디오 버튼 (14x14) */
+.radio-button::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 2px solid #d9d9d9; /* (기본 회색) */
+  box-sizing: border-box;
+}
+
+/* [추가] 15. (선택된 상태) 가상 라디오 버튼 */
+.radio-option input[type="radio"]:checked + .radio-button::before {
+  background-color: #6dcbb3; /* [사용자님 요청] 선택 시 색상 */
+  border-color: #6dcbb3;
+}
+
+/* [추가] 16. 텍스트 그룹 (2줄) */
+.radio-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* [사용자님 요청] 두 글자 간격 4px */
+}
+
+/* [추가] 17. "환경부(4단계)" 텍스트 */
+.radio-title {
+  font-family: "Paperlogy";
+  font-weight: 500; /* 5Medium */
+  font-size: 22px;
+  color: #d9d9d9; /* [사용자님 요청] 기본 색상 */
+}
+
+/* [추가] 18. "가장 일반적인 기준" 텍스트 */
+.radio-description {
+  font-family: "Paperlogy";
+  font-weight: 500; /* 5Medium */
+  font-size: 16px;
+  color: #787878; /* [사용자님 요청] 기본 색상 */
+}
+
+/* [추가] 19. (선택된 상태) 텍스트 색상 변경 */
+.radio-option input[type="radio"]:checked ~ .radio-text-group .radio-title {
+  color: #6dcbb3; /* [사용자님 요청] 선택 시 색상 */
+}
+.radio-option input[type="radio"]:checked ~ .radio-text-group .radio-description {
+  color: #728883; /* [사용자님 요청] 선택 시 색상 */
+}
+
+/* [추가] "예보 뱃지 안내" 등의 설명 텍스트 */
+.sub-menu-description {
+  font-family: "Paperlogy";
+  font-weight: 700; /* 7Bold */
+  font-size: 18px;
+  line-height: 25px; /* 줄 간격 */
+  color: #b3b2b5;
+}
+
+
 /* ========================================
    [2] 탭 콘텐츠를 감싸는 래퍼(Wrapper)
    ======================================== */
