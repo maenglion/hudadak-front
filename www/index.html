@@ -9,37 +9,134 @@
     
     <header class="App-header App-header--hazardous">
 
-    <div class="header-top-row">
-    <span class="logo-text">HUDADAK</span>
-    <img class="notification-icon" src="images/notification-icon.svg" alt="알림">
-    </div>
-      
+      <div class="header-top-row">
+        <span class="logo-text">HUDADAK</span>
+        <img class="notification-icon" src="images/notification-icon.svg" alt="알림">
+      </div>
+        
+      <div class="location-button">
+        인천 연수구 송도동
+      </div>
 
-  <div class="location-button">
-    인천 연수구 송도동
-  </div>
-
-  <div class="timestamp-row">
-    <span class="timestamp-date">2025.10.27.</span>
-    <span class="timestamp-ampm">오전</span>
-    <span class="timestamp-clock">10:30</span>
-  </div>
+      <div class="timestamp-row">
+        <span class="timestamp-date">2025.10.27.</span>
+        <span class="timestamp-ampm">오전</span>
+        <span class="timestamp-clock">10:30</span>
+      </div>
 
       <h1 class="status-title">위험</h1>
-        <p class="status-score">65점</p>
-        <p class="status-description">
-           불필요한 환기 금지, 실내 공기<br>
-           질 관리 모드로 전환.
-        </p>
+      <p class="status-score">65점</p>
+      <p class="status-description">
+          불필요한 환기 금지, 실내 공기<br>
+          질 관리 모드로 전환.
+      </p>
     
-    </header>
-    
-    <div class="standard-bar">
+    </header> <div class="standard-bar">
       <span class="standard-label">기준</span>
       <span class="standard-value standard-value--who">WHO(8단계)</span>
-    </div>
+    </div> <nav class="tab-navigation">
+      <div class="tab-item tab-item--active">
+        공기질
+      </div>
+      <div class="tab-item">
+        기상예보
+      </div>
+    </nav> <div class="air-quality-card">
+    
+      <div class="air-info-box">
+        <div class="air-info-header">
+          <span class="air-info-title">미세먼지</span>
+          <img class="air-info-badge" src="images/forecast-badge.svg" alt="등급 아이콘">
+        </div>
+        <div class="air-info-reading">
+          <span class="air-info-status">나쁨</span>
+          <span class="air-info-value">135</span>
+          <span class="air-info-unit">µg/m³</span>
+        </div>
+      </div>
 
-  </div>
-
-</body>
+      <div class="gauge-container">
+        <div class="gauge-center">
+          <div class="gauge-inner-circle">
+          </div>
+        </div>
+      </div>
+      
+      <div class="air-info-box">
+        <div class="air-info-header">
+          <span class="air-info-title">초미세먼지</span>
+          <img class="air-info-badge" src="images/forecast-badge-pm25.svg" alt="등급 아이콘"> 
+        </div>
+        <div class="air-info-reading">
+          <span class="air-info-status">나쁨</span>
+          <span class="air-info-value">135</span>
+          <span class="air-info-unit">µg/m³</span>
+        </div>
+      </div>
+      
+    </div> <div class="gas-info-card">
+    
+      <h2 class="gas-info-title">기타 공기지표</h2>
+      
+      <div class="gas-info-list">
+        
+        <div class="gas-info-item">
+          <div class="gas-item-header">
+            <div class="gas-item-title-group">
+              <span class="gas-item-title">아황산가스</span>
+              <img class="gas-item-badge" src="images/gas-badge.svg" alt="badge">
+            </div>
+            <div class="gas-item-reading-group">
+              <span class="gas-item-formula">SO₂</span>
+              <span class="gas-item-value">135</span>
+              <span class="gas-item-unit">µg/m³</span>
+            </div>
+          </div>
+          <div class="gas-item-bar-container">
+            <div class="gas-item-bar-value gas-bar--so2" style="width: 47%;"></div>
+          </div>
+        </div>
+        
+        <div class="gas-info-item">
+          <div class="gas-item-header">
+            <div class="gas-item-title-group">
+              <span class="gas-item-title">일산화탄소</span>
+              <img class="gas-item-badge" src="images/gas-badge.svg" alt="badge">
+            </div>
+            <div class="gas-item-reading-group">
+              <span class="gas-item-formula">CO</span>
+              <span class="gas-item-value">0.8</span>
+              <span class="gas-item-unit">ppm</span>
+            </div>
+          </div>
+          <div class="gas-item-bar-container">
+            <div class="gas-item-bar-value gas-bar--co" style="width: 30%;"></div>
+          </div>
+        </div>
+        
+        <div class="gas-info-item">
+          </div>
+        
+        <div class="gas-info-item">
+          </div>
+        
+      </div> </div>
+    
+    </div> <div class="tab-content hidden" id="tab-forecast-content">
+      
+      <div class="forecast-card">
+        <div class="forecast-card-header">
+          <span class="forecast-date">2025.10.30.수</span>
+          <div class="forecast-badge-ai">AI</div> </div>
+        <div class="forecast-card-body">
+          <img class="forecast-icon" src="images/forecast-icon.svg" alt="날씨 아이콘">
+          <p class="forecast-description">
+            대체로 맑지만 미세먼지 농도는 평소보다 살짝 높아요. 창문 여는 건 오전까지만, 오후엔 공기청정기가 더 든든할 거예요.
+          </p>
+        </div>
+      </div>
+    
+    
+    
+    </div> </body>
 </html>

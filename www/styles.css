@@ -238,3 +238,442 @@
 .standard-value--cai {
   color: #82A1BF;
 }
+
+/* "공기질" / "기상예보" 탭을 감싸는 전체 바 */
+.tab-navigation {
+  width: 412px;
+  height: 88px;
+  background-color: #fff; /* 흰색 배경 */
+  display: flex;
+  
+  /* [수정] 1. 'position: relative'을 추가하여 
+     밑줄을 띄울 '기준점'으로 삼습니다.
+  */
+  position: relative; 
+  
+  /* [수정] 2. 탭 바의 맨 아래에 
+     '비활성' 상태의 전체 밑줄을 추가합니다.
+  */
+  border-bottom: 4px solid #ededed; 
+}
+
+/* "공기질", "기상예보" 각각의 탭 아이템 (공통 스타일) */
+.tab-item {
+  flex-grow: 1; /* 50% 너비 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  /* 공통 폰트 스타일 */
+  font-family: "Paperlogy";
+  font-weight: 700;
+  font-size: 28px;
+  
+  /* 기본 상태 (선택 안 됨) 텍스트 색상 */
+  color: #949494;
+  
+  cursor: pointer;
+  
+  /* [삭제] border-bottom: 4px solid transparent; 
+     (이전 방식 삭제) 
+  */
+}
+
+/* '선택됨' 상태의 탭 스타일 */
+.tab-item--active {
+  color: #333333; /* 선택됨 텍스트 색상 */
+  
+  /* [삭제] border-bottom: 4px solid #b0d4cb; 
+     (이전 방식 삭제) 
+  */
+}
+
+/* [추가] 3. '활성' 상태를 표시하는 초록색 밑줄
+   .tab-navigation의 가상 자식(::after)으로 만듭니다.
+*/
+.tab-navigation::after {
+  content: ''; /* 가상 요소는 content가 필수 */
+  position: absolute; /* .tab-navigation을 기준으로 절대 위치 */
+  
+  /* 부모의 border-bottom 위에 정확히 겹치도록 */
+  bottom: -4px; 
+  height: 4px;  
+  
+  width: 50%;   /* 탭이 2개이므로 50% 너비 */
+  
+  /* [확정] 활성 탭 밑줄 색상 */
+  background-color: #b0d4cb; 
+
+  /* 기본 위치 (첫 번째 탭: 공기질) */
+  left: 0; 
+  
+  /* (나중에 app.js로 이 'left' 값을 '50%'로 바꾸면
+    '기상예보' 탭으로 밑줄이 이동합니다) */
+  transition: left 0.3s ease; 
+}
+
+.air-quality-card {
+  width: 380px;
+  /* height: 638px; <-- 높이는 내용물에 맞게 자동으로 늘어나도록 삭제합니다. */
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff; 
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  
+  /* [수정] 자식 요소들(미세먼지, 게이지, 초미세먼지) 사이에
+    46px의 세로 간격을 줍니다.
+  */
+  gap: 46px; 
+padding-top: 46px;
+  padding-bottom: 46px;
+}
+
+/* 게이지 전체를 감싸는 320px짜리 컨테이너 */
+.gauge-container {
+  width: 320px;
+  height: 320px;
+  
+  /* 카드 안에서 가운데 정렬 */
+  margin-left: auto;
+  margin-right: auto;
+  
+  /* [핵심] 원형으로 만듭니다 */
+  border-radius: 50%;
+  
+  /* [핵심] 
+    '원뿔형 그라데이션'으로 파이 차트를 만듭니다.
+    (예시: 65%를 초록색(#b0d4cb)으로 채우고, 
+     나머지는 트랙 색상(#ededed)으로 채움)
+  */
+  background-image: conic-gradient(
+    #b0d4cb 0% 65%, 
+    #ededed 65% 100%
+  );
+  
+  /* 안쪽 원을 중앙에 배치하기 위한 Flexbox */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* (디자인에 따라 게이지 위쪽 여백이 필요할 수 있습니다) */
+  /* margin-top: 30px; */
+}
+
+/* 게이지의 '구멍' 역할을 하는 260px짜리 흰색 원 */
+.gauge-center {
+  /* 게이지 두께가 30px이므로, 
+    (320px - 30px - 30px) = 260px 
+  */
+  width: 260px; 
+  height: 260px;
+  border-radius: 50%;
+  
+  /* 카드의 배경색(흰색)과 똑같이 칠해서 '구멍'처럼 보이게 합니다 */
+  background-color: #ffffff;
+  
+  /* '.pm25' (안쪽 회색 원)을 중앙에 배치하기 위한 Flexbox */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .pm25 (게이지 안쪽 220px짜리 회색 원) */
+.gauge-inner-circle {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  
+  /* d9d9d9 색상에 40% 투명도를 적용 (opacity: 0.4) */
+  background-color: rgba(217, 217, 217, 0.4);
+  
+  /* "inner shadow" 적용 */
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); 
+
+/* "미세먼지", "나쁨" 정보가 들어갈 컴포넌트 박스 */
+.air-info-box {
+  /* (위치는 나중에 잡습니다. 일단 내용물 스타일부터 만듭니다) */
+  width: 200px; /* (제플린 스펙 .components-pm10 참고) */
+}
+
+/* "미세먼지" + "뱃지" 상단 행 */
+.air-info-header {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* "미세먼지와 forecast badge는 10px" */
+}
+
+/* "미세먼지" 텍스트 */
+.air-info-title {
+  font-family: "Paperlogy";
+  font-weight: 500; /* 5Medium */
+  font-size: 20px;
+  color: #787878;
+}
+
+/* 초록색 체크 뱃지 (SVG 에셋) */
+.air-info-badge {
+  width: 30px; /* (제플린 스펙 .forecast-badges 참고) */
+  height: 30px;
+}
+
+/* "나쁨" + "135" + "유닛" 하단 행 */
+.air-info-reading {
+  /* Flexbox로 요소들을 세로 정렬 (baseline) */
+  display: flex;
+  align-items: baseline; /* 폰트 크기가 다를 땐 baseline이 좋습니다 */
+  
+  /* "미세먼지" 행과의 간격 (스펙 .Frame-60의 gap: 2px 참고) */
+  margin-top: 2px; 
+}
+
+/* "나쁨" 텍스트 */
+.air-info-status {
+  font-family: "Paperlogy";
+  font-weight: 700; /* 7Bold */
+  font-size: 24px;
+  color: #333333;
+}
+
+/* "135" 수치 텍스트 */
+.air-info-value {
+  font-family: "Paperlogy";
+  font-weight: 500; /* 5Medium */
+  font-size: 14px;
+  color: #949494;
+  
+  /* "나쁨" 텍스트와의 간격 (스펙 .PM10-level-container의 gap: 8px 참고) */
+  margin-left: 8px;
+}
+
+/* "µg/m³" 유닛 텍스트 */
+.air-info-unit {
+  font-family: "Paperlogy";
+  font-weight: 500; /* 5Medium */
+  font-size: 14px;
+  color: #949494;
+  
+  /* "135" 수치와의 간격 (스펙 .PM10-level-value-container의 gap: 6px 참고) */
+  margin-left: 6px;
+}
+
+.gas-info-card {
+  width: 380px;
+  margin-top: 46px; 
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff;
+  padding-top: 56px; }
+
+/* "기타 공기지표" 제목 텍스트 (변경 없음) */
+.gas-info-title {
+  font-family: "Paperlogy";
+  font-weight: 700;
+  font-size: 28px;
+  color: #000000;
+  text-align: center;
+}
+
+/* "아황산가스" 등 목록을 감싸는 리스트 (변경 없음) */
+.gas-info-list {
+  margin-top: 42px;
+  padding-left: 26px; /* (380px - 328px) / 2 */
+  padding-right: 26px;
+}
+  
+ /* [대대적 수정] "아황산가스" 등 개별 항목 박스 */
+.gas-info-item {
+  /* [사용자님 확인] 실제 카드 크기 */
+  width: 328px;
+  height: 90px;
+  
+  /* [사용자님 확인] 항목 사이 간격 22px */
+  margin-bottom: 22px; 
+  
+  /* [제플린 스펙] 카드 스타일 */
+  background-color: #fff;
+  border-radius: 8px;
+  
+  /* [제플린 스펙] 카드 내부 패딩 */
+  padding: 15px 8px;
+  box-sizing: border-box; /* 패딩을 크기에 포함 */
+
+  /* [사용자님 확인] 카드 그림자 (#b7b7b799) */
+  box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
+  
+  /* [제플린 스펙] 내부 요소(헤더, 바) 정렬 */
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* (헤더와 바 사이의 간격) */
+}
+
+
+.gas-item-bar-container {
+  width: 312px; /* (제플린 스펙 .linearbar 참고) */
+  height: 24px;
+  background-color: #ededed;
+  border-radius: 12px;
+  box-shadow: inset 0px 4px 4px 0px #d9d9d9;
+  position: relative;
+  overflow: hidden;
+  
+  /* [수정] gap: 12px로 대체되었으므로 margin-top 삭제 */
+  /* margin-top: 14px; <-- 삭제 */
+  
+  /* (328px 패딩(8+8) 안에 312px이므로 중앙 정렬) */
+  margin-left: auto;
+  margin-right: auto; 
+}
+
+/* [프로그레스 바] - 실제 값 (색상 바) */
+.gas-item-bar-value {
+  height: 100%;
+  border-radius: 12px;
+  /* (width는 app.js가 style="width: 47%" 처럼 넣어줄 겁니다) */
+  width: 47%; /* (임시: 146px / 312px) */
+  
+  position: absolute;
+  top: 0;
+  left: 0;
+  
+  /* (그림자는 값 바에도 동일하게 적용) */
+  box-shadow: inset 0px 4px 4px 0px #d9d9d9;
+}
+
+/* --- 🎨 [요청하신 가스별 바 색상] --- */
+
+/* 1. 아황산가스 (SO₂) - (제공해주신 색상) */
+.gas-bar--so2 {
+  background-color: #59c5a9;
+}
+
+/* 2. 일산화탄소 (CO) - (제안) */
+.gas-bar--co {
+  background-color: #59a6c5; /* (시원한 파란색 계열) */
+}
+
+/* 3. 오존 (O₃) - (제안) */
+.gas-bar--o3 {
+  background-color: #c5c259; /* (경고성 노란색 계열) */
+}
+
+/* 4. 이산화질소 (NO₂) - (제안) */
+.gas-bar--no2 {
+  background-color: #c57b59; /* (위험성 주황/갈색 계열) */
+}
+
+/* ========================================
+   [2] 탭 콘텐츠를 감싸는 래퍼(Wrapper)
+   ======================================== */
+
+/* "공기질" / "기상예보" 탭 내용을 감싸는 부모 */
+.tab-content {
+  /* [사용자님 요청] 탭 메뉴(nav)와 46px 간격 
+    첫 번째 카드가 46px 떨어지도록 패딩을 줍니다.
+  */
+  padding-top: 46px;
+  
+  /* (이 클래스는 "공기질" 카드들과 "기상예보" 카드들을
+    각각 묶어주는 부모 div에 사용할 겁니다)
+  */
+}
+
+/* JS로 숨겨질 탭을 위한 클래스 */
+.tab-content.hidden {
+  display: none;
+}
+
+
+/* ========================================
+   [2-2] 기상예보 탭 카드 스타일
+   ======================================== */
+
+/* "5일치 예보"의 각 하루치 카드 */
+.forecast-card {
+  width: 380px;
+  
+  /* [사용자님 요청] 카드끼리 30px 간격 */
+  margin-bottom: 30px; 
+  
+  /* 카드 안에서 가운데 정렬 */
+  margin-left: auto;
+  margin-right: auto;
+  
+  /* [스펙] 카드 스타일 */
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px 0 rgba(136, 136, 136, 0.15);
+  
+  /* [스펙] 내부 여백 */
+  padding: 29px 16px 30px;
+  box-sizing: border-box; /* 패딩을 크기에 포함 */
+  
+  /* [스펙] "text 길이에 따라 길어질 수 있음"
+     height: 216px; <-- 고정 높이를 쓰지 않습니다.
+  */
+}
+
+/* 카드 상단 행 (날짜 + 뱃지) */
+.forecast-card-header {
+  display: flex;
+  justify-content: space-between; /* 양쪽 끝으로 */
+  align-items: center; /* 세로 중앙 정렬 */
+  
+  /* (이미지 기준 90px 간격) */
+}
+
+/* "2025.10.30.수" 날짜 텍스트 */
+.forecast-date {
+  font-family: "Paperlogy";
+  font-weight: 700; /* 7Bold */
+  font-size: 22px;
+  color: #555555;
+}
+
+/* "AI" 뱃지 (스펙 참고) */
+.forecast-badge-ai {
+  /* (뱃지 크기에 맞게 조절) */
+  width: 30px; 
+  height: 30px;
+  border-radius: 50%;
+  background-color: #7a2ede;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  
+  /* 임시로 텍스트 중앙 정렬 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+/* 카드 하단 행 (아이콘 + 설명) */
+.forecast-card-body {
+  display: flex;
+  align-items: center; /* 세로 중앙 정렬 */
+  
+  /* [사용자님 요청] 아이콘과 텍스트 사이 26px 간격 */
+  gap: 26px; 
+  
+  /* (날짜 행과의 간격) */
+  margin-top: 20px; 
+}
+
+/* 날씨 아이콘 (80x80) */
+.forecast-icon {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0; /* 아이콘이 찌그러지지 않게 함 */
+}
+
+/* "대체로 맑지만..." 설명 텍스트 */
+.forecast-description {
+  font-family: "Paperlogy";
+  font-weight: 500; /* 5Medium */
+  font-size: 20px;
+  color: #6d6d6d;
+}
+
+}
