@@ -4,13 +4,13 @@
 
 /* 1. 모든 요소의 기본 여백(margin/padding)을 0으로 초기화 */
 :root {
-  --card-w: 388px; /* [제플린] 외부 카드 너비 */
-  --card-h: 646px; /* [제플린] 외부 카드 높이 */
-  --ring-outer: 320px; /* [제플린] PM10 휠 */
-  --ring-inner: 240px; /* [제플린] PM2.5 휠 */
-  --ring-center: 160px; /* [제플린] 맨 안쪽 하얀 부분 */
-  --ring-bg-color: #f3f3f3; /* 링의 배경색 */
-  --dash-color: #ccc; /* 꺾쇠 점선 색상 */
+--card-w: 388px; 
+  --card-h: 646px; 
+  --ring-outer: 320px; /* PM10 휠 (바깥) */
+  --ring-inner: 260px; /* [수정] PM2.5 휠 (안쪽) - 두께 30px 확보 */
+  --ring-center: 200px; /* [수정] 맨 안쪽 하얀 부분 - 두께 30px 확보 */
+  --ring-bg-color: #f3f3f3; 
+  --dash-color: #787777;
   --text-main-color: #333; /* 제목/수치 메인 텍스트 색상 */
   --text-sub-color: #787878; /* 서브 텍스트 색상 */
   --font-paperlogy-5: "Paperlogy-5", sans-serif;
@@ -365,16 +365,16 @@ html, body {
 
 /* --- 안쪽 링 (PM2.5) --- */
 .ring-pm25 {
-width: var(--ring-inner); /* 240px */
+  width: var(--ring-inner); /* 260px */
   height: var(--ring-inner);
   z-index: 2;
 }
 
 /* --- 가장 안쪽 하얀 구멍 (원래 gauge-center 역할) --- */
-.gauge-rings::before { /* 가상 요소로 구현 */
-content: '';
+.gauge-rings::before { 
+  content: '';
   position: absolute;
-  width: var(--ring-center); /* 160px */
+  width: var(--ring-center); /* 200px */
   height: var(--ring-center);
   border-radius: 50%;
   background-color: #ffffff; 
@@ -423,14 +423,14 @@ content: '';
 
 /* 초미세먼지 꺾쇠 (하단) */
 .components-pm25::after {
-  content: '';
+content: '';
   position: absolute;
   width: 2px;
-  height: 120px; /* [수정] 103px -> 120px로 늘려 트랙 중앙까지 연장 */
+  height: 115px; /* [수정] 높이 조정 (안쪽 휠 트랙 중앙까지) */
   border-right: 2px dashed var(--dash-color); 
   
-  bottom: 0px; 
-  right: -5px; /* [수정] -20px -> -5px로 조정하여 중앙에 가깝게 당김 */
+  bottom: -20px; /* [수정] 박스 아래로 더 내려서 꺾쇠 길이 고려 */
+  right: -5px; /* [유지] */
   transform: rotate(180deg); 
 }
 
