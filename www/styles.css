@@ -21,6 +21,25 @@ html, body {
   height: 100%;
 }
 
+/* ========================================
+   [1] 피그마 코드 시작
+   ======================================== */
+
+/* .Main-container를 body처럼 사용하고 
+   PC 화면에서는 가운데 정렬되도록 수정합니다.
+*/
+.Main-container {
+  width: 412px;
+  min-height: 100vh;
+  background-color: #F5F5F5; 
+  
+  /* [추가] PC 브라우저에서 볼 때
+    412px 상자가 가운데 오도록 정렬합니다.
+  */
+  margin-left: auto;
+  margin-right: auto;
+}
+
 
 
 /* '보통' (fair) */
