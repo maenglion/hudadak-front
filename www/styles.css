@@ -1,25 +1,27 @@
-/* 여기서 부터 피그마 코드 */
+/* ========================================
+   [0] CSS 리셋 및 기본 설정
+   ======================================== */
 
-.Main-container {
-  width: 412px;
-  min-height: 100vh;
-  background-color: #F5F5F5; 
+/* 1. 모든 요소의 기본 여백(margin/padding)을 0으로 초기화 */
+* {
+  margin: 0;
+  padding: 0;
+  
+  /* [중요!]
+     width: 412px; 를 정할 때,
+     padding이나 border가 그 크기 '안'으로 포함되도록 계산 방식을 바꿉니다.
+     (이걸 안 하면 412px + padding 만큼 뚱뚱해집니다)
+  */
+  box-sizing: border-box; 
 }
 
-.App-header {
-  width: 412px;
-  height: 566px;
+/* 2. HTML과 Body의 크기를 화면에 100% 맞춥니다. */
+html, body {
+  width: 100%;
+  height: 100%;
 }
 
-/* '좋음' (excellent) */
-.App-header--excellent {
-  background-image: linear-gradient(to bottom, #23a0e5, #a0cdf8);
-}
 
-/* '양호' (good) */
-.App-header--good {
-  background-image: linear-gradient(to bottom, #30b8de, #a0e6d9);
-}
 
 /* '보통' (fair) */
 .App-header--fair {
