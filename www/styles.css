@@ -412,13 +412,15 @@ html, body {
 .components-pm25::after {
 content: '';
   position: absolute;
-  width: 2px;
-  height: 115px; /* [수정] 높이 조정 (안쪽 휠 트랙 중앙까지) */
-  border-right: 2px dashed var(--dash-color); 
-  
-  bottom: -20px; /* [수정] 박스 아래로 더 내려서 꺾쇠 길이 고려 */
-  right: -5px; /* [유지] */
-  transform: rotate(180deg); 
+   left: calc(100% + 8px);   /* 글자 오른쪽에서 8px 떨어진 곳 */
+  width: 0;
+
+  /* 2) 위로 뻗어올리기 */
+  top: -150px;              /* 이 값을 조절해서 '안쪽 휠 중앙'에 맞춰 */
+  height: 150px;            /* top이 -150이면 height도 150으로 맞춰서 딱 라벨까지 내려오게 */
+
+  border-left: 2px dashed var(--dash-color);
+  /* transform 필요없음 */
 }
 
 
@@ -481,7 +483,7 @@ content: '';
 /* --- 하단 텍스트 (초미세먼지) --- */
 .components-pm25 {
   position: absolute;
-  bottom: 77px; /* [제플린] 77px */
+  bottom: 48px; /* [제플린] 77px */
   left: 60px; /* [제플린] 왼쪽에서 60px 떨어진 위치 */
   width: auto;
   text-align: left; /* 텍스트 왼쪽 정렬 */
