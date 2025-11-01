@@ -396,59 +396,56 @@ html, body {
 
 /* 미세먼지 꺾쇠 (상단) */
 .components-pm10::after {
-  content: '';
+ content: '';
   position: absolute;
-  top: 32px;           /* 라벨 밑에서 시작 */
+  top: var(--pm10-line-start);
   left: 50%;
   transform: translateX(-50%);
   width: 0;
-  height: 110px;       /* 게이지까지 내려가는 길이 */
+  height: var(--pm10-line-len);
   border-left: 2px dashed var(--dash-color);
 }
-/* 끝점(동그라미) */
+
+/* 끝점 (아래쪽) */
 .components-pm10::before {
   content: '';
   position: absolute;
-  /* 점선의 맨 끝과 같은 x축 */
   left: 50%;
+  /* 시작점 + 길이 - 반지름  → 아래 끝 */
+  top: calc(var(--pm10-line-start) + var(--pm10-line-len) - (var(--pm10-dot-size) / 2));
   transform: translateX(-50%);
-  /* 점선 높이만큼 내려가서 찍기 */
-  top: calc(32px + 110px - 5px);  /* 5px은 반지름 보정 */
-
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #333;
-  box-shadow: 0 0 3px rgba(0,0,0,0.25);
-  z-index: 5; /* 게이지 위로 */
-}
-/* 초미세먼지 꺾쇠 (하단) */
-/* 점선 (위로 뻗는 버전) */
-.components-pm25::after {
-  content: '';
-  position: absolute;
-  left: calc(100% + 8px);
-  top: -130px;
-  width: 0;
-  height: 150px;
-  border-left: 2px dashed var(--dash-color);
-}
-
-/* 끝점(동그라미) */
-.components-pm25::before {
-  content: '';
-  position: absolute;
-  left: calc(100% + 8px - 5px);  /* 선 중심 - 반지름 */
-  top: -5px;                     /* 라벨 위치에 찍기 (0에서 살짝 올림) */
-
-  width: 10px;
-  height: 10px;
+  width: var(--pm10-dot-size);
+  height: var(--pm10-dot-size);
   border-radius: 50%;
   background: #333;
   box-shadow: 0 0 3px rgba(0,0,0,0.25);
   z-index: 5;
 }
+/* 초미세먼지 꺾쇠 (하단) */
+/* 점선 (위로 뻗는 버전) */
+.components-pm25::after {
+   content: '';
+  position: absolute;
+  left: calc(100% + var(--pm25-line-offset-x));
+  top: calc(-1 * var(--pm25-line-len));
+  width: 0;
+  height: var(--pm25-line-len);
+  border-left: 2px dashed var(--dash-color);
+}
 
+/* 끝점 (위쪽) */
+.components-pm25::before {
+  content: '';
+  position: absolute;
+  left: calc(100% + var(--pm25-line-offset-x) - (var(--pm25-dot-size) / 2));
+  top: calc(-1 * var(--pm25-line-len) - (var(--pm25-dot-size) / 2));
+  width: var(--pm25-dot-size);
+  height: var(--pm25-dot-size);
+  border-radius: 50%;
+  background: #333;
+  box-shadow: 0 0 3px rgba(0,0,0,0.25);
+  z-index: 5;
+}
 
 /* --- 상단 텍스트 (미세먼지) --- */
 .components-pm10 {
@@ -456,7 +453,10 @@ html, body {
   top: 54px;
   left: 194px;
   transform: translateX(-50%);
-  text-align: center;
+  text-align: center; 
+  --pm10-line-start: 32px;   /* 라벨 아래에서 선이 시작되는 위치 */
+  --pm10-line-len: 100px;    /* 아래로 얼마나 내려갈지 */
+  --pm10-dot-size: 10px;
 }
 
 .components-pm10 .pm10 { /* Frame-60 역할 */
@@ -512,6 +512,9 @@ html, body {
   bottom: 48px;
   left: 77px;
   text-align: left;
+   --pm25-line-len: 130px;    /* 위로 얼마나 올릴지 */
+  --pm25-dot-size: 10px;
+  --pm25-line-offset-x: 8px; /* 글자에서 오른쪽으로 얼마나 뺄지 */
 }
 
 .components-pm25 .pm25 { /* Frame-64 역할 */
