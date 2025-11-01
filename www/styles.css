@@ -398,39 +398,65 @@ html, body {
 .components-pm10::after {
   content: '';
   position: absolute;
-  /* [제플린 스펙] Vector-9: width: 32px, height: 79px, border: solid 2px var(--unselect-grey) */
-  width: 2px; /* 너비 2px */
-  height: 79px; /* 높이 79px */
-  border-left: 2px dashed var(--dash-color); /* 점선 색상 #ccc */
-  
-  top: 3px; /* Frame-60 (텍스트 그룹)과의 상단 간격 */
-  left: -20px; /* 텍스트 박스 왼쪽에 위치 (조정 필요) */
-  transform: rotate(0deg); /* 회전 없음 */
+  top: 32px;           /* 라벨 밑에서 시작 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 110px;       /* 게이지까지 내려가는 길이 */
+  border-left: 2px dashed var(--dash-color);
+}
+/* 끝점(동그라미) */
+.components-pm10::before {
+  content: '';
+  position: absolute;
+  /* 점선의 맨 끝과 같은 x축 */
+  left: 50%;
+  transform: translateX(-50%);
+  /* 점선 높이만큼 내려가서 찍기 */
+  top: calc(32px + 110px - 5px);  /* 5px은 반지름 보정 */
+
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #333;
+  box-shadow: 0 0 3px rgba(0,0,0,0.25);
+  z-index: 5; /* 게이지 위로 */
+}
+/* 초미세먼지 꺾쇠 (하단) */
+/* 점선 (위로 뻗는 버전) */
+.components-pm25::after {
+  content: '';
+  position: absolute;
+  left: calc(100% + 8px);
+  top: -130px;
+  width: 0;
+  height: 150px;
+  border-left: 2px dashed var(--dash-color);
 }
 
-/* 초미세먼지 꺾쇠 (하단) */
-.components-pm25::after {
-content: '';
+/* 끝점(동그라미) */
+.components-pm25::before {
+  content: '';
   position: absolute;
-   left: calc(100% + 8px);   /* 글자 오른쪽에서 8px 떨어진 곳 */
-  width: 0;
+  left: calc(100% + 8px - 5px);  /* 선 중심 - 반지름 */
+  top: -5px;                     /* 라벨 위치에 찍기 (0에서 살짝 올림) */
 
-  /* 2) 위로 뻗어올리기 */
-  top: -140px;              /* 이 값을 조절해서 '안쪽 휠 중앙'에 맞춰 */
-  height: 150px;            /* top이 -150이면 height도 150으로 맞춰서 딱 라벨까지 내려오게 */
-
-  border-left: 2px dashed var(--dash-color);
-  /* transform 필요없음 */
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #333;
+  box-shadow: 0 0 3px rgba(0,0,0,0.25);
+  z-index: 5;
 }
 
 
 /* --- 상단 텍스트 (미세먼지) --- */
 .components-pm10 {
   position: absolute;
-  top: 54px; /* [제플린] */
-  right: 60px; /* [제플린] 오른쪽에서 60px 떨어진 위치 */
-  width: auto;
-  text-align: right; /* 텍스트 오른쪽 정렬 */
+  top: 54px;
+  left: 194px;
+  transform: translateX(-50%);
+  text-align: center;
 }
 
 .components-pm10 .pm10 { /* Frame-60 역할 */
@@ -483,10 +509,9 @@ content: '';
 /* --- 하단 텍스트 (초미세먼지) --- */
 .components-pm25 {
   position: absolute;
-  bottom: 48px; /* [제플린] 77px */
-  left: 60px; /* [제플린] 왼쪽에서 60px 떨어진 위치 */
-  width: auto;
-  text-align: left; /* 텍스트 왼쪽 정렬 */
+  bottom: 48px;
+  left: 77px;
+  text-align: left;
 }
 
 .components-pm25 .pm25 { /* Frame-64 역할 */
