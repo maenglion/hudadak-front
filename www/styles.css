@@ -270,6 +270,11 @@ html, body {
   gap: 46px; 
   padding-top: 46px;
   padding-bottom: 46px;
+  /* [추가] 모서리 둥글게 만들기 */
+  border-radius: 16px; 
+  
+  /* [추가] 그림자도 여기서 같이 넣어주면 좋겠죠? */
+  box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
 }
 
 .gauge-container {
@@ -363,6 +368,11 @@ html, body {
   margin-right: auto;
   background-color: #ffffff;
   padding-top: 56px; 
+  /* [추가] 모서리 둥글게 만들기 */
+  border-radius: 16px; 
+  
+  /* [추가] 그림자도 여기서 같이 넣어주면 좋겠죠? */
+  box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
 } /* [수정] 닫는 중괄호 } 추가 */
 
 .gas-info-title {
