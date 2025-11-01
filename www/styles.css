@@ -274,19 +274,6 @@ html, body {
    [2-1] 공기질 탭
    ======================================== */
 
-.air-quality-card {
-  width: var(--card-w);
-  height: var(--card-h); /* [제플린] 높이도 고정 */
-  margin-top: 0px; /* tab-navigation과의 간격 */
-  margin-left: auto;
-  margin-right: auto;
-  background: #fff;
-  border-radius: 16px; /* [제플린] */
-  box-shadow: 0 4px 12px rgba(183, 183, 183, 0.6); /* [기존 유지] */
-  overflow: hidden; /* 내부 요소가 넘치지 않도록 */
-  position: relative; /* 내부 absolute 요소들의 기준점 */
-}
-
 /* styles.css */
 
 /* ... (이 위에는 App-header, tab-navigation, gas-info-card 등은 유지) ... */
@@ -316,7 +303,7 @@ html, body {
 .air-quality-card {
   width: var(--card-w);
   height: var(--card-h); /* [제플린] 높이도 고정 */
-  margin-top: 46px; /* tab-navigation과의 간격 */
+  margin-top: 0px; /* tab-navigation과의 간격 */
   margin-left: auto;
   margin-right: auto;
   background: #fff;
