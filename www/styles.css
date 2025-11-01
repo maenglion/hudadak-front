@@ -262,20 +262,15 @@ html, body {
 
 .air-quality-card {
   width: 380px;
+  /* (height는 제거) */
   margin-left: auto;
   margin-right: auto;
   background-color: #ffffff; 
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
-  gap: 46px; 
-  padding-top: 46px;
+  padding-top: 46px; 
   padding-bottom: 46px;
-  /* [추가] 모서리 둥글게 만들기 */
-  border-radius: 16px; 
   
-  /* [추가] 그림자도 여기서 같이 넣어주면 좋겠죠? */
-  box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
+  /* [수정] Flexbox를 제거하고 텍스트 정렬용으로만 남깁니다. */
+  text-align: center; 
 }
 
 .gauge-container {
@@ -312,7 +307,10 @@ html, body {
 } /* [수정] 닫는 중괄호 } 추가 */
 
 .air-info-box {
-  width: 200px;
+  margin-top: 46px; 
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .air-info-header {

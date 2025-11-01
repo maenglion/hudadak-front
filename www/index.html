@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
- <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-  <link rel="stylesheet" href="styles.css">   
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css" type="text/css"/>  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <link rel="stylesheet" href="styles.css"> 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css" type="text/css"/> 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0/kopubdotum.min.css" type="text/css"/>
   
   <title>HUDADAK App</title>
@@ -32,35 +32,24 @@
           불필요한 환기 금지, 실내 공기<br>
           질 관리 모드로 전환.
       </p>
-    </header> <div class="standard-bar">
+    </header> 
+    <div class="standard-bar">
       <span class="standard-label">기준</span>
       <span class="standard-value standard-value--who">WHO(8단계)</span>
-    </div> <nav class="tab-navigation">
+    </div> 
+    <nav class="tab-navigation">
       <div class="tab-item tab-item--active">
         공기질
       </div>
       <div class="tab-item">
         기상예보
       </div>
-    </nav> <div class="tab-content" id="tab-air-content">
+    </nav> 
     
-    <div class="air-quality-card">
-  <div class="gauge-container gauge-pm10">
+    <div class="tab-content" id="tab-air-content">
     
-    <div class="gauge-inner gauge-pm25">
-      
-      <div class="gauge-center">
+      <div class="air-quality-card">
         
-        <div class="gauge-inner-circle">
-          </div>
-        
-      </div>
-      
-    </div>
-    
-  </div>
-  
-  </div>
         <div class="air-info-box">
           <div class="air-info-header">
             <span class="air-info-title">미세먼지</span>
@@ -72,12 +61,16 @@
             <span class="air-info-unit">µg/m³</span>
           </div>
         </div>
-        <div class="gauge-container">
-          <div class="gauge-center">
-            <div class="gauge-inner-circle">
+        
+        <div class="gauge-container gauge-pm10">
+          <div class="gauge-inner gauge-pm25">
+            <div class="gauge-center">
+              <div class="gauge-inner-circle">
+                </div>
             </div>
           </div>
         </div>
+        
         <div class="air-info-box">
           <div class="air-info-header">
             <span class="air-info-title">초미세먼지</span>
@@ -89,9 +82,8 @@
             <span class="air-info-unit">µg/m³</span>
           </div>
         </div>
-      </div>
-      
-      <div class="gas-info-card">
+        
+      </div> <div class="gas-info-card">
         <h2 class="gas-info-title">기타 공기지표</h2>
         <div class="gas-info-list">
           <div class="gas-info-item">
@@ -127,14 +119,13 @@
             </div>
           </div>
           <div class="gas-info-item">
-          </div>
+            </div>
           <div class="gas-info-item">
-          </div>
+            </div>
         </div>
       </div>
       
     </div> <div class="tab-content hidden" id="tab-forecast-content">
-      
       <div class="forecast-card">
         <div class="forecast-card-header">
           <span class="forecast-date">2025.10.30.수</span>
@@ -147,81 +138,10 @@
           </p>
         </div>
       </div>
-      </div> </div> <div class="slide-menu-overlay">
-  
-    <div class="slide-menu-content">
-      
-      <span class="slide-menu-logo">HUDADAK</span>
-      
-      <nav class="slide-menu-nav">
-        <div class="menu-item">
-          <span class="menu-item-text">표시기준 설정</span>
-          <img class="menu-item-arrow" src="images/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <label class="radio-option">
-            <input type="radio" name="standard" value="cai" checked>
-            <span class="radio-button"></span>
-            <div class="radio-text-group">
-              <span class="radio-title">환경부(4단계)</span>
-              <span class="radio-description">가장 일반적인 기준</span>
-            </div>
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="standard" value="who">
-            <span class="radio-button"></span>
-            <div class="radio-text-group">
-              <span class="radio-title">WHO(8단계)</span>
-              <span class="radio-description">세계보건기구 권고 기준</span>
-            </div>
-          </label>
-        </div>
-        
-        <div class="menu-item">
-          <span class="menu-item-text">예보 뱃지 안내</span>
-          <img class="menu-item-arrow" src="images/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <p class="sub-menu-description">
-            여기에 '예보 뱃지 안내'에 대한 긴 설명 텍스트가 들어갑니다.
-            제플린 스펙대로 18px, 7Bold, #b3b2b5 색상으로 표시됩니다.
-          </p>
-        </div>
-        
-        <div class="menu-item">
-          <span class="menu-item-text">이 앱의 특별한 이야기</span>
-          <img class="menu-item-arrow" src="images/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <p class="sub-menu-description">
-            여기에 '이 앱의 특별한 이야기'에 대한 긴 설명 텍스트가 들어갑니다.
-          </p>
-        </div>
-      </nav>
-      
+    </div> </div> <div class="slide-menu-overlay">
     </div>
-    
-  </div> <div class="search-overlay">
- 
-    <div class="search-widget">
-      
-      <input type="text" class="search-input-box" placeholder="지역, 위치를 입력하세요">
-      
-      <div class="search-results-list">
-        
-        <div class="search-result-item">
-          인천시 연수구 송도동
-        </div>
-        <div class="search-result-item">
-          서울시 강남구
-        </div>
-        <div class="search-result-item selected">
-          삼성동
-        </div>
-        
-      </div>
-      
+  <div class="search-overlay">
     </div>
-    
-  </div> </body>
+    <script src="app.js"></script>
+</body>
 </html>
