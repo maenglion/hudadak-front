@@ -10,7 +10,7 @@
   --ring-inner: 260px; /* [수정] PM2.5 휠 (안쪽) - 두께 30px 확보 */
   --ring-center: 200px; /* [수정] 맨 안쪽 하얀 부분 - 두께 30px 확보 */
   --ring-bg-color: #f3f3f3; 
-  --dash-color: #787777;
+  --dash-color: #333333;
   --text-main-color: #333; /* 제목/수치 메인 텍스트 색상 */
   --text-sub-color: #787878; /* 서브 텍스트 색상 */
   --font-paperlogy-5: "Paperlogy-5", sans-serif;
@@ -416,7 +416,7 @@ content: '';
   width: 0;
 
   /* 2) 위로 뻗어올리기 */
-  top: -150px;              /* 이 값을 조절해서 '안쪽 휠 중앙'에 맞춰 */
+  top: -140px;              /* 이 값을 조절해서 '안쪽 휠 중앙'에 맞춰 */
   height: 150px;            /* top이 -150이면 height도 150으로 맞춰서 딱 라벨까지 내려오게 */
 
   border-left: 2px dashed var(--dash-color);
