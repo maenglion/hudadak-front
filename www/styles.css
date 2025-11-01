@@ -1,332 +1,164 @@
-/* 기본 & 변수 설정 */
-:root {
-  --bg: #f8f9fa;
-  --bg-card: #ffffff;
-  --text-primary: #212529;
-  --text-secondary: #495057;
-  --text-muted: #868e96;
-  --border-color: #dee2e6;
-  
-  /* Paperlog 폰트 변수 추가 */
-  --font-p7: 'Paperlog 7', 'Paperlog', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
-  --font-p5: 'Paperlog 5', 'Paperlog', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
-  --font-p8: 'Paperlog-ExtraBold','Paperlog', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
-  --font-p9: 'Paperlog-Black','Paperlog', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
-}
+/* 여기서 부터 피그마 코드 */
 
-body { font-family: var(--font-p5); }
-.header-logo, .tab-button, .forecast-day { font-family: var(--font-p7); }
-
-
-/* 기본 스타일 */
-body {
-  margin: 0;
-  background-color: var(--bg);
-  color: var(--text-primary);
-  -webkit-font-smoothing: antialiased;
-}
-
-.app-container {
-  /* 요청하신 너비로 수정 */
-  max-width: 412px; 
-  margin: 0 auto;
-  background-color: #fff; /* 하단 배경은 흰색으로 고정 */
+.Main-container {
+  width: 412px;
   min-height: 100vh;
+  background-color: #F5F5F5; 
 }
 
-/* --- 상단 Hero 영역 (완전 재작성) --- */
-.hero-section {
-  width: 100%;
-  height: 598px;
-  color: white;
-  position: relative; /* 자식 요소들을 절대 위치로 배치하기 위함 */
-  padding-top: env(safe-area-inset-top, 0); /* 상태표시줄 영역 확보 */
-  box-sizing: border-box;
-  transition: background 0.5s ease;
+.App-header {
+  width: 412px;
+  height: 566px;
 }
 
-/* 단계별 그라데이션 배경 */
-.hero-section.grade-1 { background: linear-gradient(180deg, #5C9DFF 0%, #7EB9FF 100%); } /* 좋음 */
-.hero-section.grade-2 { background: linear-gradient(180deg, #4CAF50 0%, #81C784 100%); } /* 보통 */
-.hero-section.grade-3 { background: linear-gradient(180deg, #FF9800 0%, #FFB74D 100%); } /* 나쁨 */
-.hero-section.grade-4 { background: linear-gradient(180deg, #E53935 0%, #EF5350 100%); } /* 매우 나쁨 */
+/* '좋음' (excellent) */
+.App-header--excellent {
+  background-image: linear-gradient(to bottom, #23a0e5, #a0cdf8);
+}
+
+/* '양호' (good) */
+.App-header--good {
+  background-image: linear-gradient(to bottom, #30b8de, #a0e6d9);
+}
+
+/* '보통' (fair) */
+.App-header--fair {
+  background-image: linear-gradient(to bottom, #3dd392, #bbe596);
+}
+
+/* '나쁨' (moderate) */
+.App-header--moderate {
+  background-image: linear-gradient(to bottom, #85af36, #ded06d);
+}
+
+/* '상당히 나쁨' (poor) */
+.App-header--poor {
+  background-image: linear-gradient(to bottom, #db9f3c 18%, #e6d55c);
+}
+
+/* '매우 나쁨' (unhealthy) */
+.App-header--unhealthy {
+  background-image: linear-gradient(to bottom, #df7f59 27%, #e4bb8b);
+}
+
+/* '위험' (hazardous) - 어제 찾으신 것 */
+.App-header--hazardous {
+  background-image: linear-gradient(to bottom, #71395e 27%, #d4a5a5);
+}
+
+/* '심각' (severe) */
+.App-header--severe {
+  background-image: linear-gradient(to bottom, #a44960 18%, #ffbba7);
+}
 
 
-.header-logo {
-  font-family: var(--font-p8);
+.status-title {
+  /* '7Bold'는 'Bold' (굵게)를 의미하며, 
+    표준 CSS에서는 숫자 700으로 씁니다.
+  */
+  font-weight: 700;
+  font-family: "Paperlogy"; /* 제플린이 알려준 폰트 이름 */
+  font-size: 50px;
+  color: #ffffff;
+  text-align: center; }
+
+.status-score {
+  font-weight: 500; /* 5Medium */
+  font-family: "Paperlogy";
+  font-size: 28px;
+  
+  /* [사용자님 확인] 흰색 80% */
+  color: rgba(255, 255, 255, 0.8); /* #ffffffcc */
+  text-align: center;
+  
+  /* '위험' 텍스트와의 상단 여백 */
+  margin-top: 62px; 
+}
+
+.status-description {
+  font-family: "KoPubDotum";
+  font-weight: 700; /* Bold */
+  font-size: 26px;
+  
+ color: #333333; 
+  text-align: center;
+
+  /* '65점' 텍스트와의 상단 여백입니다. */
+  margin-top: 58px;
+
+  /* [사용자님 요청 사항]
+    최대 너비를 380px로 제한합니다.
+    이 너비를 넘어가면 자동으로 줄바꿈됩니다.
+  */
+  max-width: 380px;
+  
+  /* 이 380px 너비의 박스를 부모(412px) 안에서 
+    가운데 정렬하기 위해 좌우 마진을 'auto'로 줍니다.
+  */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.header-top-row {
+  display: flex;
+  justify-content: space-between; /* 양쪽 끝으로 보내기 */
+  align-items: center; /* 세로 중앙 정렬 */
+  padding-left: 26px;  /* 제플린 X: 26px 참조 */
+  padding-right: 26px; /* 제플린 X: 26px 참조 */
+  padding-top: 71px;     /* 제플린 Y: 70.9px 참조 */
+}
+
+/* [업데이트된 부분] 'HUDADAK' 로고 텍스트 스타일 */
+.logo-text {
+  font-family: "Paperlogy";
+  /* '8ExtraBold'는 표준 CSS에서 숫자 800입니다. */
+  font-weight: 800; 
   font-size: 20px;
-  position: absolute;
-  top: 72px;
-  left: 24px;
-  margin: 0;
+  color: #ffffff; 
 }
 
-.current-location-btn {
-  position: absolute;
-  top: 72px; /* 로고와 같은 높이 */
-  right: 24px;
-  width: 24px; /* 이미지 크기 조절 */
-  height: 24px;
-  cursor: pointer;
+/* 알림 아이콘 스타일 */
+.notification-icon {
+  width: 42px;
+  height: 42px;
 }
 
-.location-search-bar {
-  position: absolute;
-  top: 160px;
-  left: 50%;
-  transform: translateX(-50%); /* 정확한 중앙 정렬 */
+.location-button {
+  /* 크기 */
   width: 230px;
   height: 40px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 16px;
-  color: white;
-  font-family: var(--font-p5);
-  text-align: center;
-  box-sizing: border-box;
-}
-.location-search-bar::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
 
-.timestamp {
-  position: absolute;
-  top: 210px; /* 검색창 아래 */
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-p5);
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-}
-.timestamp .ampm {
-  font-family: var(--font-p7);
-}
-
-.hero-content {
-  position: absolute;
-  top: 50%; /* 수직 중앙 정렬 */
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  width: 100%;
-}
-.grade-label {
-  font-family: var(--font-p9); /* Paperlog 9 Black */
-  font-size: 32px;
-  margin-bottom: 8px;
-}
-.score {
-  font-family: var(--font-p5); /* Paperlog 5 Medium */
-  font-size: 18px;
-  opacity: 0.9;
-}
-
-
-/* --- 탭 메뉴 (스타일 수정) --- */
-.tab-nav {
-  display: flex;
-  background-color: var(--bg-card); /* 흰색 배경으로 변경 */
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color);
-}
-.tab-button {
-  flex: 1;
-  padding: 12px;
-  font-size: 16px;
-  font-family: var(--font-p7); /* Paperlog 7 */
-  border: none;
-  background: none;
-  color: #848484; /* 선택 안될 시 */
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.tab-button.active {
-  color: #333333; /* 선택 시 */
-}
-
-/* 탭 내용은 기존 스타일 유지 */
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.card {
-  background: var(--bg-card);
-  padding: 16px;
-  margin: 12px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  position: relative;  /* 카드가 자식을 contain하도록 (이미 추가됨) */
-  overflow: hidden;    /* (이미 추가됨) */
-  min-width: 300px;    /* 추가: 게이지(280px)를 담을 최소 너비 보장 */
-}
-.card h4 { margin: 0 0 16px 0; font-family: var(--font-p7); }
-
-/* === concentric (PM10 밖 · PM2.5 안) 도넛 게이지 === */
-.concentric-gauge{
-width: 100%; max-width: 280px; height: 280px; margin: 16px auto 4px; position: relative;
-}
-.gauge-outer, .gauge-inner{
-  position: absolute;  /* 수정: relative → absolute로 중첩 강화 */
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  border-radius: 50%;
-  background: #e9edf2; /* 초기 트랙색 */
-  /* 도넛(링)으로 뚫는 마스크: 두께만 바꿔도 모양 유지 */
-  --thickness: 22px;
-  -webkit-mask: radial-gradient(circle at 50% 50%,
-    transparent calc(50% - var(--thickness)),
-    #000 calc(50% - var(--thickness) + 1px));
-          mask: radial-gradient(circle at 50% 50%,
-    transparent calc(50% - var(--thickness)),
-    #000 calc(50% - var(--thickness) + 1px));
-  transition: background 0.6s ease;
-}
-/* 안쪽 링은 살짝 안쪽으로 들여앉히기 + 같은 두께 */
-.gauge-inner{
-  --thickness: 22px;
-  width: calc(100% - 60px); height: calc(100% - 60px);  /* 수정: 비율 유지 */
-  top: 30px; left: 30px;  /* (260-200)/2 유지 */
-  background: #e9edf2;
-  border-radius: 50%;
-  transition: background 0.6s ease 0.05s;
-  position:absolute;
-  inset: 0;
-}
-
-/* 중앙 텍스트 */
-.gauge-center-text{
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  text-align: center; pointer-events: none;
-}
-.gauge-center-text .grade-big{font-weight:800; font-size:22px; line-height:1.15}
-.gauge-center-text .pm-summary{font-size:12px; color:#666; margin-top:4px}
-.gauge-center-text .badges{font-size:12px; color:#444; margin-top:4px}
-
-/* 하단 라벨 영역(이미 있으니 최소만) */
-.gauge-labels{
-  display:flex; justify-content:space-between; gap:12px; margin-top:14px;
-}
-.gauge-labels .label-title{display:block; font-size:13px; color:#2b2b2b; margin-bottom:4px}
-.gauge-labels .label-value{font-size:13px; color:#2b2b2b}
-.gauge-labels .label-value em{font-style:normal; color:#7a7a7a; font-size:11px; margin-left:2px}
-
-/* SVG 게이지: 기존 conic-gradient 버전은 감추고 이걸 씀 */
-.concentric-gauge.use-svg .gauge-outer,
-.concentric-gauge.use-svg .gauge-inner { display: none; } /* div 도넛 숨김 */
-
-.cg-svg { position:absolute; top:0; left:50%; transform: translateX(-50%); width:260px; height:260px; } /* 수정: 중앙 정렬 */
-.cg-track { fill:none; stroke:#e9edf2; stroke-width:22; }
-.cg-arc   { fill:none; stroke:#3cb371; stroke-width:22; stroke-linecap:round; transition:stroke-dasharray .8s ease, stroke .3s ease; }
-
-/* 안쪽 링은 반지름/두께만 다르게 */
-.cg-inner-track, .cg-inner-arc { stroke-width:22; }
-
-/* --- 나머지 스타일은 기존 코드 유지 --- */
-.linear-bar-item { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }
-.bar-wrapper { background-color: #e9ecef; border-radius: 4px; overflow: hidden; height: 8px; }
-.bar-fill { background-color: #848484; height: 100%; border-radius: 4px; transition: width 0.5s; }
-.bar-value { text-align: right; font-family: var(--font-p5); }
-.forecast-grid { display: grid; gap: 8px; }
-.forecast-card { display: grid; grid-template-columns: 80px 40px 1fr; align-items: center; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
-.forecast-card:last-child { border-bottom: none; }
-.forecast-day { font-family: var(--font-p7); font-size: 16px; }
-.forecast-icon { font-size: 28px; }
-.forecast-temp { text-align: right; font-size: 16px; }
-.forecast-desc { grid-column: 3; text-align: right; font-size: 14px; color: var(--text-secondary); margin-top: -8px; }
-.muted { color: var(--text-muted); font-size: 12px; margin-top: 8px; }  /* 수정: margin 조정 */
-
-/* 추가: 모바일 responsive (스크린샷처럼 좁은 화면 대응) */
-@media (max-width: 480px) {
-  .card { padding: 12px; margin: 8px; min-width: auto; }  /* 카드 축소 */
-  .concentric-gauge { max-width: 100%; }  /* 게이지 화면에 맞춤 */
-  .cg-svg { width: 100%; height: auto; }  /* SVG 반응형 */
-  .gauge-labels { flex-direction: column; }  /* 라벨 세로 배치 방지 overlapping */
-}
-/* --- 설정 패널 스타일 (전체 교체) --- */
-#settings-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 80%;
-  max-width: 320px;
-  height: 100%;
-  background-color: #333237;
-  color: #C4C4C4;
-  z-index: 1001;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
-  box-sizing: border-box;
-  /* 패널 자체의 padding은 제거합니다. */
-}
-
-#settings-panel.is-open {
-  transform: translateX(0);
-}
-
-.panel-header {
-  /* 절대 위치로 변경하여 좌표 고정 */
-  position: absolute;
-  top: 72px;
-  left: 24px;
+  /* 테두리 (4px, 흰색, 둥글게) */
+  border: 4px solid #ffffff;
+  border-radius: 40px;
+  box-sizing: border-box; /* 테두리(4px)를 크기(40px) 안에 포함시킵니다 */
   
-  /* 메인 로고와 동일한 폰트 스타일 적용 */
-  font-family: var(--font-p8);
-  font-size: 20px;
-  color: #FFFFFF;
-  margin: 0; /* 기존 margin 제거 */
-}
+  /* 배경은 투명 (테두리만 있으니까) */
+  background-color: transparent;
+  
+  /* 위치 (가운데 정렬) 
+     부모(412px) - 자신(230px) / 2 = 91px. (X: 91px와 일치)
+     좌우 마진을 auto로 주면 자동으로 가운데 정렬됩니다.
+  */
+  margin-left: auto;
+  margin-right: auto;
 
-/* 새로 추가한 content wrapper의 위치를 조정 */
-.panel-content {
-  padding: 130px 24px 24px 24px; /* 위쪽 여백을 확보하여 헤더와 겹치지 않게 함 */
-  height: 100%;
-  box-sizing: border-box;
-  overflow-y: auto; /* 내용이 길어질 경우 스크롤 */
-}
+  /* 간격 (Spacing)
+     Y: 152px. 
+     위쪽 로고 행(header-top-row)이 끝나는 지점(Y=71+42=113px)에서
+     152px까지의 거리입니다. 
+     margin-top = 152px - 113px = 39px
+  */
+  margin-top: 39px;
 
-.panel-section {
-  border-bottom: 1px solid rgba(196, 196, 196, 0.2);
-  padding: 20px 0;
-}
-.panel-section:last-child {
-  border-bottom: none;
-}
-.panel-section h2 {
-  font-family: var(--font-p7);
-  font-size: 18px;
-  margin: 0 0 16px 0;
-  color: #FFFFFF;
-}
-
-/* 라디오 버튼, 아코디언 등 나머지 스타일은 그대로 유지 */
-.radio-group label { display: flex; align-items: center; margin-bottom: 12px; font-size: 16px; }
-.radio-group input[type="radio"] { margin-right: 12px; accent-color: #4CAF50; }
-.accordion-menu details { border-bottom: 1px solid rgba(196, 196, 196, 0.2); }
-.accordion-menu details:last-child { border-bottom: none; }
-.accordion-menu summary { padding: 16px 0; font-size: 16px; font-family: var(--font-p5); cursor: pointer; list-style: none; position: relative; padding-right: 20px; }
-.accordion-menu summary::-webkit-details-marker { display: none; }
-.accordion-menu summary::after { content: '▼'; position: absolute; right: 0; top: 16px; font-size: 12px; transition: transform 0.2s; }
-.accordion-menu details[open] > summary::after { transform: rotate(180deg); }
-.accordion-content { padding: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #a9a9a9; }
-.accordion-content p { margin-top: 0; }
-
-/* 뒷면 백드롭 스타일은 그대로 유지 */
-#settings-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s, visibility 0.3s;
-}
-
-#settings-backdrop.is-visible {
-  opacity: 1;
-  visibility: visible;
+  /* 텍스트 스타일 (Paperlogy, 5Medium, 22px, #ffffff, center) */
+  font-family: "Paperlogy";
+  font-weight: 500; /* 5Medium */
+  font-size: 22px;
+  color: #ffffff;
+  
+  /* 텍스트를 버튼의 완벽한 중앙에 놓기 위한 Flexbox 설정 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

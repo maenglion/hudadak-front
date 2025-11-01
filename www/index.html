@@ -1,140 +1,29 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-  <title>HUDADAK</title>
-  
-  <meta name="theme-color" id="theme-color-meta" content="#f4f6f8" />
-  <meta name="color-scheme" content="light dark" />
-
-  <link rel="stylesheet" href="/styles.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/paper-log/Paperlog-font/Paperlog.css" />
-
-  <style>
-     /* 게이지 기본 스타일 (styles.css와 충돌 없이 최소만) */
-    .panel{width:280px;margin:24px auto;padding:18px 16px;background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
-    .title{font-weight:700;font-size:16px;margin:0 0 10px}
-    .meta{font-size:12px;color:#666;margin-top:8px}
-    .gauge-container{position:relative;width:240px;height:240px;margin:8px auto 0}
-    .gauge-svg{width:100%;height:100%}
-    .track{fill:none;stroke:#e6e6e6;stroke-width:20;transform:rotate(-90deg);transform-origin:50% 50%}
-    .ring{fill:none;stroke-linecap:round;stroke-width:20;stroke-dasharray:0 1;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dasharray 1.0s ease}
-    .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-    .main-reading{font-weight:800;font-size:24px;line-height:1.1}
-    .sub-reading{font-size:12px;color:#666}
-    .badge{margin-top:6px;font-size:12px;color:#444}
-
-    /* 보조수치 바 */
-    .bar-wrap{width:320px;margin:18px auto 8px;display:flex;flex-direction:column;gap:10px}
-    .bar-row{display:flex;align-items:center;gap:10px}
-    .bar-label{min-width:64px;font-size:12px;color:#333}
-    .bar-progress{position:relative;flex:1;height:14px;background:#eee;border-radius:8px;overflow:hidden}
-    .bar-fill{height:100%;width:0%;background:#2196F3;border-radius:8px;transition:width 1.0s ease}
-    .bar-value{min-width:72px;text-align:right;font-size:12px;color:#333}
-  </style>
-
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
- <div class="app-container">
+
+  <div class="Main-container">
     
-    <div id="settings-backdrop"></div>
+    <header class="App-header App-header--hazardous">
 
-    <aside id="settings-panel">
-  <header class="panel-header">HUDADAK</header>
-  
-  <div class="panel-content">
-    <section class="panel-section">
-      <h2>표시 기준 설정</h2>
-      <div class="radio-group" id="standard-options">
-        <label><input type="radio" name="aq_standard" value="KOR"> 대한민국 환경부 (CAI)</label>
-        <label><input type="radio" name="aq_standard" value="WHO8"> WHO 권고 (8단계)</label>
-      </div>
-    </section>
-
-    <section class="panel-section accordion-menu">
-      <details>
-        <summary>이 앱의 특별한 이야기</summary>
-        <div class="accordion-content">
-          <p><strong>후다닥</strong>은 단순한 미세먼지 앱이 아닙니다. 국내 측정망 데이터뿐만 아니라, 전 세계의 기상 모델과 위성 데이터를 종합하여 가장 정확하고 신뢰도 높은 정보를 제공하기 위해 노력합니다.</p>
-        </div>
-      </details>
-      <details>
-        <summary>예보 뱃지 안내</summary>
-        <div class="accordion-content">
-          <p>메인 화면의 예보 카드에는 예측의 신뢰도와 주요 원인을 나타내는 뱃지가 표시됩니다.</p>
-        </div>
-      </details>
-    </section>
+    <div class="header-top-row">
+    <span class="logo-text">HUDADAK</span>
+    <img class="notification-icon" src="images/notification-icon.svg" alt="알림">
+    </div>
+      
+      <h1 class="status-title">위험</h1>
+        <p class="status-score">65점</p>
+        <p class="status-description">
+           불필요한 환기 금지, 실내 공기<br>
+           질 관리 모드로 전환.
+        </p>
+      
+    </header>
+    
   </div>
-  </aside>
-        <main id="app-main">
-      <header class="hero-section grade-2"> <h1 class="header-logo">HUDADAK</h1>
-        
-        <img src="https://res.cloudinary.com/dnswboo5z/image/upload/v1760730007/Group_6_mhnxwh.png" 
-             id="current-btn" 
-             class="current-location-btn" 
-             alt="Current Location" />
 
-        <input type="search" id="location-input" class="location-search-bar" placeholder="지역 검색..." />
-
-        <div class="timestamp">
-          오전 11:32 <span class="ampm">오후</span> 업데이트
-        </div>
-        
-        <div class="hero-content">
-          <div id="hero-grade-label" class="grade-label">좋음</div>
-          <div id="hero-score" class="score">통합지수 42</div>
-        </div>
-      </header>
-
-      <nav class="tab-nav">
-        <button class="tab-button active" data-tab="air-quality">공기질 분석</button>
-        <button class="tab-button" data-tab="weather-forecast">기상 예보</button>
-      </nav>
-
-      <div class="tab-content active" id="tab-air-quality">
-        <section class="card">
-          <div class="concentric-gauge">
-            <div class="gauge-outer" id="pm10-gauge">
-              <div class="gauge-inner" id="pm25-gauge">
-                <div class="gauge-center-text">
-                  </div>
-              </div>
-            </div>
-            <div class="gauge-labels">
-              <div class="label-item">
-                <span class="label-title">미세먼지(PM10)</span>
-                <span id="pm10-value" class="label-value">-- <em>μg/m³</em></span>
-              </div>
-              <div class="label-item">
-                <span class="label-title">초미세먼지(PM2.5)</span>
-                <span id="pm25-value" class="label-value">-- <em>μg/m³</em></span>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section class="card">
-          <h4>기타 지표</h4>
-          <div class="linear-bars" id="linear-bars-container"></div>
-        </section>
-      </div>
-
-      <div class="tab-content" id="tab-weather-forecast">
-        <section class="card">
-          <h4>주간 예보</h4>
-          <div id="forecast-grid" class="forecast-grid"></div>
-          <small id="forecast-note" class="muted"></small>
-        </section>
-      </div>
-    </main>
-    <footer class="app-footer" style="text-align:center;color:#8a8a8a;font-size:12px;margin:16px 0 28px;">
-  <span>2e Studio</span> ·
-  <a href="./termofuse.html" style="color:inherit;text-decoration:underline;">termofuse</a>
-</footer>
-
-  </div>
-  <script>window.__API_BASE__ = '/backend';</script>
-    <script type="module" src="/app.js?v=20251023_1"></script>
 </body>
 </html>
