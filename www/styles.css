@@ -7,7 +7,7 @@
   --card-w: 388px; /* [제플린] 외부 카드 너비 */
   --card-h: 646px; /* [제플린] 외부 카드 높이 */
   --ring-outer: 320px; /* [제플린] PM10 휠 */
-  --ring-inner: 220px; /* [제플린] PM2.5 휠 */
+  --ring-inner: 240px; /* [제플린] PM2.5 휠 */
   --ring-center: 160px; /* [제플린] 맨 안쪽 하얀 부분 */
   --ring-bg-color: #f3f3f3; /* 링의 배경색 */
   --dash-color: #ccc; /* 꺾쇠 점선 색상 */
@@ -277,7 +277,7 @@ html, body {
 .air-quality-card {
   width: var(--card-w);
   height: var(--card-h); /* [제플린] 높이도 고정 */
-  margin-top: 46px; /* tab-navigation과의 간격 */
+  margin-top: 0px; /* tab-navigation과의 간격 */
   margin-left: auto;
   margin-right: auto;
   background: #fff;
@@ -365,18 +365,17 @@ html, body {
 
 /* --- 안쪽 링 (PM2.5) --- */
 .ring-pm25 {
-width: 270px; /* 220px -> 270px (두께 25px 확보) */
-  height: 270px;
-  border-radius: 50%;
+width: var(--ring-inner); /* 240px */
+  height: var(--ring-inner);
+  z-index: 2;
 }
 
 /* --- 가장 안쪽 하얀 구멍 (원래 gauge-center 역할) --- */
 .gauge-rings::before { /* 가상 요소로 구현 */
-  content: '';
+content: '';
   position: absolute;
-  /* 270px - (25px 갭) - (25px 두께) = 220px */
-  width: 220px; 
-  height: 220px;
+  width: var(--ring-center); /* 160px */
+  height: var(--ring-center);
   border-radius: 50%;
   background-color: #ffffff; 
   z-index: 3;
@@ -426,14 +425,13 @@ width: 270px; /* 220px -> 270px (두께 25px 확보) */
 .components-pm25::after {
   content: '';
   position: absolute;
-  /* [제플린 스펙] Vector-8: width: 27.5px, height: 103px, border: solid 2px var(--dash-color) */
-  width: 2px; /* 너비 2px */
-  height: 103px; /* 높이 103px */
-  border-right: 2px dashed var(--dash-color); /* 점선 색상 #ccc */
+  width: 2px;
+  height: 120px; /* [수정] 103px -> 120px로 늘려 트랙 중앙까지 연장 */
+  border-right: 2px dashed var(--dash-color); 
   
-  bottom: 0px; /* Frame-64 (텍스트 그룹) 하단에 위치 */
-  right: -20px; /* 텍스트 박스 오른쪽에 위치 (조정 필요) */
-  transform: rotate(180deg); /* 180도 회전하여 위로 꺾이도록 */
+  bottom: 0px; 
+  right: -5px; /* [수정] -20px -> -5px로 조정하여 중앙에 가깝게 당김 */
+  transform: rotate(180deg); 
 }
 
 
