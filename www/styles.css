@@ -271,6 +271,7 @@ html, body {
   
   /* [수정] Flexbox를 제거하고 텍스트 정렬용으로만 남깁니다. */
   text-align: center; 
+  border-radius: 16px;
 }
 
 .gauge-container {
@@ -361,7 +362,7 @@ html, body {
 }
 
 .gas-info-card {
-  width: 396px;
+  width: 380px;
   margin-top: 46px; 
   margin-left: auto;
   margin-right: auto;
@@ -389,7 +390,7 @@ html, body {
 }
   
 .gas-info-item {
-  width: 328px;
+  width: 340px;
   height: 90px;
   margin-bottom: 22px; 
   background-color: #fff;
