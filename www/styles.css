@@ -363,7 +363,7 @@ html, body {
 }
 
 .gas-info-card {
-  width: 380px;
+  width: 396px;
   margin-top: 46px; 
   margin-left: auto;
   margin-right: auto;
@@ -476,7 +476,6 @@ html, body {
   position: absolute;
   top: 0;
   left: 0;
-  box-shadow: inset 0px 4px 4px 0px #d9d9d9;
 }
 
 .gas-bar--so2 {
@@ -782,4 +781,99 @@ html, body {
 .search-result-item:hover,
 .search-result-item.selected {
   background-color: #edeeee;
+}
+
+/* 1. PM10 휠 (바깥쪽 320px) */
+.gauge-pm10 {
+  width: 320px;
+  height: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 50%;
+  
+  /* PM10 게이지 색상 (초록 계열) */
+  background-image: conic-gradient(
+    #b0d4cb 0% 65%, 
+    #ededed 65% 100%
+  );
+  
+  /* 안쪽 휠을 중앙에 배치하기 위한 Flexbox */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 2. PM2.5 휠 (안쪽 260px) */
+.gauge-pm25 {
+  /* PM10 휠보다 휠 두께(30px)만큼 작게 */
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  
+  /* PM2.5 게이지 색상 (주황 계열이라고 가정) */
+  background-image: conic-gradient(
+    #df7f59 0% 80%, /* (임시 80% 주황색) */
+    #ededed 80% 100%
+  );
+  
+  /* 게이지 구멍을 중앙에 배치하기 위한 Flexbox */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 3. 게이지 구멍 (흰색 원, 220px) */
+.gauge-center {
+  /* PM2.5 휠보다 휠 두께(20px)만큼 작게 */
+  width: 220px; 
+  height: 220px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  /* ... (나머지 Flexbox) ... */
+}
+
+/* 4. 게이지 안쪽 회색 원 (180px, 이 안에 텍스트) */
+.gauge-inner-circle {
+  width: 180px; /* (게이지 텍스트를 담을 공간으로 임시 축소) */
+  height: 180px;
+  border-radius: 50%;
+  background-color: rgba(217, 217, 217, 0.4);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); 
+  /* (이 안에 텍스트를 중앙 정렬할 Flexbox 추가) */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+
+/* ========================================
+   [추가] 점선 꺾쇠 구현 (CSS 중급 기술)
+   ======================================== */
+
+/* 미세먼지 정보 박스 위치를 기준으로 설정 */
+.air-info-box {
+  /* ... (기존 스타일) ... */
+  position: relative; /* 자식 꺾쇠의 기준점 */
+}
+
+/* 점선 꺾쇠 구현 */
+.air-info-box::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 100px; /* (임시 높이, 디자인에 맞게 조절) */
+  border-right: 2px dotted #949494; /* [추가] 회색 점선 */
+  
+  /* 꺾쇠의 X, Y 위치는 미세먼지 정보 박스의 위치에 따라 달라집니다. */
+  /* [임시] 오른쪽 위에 꺾쇠가 오도록 */
+  top: 40px; 
+  left: 100%; 
+  transform: translateX(-50%);
+}
+
+/* 초미세먼지 박스도 비슷하게 구현 */
+.air-info-box:last-of-type::after {
+  /* 아래로 꺾이는 꺾쇠는 회전하거나 방향을 반대로 주어야 합니다. */
+  /* transform: rotate(180deg); */ 
 }
