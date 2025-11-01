@@ -162,3 +162,79 @@
   align-items: center;
   justify-content: center;
 }
+
+.timestamp-row {
+  /* 세 텍스트를 가로로 나란히, 가운데 정렬합니다 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* 공통 폰트 스타일 */
+  font-family: "Paperlogy";
+  font-size: 18px;
+  color: #ffffff;
+
+  /* 상단 여백 (이전과 동일) */
+  margin-top: 12px;
+}
+
+/* 날짜 텍스트 (가는 굵기) */
+.timestamp-date {
+  font-weight: 300; /* 3Light */
+}
+
+/* 오전/오후 텍스트 (중간 굵기) */
+.timestamp-ampm {
+  font-weight: 500; /* 5Medium (시간과 동일한 굵기) */
+  
+  /* [사용자님 요청] 날짜와 12px 간격 */
+  margin-left: 12px;
+}
+
+/* 시간 텍스트 (중간 굵기) */
+.timestamp-clock {
+  font-weight: 500; /* 5Medium */
+
+  /* [사용자님 요청] 오전/오후와 2px 간격 */
+  margin-left: 2px;
+}
+
+.standard-bar {
+  /* 제플린이 알려준 크기와 배경색은 맞습니다 */
+  width: 412px;
+  height: 40px;
+  background-color: #333237;
+
+  /* padding 대신 Flexbox로 텍스트를 중앙 정렬합니다 */
+  display: flex;
+  align-items: center;    /* 세로 중앙 */
+  justify-content: center; /* 가로 중앙 */
+}
+
+/* "기준" 텍스트 스타일 */
+.standard-label {
+  font-family: "Paperlogy";
+  font-weight: 700; /* 7Bold */
+  font-size: 16px;
+  color: #949494; /* 사용자님이 알려주신 회색 */
+}
+
+/* "WHO(8단계)" 또는 "CAI(4단계)" 텍스트의 [공통 스타일] */
+.standard-value {
+  font-family: "Paperlogy";
+  font-weight: 700; /* 7Bold */
+  font-size: 16px;
+
+  /* "기준" 텍스트와의 8px 간격 */
+  margin-left: 8px;
+}
+
+/* [상태 1: WHO일 때 색상] */
+.standard-value--who {
+  color: #B2A760; 
+}
+
+/* [상태 2: CAI일 때 색상] */
+.standard-value--cai {
+  color: #82A1BF;
+}
