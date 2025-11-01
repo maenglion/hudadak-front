@@ -3,6 +3,20 @@
    ======================================== */
 
 /* 1. 모든 요소의 기본 여백(margin/padding)을 0으로 초기화 */
+:root {
+  --card-w: 388px; /* [제플린] 외부 카드 너비 */
+  --card-h: 646px; /* [제플린] 외부 카드 높이 */
+  --ring-outer: 320px; /* [제플린] PM10 휠 */
+  --ring-inner: 220px; /* [제플린] PM2.5 휠 */
+  --ring-center: 160px; /* [제플린] 맨 안쪽 하얀 부분 */
+  --ring-bg-color: #f3f3f3; /* 링의 배경색 */
+  --dash-color: #ccc; /* 꺾쇠 점선 색상 */
+  --text-main-color: #333; /* 제목/수치 메인 텍스트 색상 */
+  --text-sub-color: #787878; /* 서브 텍스트 색상 */
+  --font-paperlogy-5: "Paperlogy-5", sans-serif;
+  --font-paperlogy-7: "Paperlogy-7", sans-serif;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -261,60 +275,280 @@ html, body {
    ======================================== */
 
 .air-quality-card {
-  width: 380px;
-  height: 646px; 
+  width: var(--card-w);
+  height: var(--card-h); /* [제플린] 높이도 고정 */
+  margin-top: 46px; /* tab-navigation과의 간격 */
   margin-left: auto;
   margin-right: auto;
-  background-color: #ffffff; 
-  padding-top: 46px; 
-  padding-bottom: 46px;
-  
-  /* [수정] Flexbox를 제거하고 텍스트 정렬용으로만 남깁니다. */
-  text-align: center; 
-  border-radius: 16px;
+  background: #fff;
+  border-radius: 16px; /* [제플린] */
+  box-shadow: 0 4px 12px rgba(183, 183, 183, 0.6); /* [기존 유지] */
+  overflow: hidden; /* 내부 요소가 넘치지 않도록 */
+  position: relative; /* 내부 absolute 요소들의 기준점 */
 }
 
-.gauge-container {
-  width: 320px;
-  height: 320px;
+/* styles.css */
+
+/* ... (이 위에는 App-header, tab-navigation, gas-info-card 등은 유지) ... */
+
+
+/* =========================================================
+   [NEW] ChatGPT 기반 Air Quality Card & Gauge Styles (Zeplin Spec 적용)
+   모든 기존 .air-quality-card 내부 스타일은 제거하고 이 코드로 대체합니다.
+   ========================================================= */
+
+/* --- CSS 변수 (루트에서 관리) --- */
+:root {
+  --card-w: 388px; /* [제플린] 외부 카드 너비 */
+  --card-h: 646px; /* [제플린] 외부 카드 높이 */
+  --ring-outer: 320px; /* [제플린] PM10 휠 */
+  --ring-inner: 220px; /* [제플린] PM2.5 휠 */
+  --ring-center: 160px; /* [제플린] 맨 안쪽 하얀 부분 */
+  --ring-bg-color: #f3f3f3; /* 링의 배경색 */
+  --dash-color: #ccc; /* 꺾쇠 점선 색상 */
+  --text-main-color: #333; /* 제목/수치 메인 텍스트 색상 */
+  --text-sub-color: #787878; /* 서브 텍스트 색상 */
+  --font-paperlogy-5: "Paperlogy-5", sans-serif;
+  --font-paperlogy-7: "Paperlogy-7", sans-serif;
+}
+
+/* --- 메인 컨테이너: .air-quality-card --- */
+.air-quality-card {
+  width: var(--card-w);
+  height: var(--card-h); /* [제플린] 높이도 고정 */
+  margin-top: 46px; /* tab-navigation과의 간격 */
   margin-left: auto;
   margin-right: auto;
+  background: #fff;
+  border-radius: 16px; /* [제플린] */
+  box-shadow: 0 4px 12px rgba(183, 183, 183, 0.6); /* [기존 유지] */
+  overflow: hidden; /* 내부 요소가 넘치지 않도록 */
+  position: relative; /* 내부 absolute 요소들의 기준점 */
+}
+
+/* --- 게이지 카드 (air-quality-card의 내용물) --- */
+.gauge-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* 내부 absolute 요소들이 air-quality-card 기준으로 배치되도록 */
+}
+
+/* --- 가운데 원들 (게이지 링) --- */
+.gauge-rings {
+  position: absolute;
+  /* [제플린] top: 140px; */
+  top: 140px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--ring-outer);
+  height: var(--ring-outer);
+  display: flex; /* 내부 링 중앙 정렬용 */
+  justify-content: center;
+  align-items: center;
+}
+
+/* --- 공통 링 스타일 --- */
+.ring {
+  position: absolute;
   border-radius: 50%;
-  background-image: conic-gradient(
-    #b0d4cb 0% 65%, 
-    #ededed 65% 100%
-  );
+  background: radial-gradient(circle, #fff 20%, #f8f8f8 60%, #f0f0f0 100%);
+  box-shadow: inset 0 4px 6px rgba(0,0,0,0.03);
+}
+
+/* --- 바깥 링 (PM10) --- */
+.ring-pm10 {
+  width: var(--ring-outer); /* 320px */
+  height: var(--ring-outer);
+  z-index: 1; /* 안쪽 링보다 아래에 위치 */
+}
+
+/* --- 안쪽 링 (PM2.5) --- */
+.ring-pm25 {
+  width: var(--ring-inner); /* 220px */
+  height: var(--ring-inner);
+  z-index: 2; /* PM10 링 위에 위치 */
+}
+
+/* --- 가장 안쪽 하얀 구멍 (원래 gauge-center 역할) --- */
+.gauge-rings::before { /* 가상 요소로 구현 */
+  content: '';
+  position: absolute;
+  width: var(--ring-center); /* 160px */
+  height: var(--ring-center);
+  border-radius: 50%;
+  background-color: #ffffff; /* [제플린] #ffffff */
+  z-index: 3; /* 모든 링 위에 위치 */
+}
+
+/* --- 게이지 채워지는 부분 --- */
+.ring-fill {
+  position: absolute;
+  inset: 0; /* 부모 링에 꽉 채움 */
+  border-radius: 50%;
+  /* 기본적으로 비워둠 (JS에서 동적으로 채울 예정) */
+  background: rgba(0,0,0,0); /* 초기 투명 */
+}
+
+/* PM10 게이지 채우기 (연한 민트) */
+.ring-pm10-fill {
+  background: conic-gradient(#b0d4cb 0% 65%, rgba(0,0,0,0) 65% 100%); /* [기존 색상 유지] */
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  z-index: 1; /* 링 자체보다 위에, 안쪽 링보다는 아래 */
+}
+
+/* PM2.5 게이지 채우기 (주황) */
+.ring-pm25-fill {
+  background: conic-gradient(#df7f59 0% 80%, rgba(0,0,0,0) 80% 100%); /* [기존 색상 유지] */
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  z-index: 2; /* 링 자체보다 위에, PM10 게이지보다 위에 */
+}
+
+
+/* --- 꺾쇠(점선 가이드) --- */
+
+/* 미세먼지 꺾쇠 (상단) */
+.components-pm10::after {
+  content: '';
+  position: absolute;
+  /* [제플린 스펙] Vector-9: width: 32px, height: 79px, border: solid 2px var(--unselect-grey) */
+  width: 2px; /* 너비 2px */
+  height: 79px; /* 높이 79px */
+  border-left: 2px dashed var(--dash-color); /* 점선 색상 #ccc */
+  
+  top: 3px; /* Frame-60 (텍스트 그룹)과의 상단 간격 */
+  left: -20px; /* 텍스트 박스 왼쪽에 위치 (조정 필요) */
+  transform: rotate(0deg); /* 회전 없음 */
+}
+
+/* 초미세먼지 꺾쇠 (하단) */
+.components-pm25::after {
+  content: '';
+  position: absolute;
+  /* [제플린 스펙] Vector-8: width: 27.5px, height: 103px, border: solid 2px var(--dash-color) */
+  width: 2px; /* 너비 2px */
+  height: 103px; /* 높이 103px */
+  border-right: 2px dashed var(--dash-color); /* 점선 색상 #ccc */
+  
+  bottom: 0px; /* Frame-64 (텍스트 그룹) 하단에 위치 */
+  right: -20px; /* 텍스트 박스 오른쪽에 위치 (조정 필요) */
+  transform: rotate(180deg); /* 180도 회전하여 위로 꺾이도록 */
+}
+
+
+/* --- 상단 텍스트 (미세먼지) --- */
+.components-pm10 {
+  position: absolute;
+  top: 54px; /* [제플린] */
+  right: 60px; /* [제플린] 오른쪽에서 60px 떨어진 위치 */
+  width: auto;
+  text-align: right; /* 텍스트 오른쪽 정렬 */
+}
+
+.components-pm10 .pm10 { /* Frame-60 역할 */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* 오른쪽 정렬 */
+  gap: 2px; /* [제플린] */
+}
+
+.components-pm10 .title-line { /* Frame-59 역할 */
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
 }
 
-.gauge-center {
-  width: 260px; 
-  height: 260px;
-  border-radius: 50%;
-  background-color: #ffffff;
+.components-pm10 img.forecast-badges { /* forecast-badges 역할 */
+  width: 30px; /* [제플린] */
+  height: 30px; /* [제플린] */
+  object-fit: contain;
+}
+
+.components-pm10 .gauge-title { /* gauge-title 역할 */
+  font-family: var(--font-paperlogy-5);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: normal;
+  color: var(--text-sub-color);
+}
+
+.components-pm10 .value-line { /* PM10-level-container 역할 */
+  display: flex;
+  align-items: baseline;
+  gap: 8px; /* [제플린] */
+}
+
+.components-pm10 .level { /* PM10-level 역할 */
+  font-family: var(--font-paperlogy-7);
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-main-color);
+}
+
+.components-pm10 .unit { /* PM10-level-unit 역할 */
+  font-family: var(--font-paperlogy-5);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-sub-color);
+}
+
+/* --- 하단 텍스트 (초미세먼지) --- */
+.components-pm25 {
+  position: absolute;
+  bottom: 77px; /* [제플린] 77px */
+  left: 60px; /* [제플린] 왼쪽에서 60px 떨어진 위치 */
+  width: auto;
+  text-align: left; /* 텍스트 왼쪽 정렬 */
+}
+
+.components-pm25 .pm25 { /* Frame-64 역할 */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* 왼쪽 정렬 */
+  gap: 2px; /* [제플린] */
+}
+
+.components-pm25 .title-line {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
 }
 
-.gauge-inner-circle {
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background-color: rgba(217, 217, 217, 0.4);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); 
-} /* [수정] 닫는 중괄호 } 추가 */
-
-.air-info-box {
-  width: 200px; /* [유지] 박스의 너비 */
-  
-  /* [필수] 꺾쇠(가상 요소)의 기준점 */
-  position: relative; 
-  
-  /* 박스 자체의 중앙 정렬은 부모(.air-quality-card)가 처리합니다. */
+.components-pm25 img.forecast-badges {
+  width: 30px; /* [제플린] */
+  height: 30px; /* [제플린] */
+  object-fit: contain;
 }
+
+.components-pm25 .gauge-title {
+  font-family: var(--font-paperlogy-5);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: normal;
+  color: var(--text-sub-color);
+}
+
+.components-pm25 .value-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px; /* [제플린] */
+}
+
+.components-pm25 .level {
+  font-family: var(--font-paperlogy-7);
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-main-color);
+}
+
+.components-pm25 .unit {
+  font-family: var(--font-paperlogy-5);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-sub-color);
+}
+
+
 
 .air-info-header {
   display: flex;
@@ -782,69 +1016,5 @@ html, body {
 .search-result-item:hover,
 .search-result-item.selected {
   background-color: #edeeee;
-}
-
-/* 1. PM10 휠 (바깥쪽 320px) */
-/* [수정] PM10 휠 (바깥쪽) */
-.gauge-pm10 {
-  width: 320px;
-  height: 320px;
-  /* ... (conic-gradient, display: flex 등 유지) ... */
-}
-
-/* [수정] PM2.5 휠 (안쪽) */
-.gauge-pm25 {
-  /* PM10 휠 (320px)과의 간격 50px */
-  width: 220px; /* 320 - (50 + 50) / 2 */
-  height: 220px;
-  /* ... (conic-gradient, display: flex 등 유지) ... */
-}
-
-/* [수정] 게이지 구멍 (흰색 원) */
-.gauge-center {
-  /* PM2.5 휠 (220px)과의 간격 60px */
-  width: 160px; /* 220 - (60 + 60) / 2 */
-  height: 160px;
-  background-color: #ffffff; /* [확인] #ffffff */
-  /* ... (나머지 스타일 유지) ... */
-}
-
-.air-info-box {
-  width: 200px; /* [유지] */
-  position: relative; /* 꺾쇠의 기준점 */
-  /* ... (나머지 스타일 유지) ... */
-}
-
-/* 미세먼지 꺾쇠 (오른쪽 위) */
-.air-info-box:first-of-type::after {
-  content: '';
-  position: absolute;
-  
-  /* [스펙] Vector-9: height: 79px, border: solid 2px var(--unselect-grey) */
-  width: 2px;
-  height: 79px; 
-  border-left: 2px dotted #949494; /* 꺾쇠 색상 (#949494) */
-  
-  /* 위치 조정 (미세먼지 박스의 오른쪽 끝) */
-  top: -40px; /* 박스 위로 올림 (임의) */
-  right: -10px; /* 박스 오른쪽으로 뺌 (임의) */
-}
-
-/* 초미세먼지 꺾쇠 (오른쪽 아래) */
-.air-info-box:last-of-type::after {
-  content: '';
-  position: absolute;
-  
-  /* [스펙] Vector-8: height: 103px, border: solid 2px var(--dash-color) */
-  width: 2px;
-  height: 103px; 
-  border-left: 2px dotted #949494;
-  
-  /* 위치 조정 (초미세먼지 박스의 오른쪽 끝) */
-  bottom: -110px; /* 박스 아래로 내림 (임의) */
-  right: -10px;
-  
-  /* 아래로 꺾이는 모양을 위한 transform */
-  transform: rotate(180deg);
 }
 

@@ -18,9 +18,7 @@
         <span class="logo-text">HUDADAK</span>
         <img class="notification-icon" src="images/notification-icon.svg" alt="알림">
       </div>
-      <div class="location-button">
-        인천 연수구 송도동
-      </div>
+      <div class="location-button">인천 연수구 송도동</div>
       <div class="timestamp-row">
         <span class="timestamp-date">2025.10.27.</span>
         <span class="timestamp-ampm">오전</span>
@@ -33,57 +31,51 @@
           질 관리 모드로 전환.
       </p>
     </header> 
+    
     <div class="standard-bar">
       <span class="standard-label">기준</span>
       <span class="standard-value standard-value--who">WHO(8단계)</span>
     </div> 
     <nav class="tab-navigation">
-      <div class="tab-item tab-item--active">
-        공기질
-      </div>
-      <div class="tab-item">
-        기상예보
-      </div>
+      <div class="tab-item tab-item--active">공기질</div>
+      <div class="tab-item">기상예보</div>
     </nav> 
     
     <div class="tab-content" id="tab-air-content">
-    
-      <div class="air-quality-card">
-        
-        <div class="air-info-box">
-          <div class="air-info-header">
-            <span class="air-info-title">미세먼지</span>
-            <img class="air-info-badge" src="images/forecast-badge.svg" alt="등급 아이콘">
-          </div>
-          <div class="air-info-reading">
-            <span class="air-info-status">나쁨</span>
-            <span class="air-info-value">135</span>
-            <span class="air-info-unit">µg/m³</span>
-          </div>
-        </div>
-        
-        <div class="gauge-container gauge-pm10">
-          <div class="gauge-inner gauge-pm25">
-            <div class="gauge-center">
-              <div class="gauge-inner-circle">
-                </div>
+      
+      <div class="air-quality-card"> 
+        <div class="gauge-card">
+          <div class="gauge-rings">
+            <div class="ring ring-pm10">
+              <div class="ring-fill ring-pm10-fill"></div>
+            </div>
+            <div class="ring ring-pm25">
+              <div class="ring-fill ring-pm25-fill"></div>
             </div>
           </div>
-        </div>
-        
-        <div class="air-info-box">
-          <div class="air-info-header">
-            <span class="air-info-title">초미세먼지</span>
-            <img class="air-info-badge" src="images/forecast-badge-pm25.svg" alt="등급 아이콘"> 
+          <div class="components-pm10">
+            <div class="pm10">
+              <div class="title-line">
+                <img src="images/forecast-badge.svg" class="forecast-badges" alt="등급 아이콘"> <span class="gauge-title">미세먼지</span>
+              </div>
+              <div class="value-line">
+                <span class="level">나쁨</span>
+                <span class="unit">135µg/m³</span>
+              </div>
+            </div>
           </div>
-          <div class="air-info-reading">
-            <span class="air-info-status">나쁨</span>
-            <span class="air-info-value">135</span>
-            <span class="air-info-unit">µg/m³</span>
+          <div class="components-pm25">
+            <div class="pm25">
+              <div class="title-line">
+                <img src="images/forecast-badge-pm25.svg" class="forecast-badges" alt="등급 아이콘"> <span class="gauge-title">초미세먼지</span>
+              </div>
+              <div class="value-line">
+                <span class="level">나쁨</span>
+                <span class="unit">135µg/m³</span>
+              </div>
+            </div>
           </div>
-        </div>
-        
-      </div> <div class="gas-info-card">
+        </div> </div> <div class="gas-info-card">
         <h2 class="gas-info-title">기타 공기지표</h2>
         <div class="gas-info-list">
           <div class="gas-info-item">
@@ -118,10 +110,8 @@
               <div class="gas-item-bar-value gas-bar--co" style="width: 30%;"></div>
             </div>
           </div>
-          <div class="gas-info-item">
-            </div>
-          <div class="gas-info-item">
-            </div>
+          <div class="gas-info-item"></div>
+          <div class="gas-info-item"></div>
         </div>
       </div>
       
@@ -139,9 +129,56 @@
         </div>
       </div>
     </div> </div> <div class="slide-menu-overlay">
+    <div class="slide-menu-content">
+      <span class="slide-menu-logo">HUDADAK</span>
+      <nav class="slide-menu-nav">
+        <div class="menu-item">
+          <span class="menu-item-text">표시기준 설정</span>
+          <img class="menu-item-arrow" src="images/arrow-down.svg" alt="열기">
+        </div>
+        <div class="sub-menu-box">
+          <label class="radio-option">
+            <input type="radio" name="standard" value="cai" checked>
+            <span class="radio-button"></span>
+            <div class="radio-text-group">
+              <span class="radio-title">환경부(4단계)</span>
+              <span class="radio-description">가장 일반적인 기준</span>
+            </div>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="standard" value="who">
+            <span class="radio-button"></span>
+            <div class="radio-text-group">
+              <span class="radio-title">WHO(8단계)</span>
+              <span class="radio-description">세계보건기구 권고 기준</span>
+            </div>
+          </label>
+        </div>
+        <div class="menu-item">
+          <span class="menu-item-text">예보 뱃지 안내</span>
+          <img class="menu-item-arrow" src="images/arrow-down.svg" alt="열기">
+        </div>
+        <div class="sub-menu-box">
+          <p class="sub-menu-description">여기에 '예보 뱃지 안내'에 대한 긴 설명 텍스트가 들어갑니다.</p>
+        </div>
+        <div class="menu-item">
+          <span class="menu-item-text">이 앱의 특별한 이야기</span>
+          <img class="menu-item-arrow" src="images/arrow-down.svg" alt="열기">
+        </div>
+        <div class="sub-menu-box">
+          <p class="sub-menu-description">여기에 '이 앱의 특별한 이야기'에 대한 긴 설명 텍스트가 들어갑니다.</p>
+        </div>
+      </nav>
     </div>
-  <div class="search-overlay">
+  </div> <div class="search-overlay">
+    <div class="search-widget">
+      <input type="text" class="search-input-box" placeholder="지역, 위치를 입력하세요">
+      <div class="search-results-list">
+        <div class="search-result-item">인천시 연수구 송도동</div>
+        <div class="search-result-item">서울시 강남구</div>
+        <div class="search-result-item selected">삼성동</div>
+      </div>
     </div>
-    <script src="app.js"></script>
+  </div> <script src="app.js"></script>
 </body>
 </html>
