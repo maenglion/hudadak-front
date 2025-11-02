@@ -393,7 +393,7 @@ html, body {
   z-index: 2; /* 링 자체보다 위에, PM10 게이지보다 위에 */
 }
 
-/* 미세먼지 (위) */
+/* ===== 미세먼지 (위) ===== */
 .components-pm10 {
   position: absolute;
   top: 54px;
@@ -401,13 +401,13 @@ html, body {
   transform: translateX(-50%);
   text-align: left;
 
-  /* 점선 위치 조절용 */
-  --pm10-line-start: 32px;   /* 텍스트 밑에서 선이 시작되는 위치 */
-  --pm10-line-len: 80px;     /* 아래로 뻗는 길이 */
+  --pm10-line-start: 32px;   /* 선 시작 위치 */
+  --pm10-line-len: 80px;     /* 아래로 길이 */
   --pm10-dot-size: 10px;
+  --pm10-text-offset: 8px;   /* ✅ 선에서 글자까지 띄울 거리 */
 }
 
-/* 세로 점선 */
+/* 세로 점선 (가운데) */
 .components-pm10::after {
   content: '';
   position: absolute;
@@ -434,48 +434,43 @@ html, body {
   z-index: 5;
 }
 
-/* 박스 안 내용 */
+/* ✅ 텍스트 덩어리는 선에서 8px 오른쪽으로 */
 .components-pm10 .pm10 {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;          /* 왼쪽 정렬로 교체 */
   gap: 2px;
+  align-items: flex-start;
+  margin-left: calc(50% + var(--pm10-text-offset)); /* 선(50%)에서 +8px */
+  transform: translateX(-50%); /* 왼쪽 기준으로 다시 잡기 */
 }
 
-/* 제목 + 아이콘 */
 .components-pm10 .title-line {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-
 .components-pm10 img.forecast-badges {
   width: 30px;
   height: 30px;
   object-fit: contain;
 }
-
 .components-pm10 .gauge-title {
   font-family: var(--font-paperlogy-5);
   font-size: 20px;
   font-weight: 500;
   color: var(--text-sub-color);
 }
-
-/* 등급 + 단위 */
 .components-pm10 .value-line {
   display: flex;
   align-items: baseline;
   gap: 8px;
 }
-
 .components-pm10 .level {
   font-family: var(--font-paperlogy-7);
   font-size: 24px;
   font-weight: 700;
   color: var(--text-main-color);
 }
-
 .components-pm10 .unit {
   font-family: var(--font-paperlogy-5);
   font-size: 14px;
@@ -483,20 +478,20 @@ html, body {
   color: var(--text-sub-color);
 }
 
-/* ------------------------------------------------------------------ */
-/* 초미세먼지 (아래) */
+/* ===== 초미세먼지 (아래) ===== */
 .components-pm25 {
   position: absolute;
   bottom: 48px;
   left: 77px;
   text-align: left;
 
-  --pm25-line-len: 135px;    /* 위로 뻗는 길이 */
+  --pm25-line-len: 135px;
   --pm25-dot-size: 10px;
-  --pm25-line-offset-x: 12px; /* 텍스트에서 오른쪽으로 얼마나 뺄지 */
+  --pm25-line-offset-x: 12px;
+  --pm25-text-offset: 8px; /* 선에서 텍스트까지 */
 }
 
-/* 위로 뻗는 점선 */
+/* 위로 뻗는 선 */
 .components-pm25::after {
   content: '';
   position: absolute;
@@ -507,7 +502,7 @@ html, body {
   border-left: 2px dashed var(--dash-color);
 }
 
-/* 위쪽 끝점 */
+/* 끝점 */
 .components-pm25::before {
   content: '';
   position: absolute;
@@ -521,12 +516,13 @@ html, body {
   z-index: 5;
 }
 
-/* 박스 안 내용 */
+/* ✅ 아래 것도 선에서 8px 오른쪽으로 */
 .components-pm25 .pm25 {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 2px;
+  align-items: flex-start;
+  margin-left: calc(var(--pm25-line-offset-x) + var(--pm25-text-offset));
 }
 
 .components-pm25 .title-line {
@@ -534,40 +530,34 @@ html, body {
   align-items: center;
   gap: 6px;
 }
-
 .components-pm25 img.forecast-badges {
   width: 30px;
   height: 30px;
   object-fit: contain;
 }
-
 .components-pm25 .gauge-title {
   font-family: var(--font-paperlogy-5);
   font-size: 20px;
   font-weight: 500;
   color: var(--text-sub-color);
 }
-
 .components-pm25 .value-line {
   display: flex;
   align-items: baseline;
   gap: 6px;
 }
-
 .components-pm25 .level {
   font-family: var(--font-paperlogy-7);
   font-size: 24px;
   font-weight: 700;
   color: var(--text-main-color);
 }
-
 .components-pm25 .unit {
   font-family: var(--font-paperlogy-5);
   font-size: 14px;
   font-weight: 500;
   color: var(--text-sub-color);
 }
-
 
 
 
