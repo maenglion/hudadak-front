@@ -403,7 +403,7 @@ html, body {
   --pm10-line-start: 32px;
   --pm10-line-len: 80px;
   --pm10-dot-size: 10px;
-  --pm10-text-gap: 8px;   /* 선에서 글자까지 띄우는 거리 */
+  --pm10-text-gap: 12px;   /* 선에서 글자까지 띄우는 거리 */
 }
 
 /* 점선 (아래로) */
