@@ -394,20 +394,19 @@ html, body {
 }
 
 /* ===== 미세먼지 (위) ===== */
+/* ===== 미세먼지 (위) ===== */
 .components-pm10 {
   position: absolute;
   top: 54px;
   left: 194px;
   transform: translateX(-50%);
-  text-align: left;
-
-  --pm10-line-start: 32px;   /* 선 시작 위치 */
-  --pm10-line-len: 80px;     /* 아래로 길이 */
+  --pm10-line-start: 32px;
+  --pm10-line-len: 80px;
   --pm10-dot-size: 10px;
-  --pm10-text-offset: 8px;   /* ✅ 선에서 글자까지 띄울 거리 */
+  --pm10-text-gap: 8px;   /* 선에서 글자까지 띄우는 거리 */
 }
 
-/* 세로 점선 (가운데) */
+/* 점선 (아래로) */
 .components-pm10::after {
   content: '';
   position: absolute;
@@ -419,7 +418,7 @@ html, body {
   border-left: 2px dashed var(--dash-color);
 }
 
-/* 끝점 */
+/* 점 */
 .components-pm10::before {
   content: '';
   position: absolute;
@@ -430,18 +429,20 @@ html, body {
   height: var(--pm10-dot-size);
   border-radius: 50%;
   background: #333;
-  box-shadow: 0 0 3px rgba(0,0,0,0.25);
   z-index: 5;
 }
 
-/* ✅ 텍스트 덩어리는 선에서 8px 오른쪽으로 */
+/* ✅ 텍스트 블록: 선 오른쪽에 딱 붙임 */
 .components-pm10 .pm10 {
+  position: absolute;
+  top: 0;
+  left: 50%;                        /* 선 위치 */
+  margin-left: var(--pm10-text-gap); /* 선에서 8px 오른쪽 */
   display: flex;
   flex-direction: column;
   gap: 2px;
   align-items: flex-start;
-  margin-left: calc(50% + var(--pm10-text-offset)); /* 선(50%)에서 +8px */
-  transform: translateX(-50%); /* 왼쪽 기준으로 다시 잡기 */
+  white-space: nowrap;               /* 제목 줄바꿈 방지 */
 }
 
 .components-pm10 .title-line {
@@ -477,6 +478,7 @@ html, body {
   font-weight: 500;
   color: var(--text-sub-color);
 }
+
 
 /* ===== 초미세먼지 (아래) ===== */
 .components-pm25 {
