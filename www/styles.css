@@ -514,7 +514,7 @@ html, body {
   bottom: 48px;
   left: 77px;
   text-align: left;
-   --pm25-line-len: 105px;    /* 위로 얼마나 올릴지 */
+   --pm25-line-len: 135px;    /* 위로 얼마나 올릴지 */
   --pm25-dot-size: 10px;
   --pm25-line-offset-x: 12px; /* 글자에서 오른쪽으로 얼마나 뺄지 */
 }
