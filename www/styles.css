@@ -455,7 +455,7 @@ html, body {
   top: 54px;
   left: 194px;
   transform: translateX(-50%);
-  text-align: center; 
+  text-align: left; 
   --pm10-line-start: 32px;   /* 라벨 아래에서 선이 시작되는 위치 */
   --pm10-line-len: 80px;    /* 아래로 얼마나 내려갈지 */
   --pm10-dot-size: 10px;
