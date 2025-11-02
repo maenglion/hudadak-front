@@ -768,17 +768,11 @@ html, body {
   color: #555555;
 }
 
-.forecast-badge-ai {
-  width: 30px; 
+.forecast-badge {
+  width: 30px;
   height: 30px;
-  border-radius: 50%;
-  background-color: #7a2ede;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
+  display: inline-block;
+  object-fit: contain;
 }
 
 .forecast-card-body {
