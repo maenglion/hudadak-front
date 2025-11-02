@@ -67,23 +67,23 @@ export const STANDARDS = {
     ],
   },
 
-  // 🟣 너가 지금 CSS로 쓰고 있는 8단계 그대로 매칭
+   // 🟣 HUDADAK 전용 8단계 (CSS랑 1:1 매칭)
   HUDADAK8: {
     code: 'HUDADAK8',
     label: '후다닥 8단계',
-    // 지금은 WHO8이랑 같은 컷. "총점 구간" 나오면 여기만 바꾸면 돼.
+    // 일단 WHO8이랑 같은 컷. (나중에 "총점 구간" 나오면 여기만 교체)
     breaks: {
       pm25: [5, 10, 15, 25, 37.5, 50, 75],
       pm10: [15, 30, 45, 50, 75, 100, 150],
-      // score: [100, 200, 300, 400, 500, 600, 700],  // 나중에 점수로 돌릴 때 이 라인 활성화
+      // score: [100, 200, 300, 400, 500, 600, 700], // 점수 쓰게 되면 이 라인으로
     },
     bands: [
       {
         key: 'excellent',
         label: '청정',
-        bg: '#23a0e5',
+        bg: '#23a0e5',          // .summary_background_component.excellent 의 위쪽 색
         fg: '#ffffff',
-        statusColor: '#23a0e5',
+        statusColor: '#23a0e5', // 이걸 var(--mobile-status)에 넣어
         kor4: false,
         className: 'excellent',
       },
