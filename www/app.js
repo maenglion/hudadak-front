@@ -259,6 +259,44 @@ function renderLinearBars(d) {
   });
 }
 
+function renderGases(air) {
+  // 대충 최대값 — 실제 기준 맞추려면 바꿔
+  const MAX_SO2 = 180;
+  const MAX_CO  = 20;   // ppm
+  const MAX_O3  = 200;
+  const MAX_NO2 = 200;
+
+  // SO2
+  const so2 = air.so2;
+  const so2Val = document.getElementById('gas-so2-value');
+  const so2Bar = document.getElementById('gas-so2-bar');
+  if (so2Val) so2Val.textContent = so2 != null ? Math.round(so2) : '--';
+  if (so2Bar) so2Bar.style.width = so2 != null ? Math.min(100, so2 / MAX_SO2 * 100) + '%' : '0%';
+
+  // CO
+  const co = air.co;
+  const coVal = document.getElementById('gas-co-value');
+  const coBar = document.getElementById('gas-co-bar');
+  if (coVal) coVal.textContent = co != null ? (Math.round(co * 10) / 10) : '--';
+  if (coBar) coBar.style.width = co != null ? Math.min(100, co / MAX_CO * 100) + '%' : '0%';
+
+  // O3
+  const o3 = air.o3;
+  const o3Val = document.getElementById('gas-o3-value');
+  const o3Bar = document.getElementById('gas-o3-bar');
+  if (o3Val) o3Val.textContent = o3 != null ? Math.round(o3) : '--';
+  if (o3Bar) o3Bar.style.width = o3 != null ? Math.min(100, o3 / MAX_O3 * 100) + '%' : '0%';
+
+  // NO2
+  const no2 = air.no2;
+  const no2Val = document.getElementById('gas-no2-value');
+  const no2Bar = document.getElementById('gas-no2-bar');
+  if (no2Val) no2Val.textContent = no2 != null ? Math.round(no2) : '--';
+  if (no2Bar) no2Bar.style.width = no2 != null ? Math.min(100, no2 / MAX_NO2 * 100) + '%' : '0%';
+}
+
+
+
 function renderForecast(f) {
   const grid = document.getElementById('forecast-grid');
   if (!grid) return;
@@ -287,62 +325,134 @@ function renderForecast(f) {
 
 function renderMain(air) {
   if (!air) return;
-  renderGauge(air);
-  renderLinearBars(air);
 
+  // 1) 공통 위젯들 먼저
+  renderGauge(air);
+  renderGases(air);
+  renderLinearBars(air); 
+
+  // 2) 어떤 표준으로 칠할지 결정
+  const std = CURRENT_STANDARD === 'KOR'
+    ? STANDARDS.KOR
+    : STANDARDS.HUDADAK8;
+
+  // 3) 헤더 위치명
   const placeEl = document.getElementById('station-name');
   if (placeEl) placeEl.textContent = air.station?.name || air.name || '—';
 
-  // 4단계 텍스트 + 그라데이션
-  const gradeEl = document.getElementById('hero-grade-label');
-  if (gradeEl) {
-    const korGrade = caiGradeKOR(air.pm10, air.pm25);
-    const band = STANDARDS.KOR.bands[korGrade - 1];
-    gradeEl.textContent = band?.label || '—';
+  // 4) 표준별로 등급/밴드 뽑기
+  let band = null;
+  if (std === STANDARDS.KOR) {
+    // 4단계: 우리 기존 방식
+    const korGrade = caiGradeKOR(air.pm10, air.pm25); // 1~4
+    band = std.bands[korGrade - 1];
 
-    // 대형 카드 그라데이션 직접 덮기
-    const bgComp =
-      document.querySelector('.summary_background_component .Rectangle-32') ||
-      document.querySelector('.summary_background_component.Rectangle-32');
-    if (bgComp && band?.gradient) {
-      const { top, bottom } = band.gradient;
-      bgComp.style.backgroundImage = `linear-gradient(to bottom, ${top} 27%, ${bottom})`;
-    }
-
-    // 부모 클래스도 달아주기 (CSS에서 쓰는 경우)
-    const summaryRoot = document.querySelector('.summary_background_component');
-    if (summaryRoot) {
-      summaryRoot.classList.remove(
-        'excellent',
-        'good',
-        'fair',
-        'moderate',
-        'poor',
-        'unhealthy',
-        'severe',
-        'hazardous'
+    // 헤더 클래스도 4→8 이름으로 매핑
+    const map4to8 = {
+      1: 'good',
+      2: 'moderate',
+      3: 'unhealthy',
+      4: 'hazardous',
+    };
+    const header = document.getElementById('app-header');
+    if (header) {
+      header.classList.remove(
+        'App-header--excellent',
+        'App-header--good',
+        'App-header--fair',
+        'App-header--moderate',
+        'App-header--poor',
+        'App-header--unhealthy',
+        'App-header--severe',
+        'App-header--hazardous',
       );
-      // 4단계를 8단계 이름으로 매핑
-      const map4to8 = {
-        1: 'good',
-        2: 'moderate',
-        3: 'unhealthy',
-        4: 'hazardous',
-      };
       const cls = map4to8[korGrade];
-      if (cls) summaryRoot.classList.add(cls);
+      if (cls) header.classList.add(`App-header--${cls}`);
     }
+
+    // 배경 그라데이션도 여기서
+    const bg = document.querySelector('.summary_background_component .Rectangle-32');
+    if (bg && band?.gradient) {
+      const { top, bottom } = band.gradient;
+      bg.style.backgroundImage = `linear-gradient(to bottom, ${top} 27%, ${bottom})`;
+    }
+
+    // “좋음/보통/나쁨/매우나쁨” 글자
+    const gradeEl = document.getElementById('hero-grade-label');
+    if (gradeEl) gradeEl.textContent = band?.label ?? '—';
+
+  } else {
+    // 8단계: HUDADAK8
+    // pm25 우선으로 밴드 찾고, 없으면 pm10으로
+    const pm25 = air.pm25 ?? null;
+    const pm10 = air.pm10 ?? null;
+
+    const findBandIdx = (value, arr) => {
+      if (value == null) return -1;
+      for (let i = 0; i < arr.length; i++) {
+        if (value <= arr[i]) return i;
+      }
+      return arr.length; // 마지막 칸
+    };
+
+    let idx = -1;
+    if (pm25 != null && std.breaks.pm25) {
+      idx = findBandIdx(pm25, std.breaks.pm25);
+    } else if (pm10 != null && std.breaks.pm10) {
+      idx = findBandIdx(pm10, std.breaks.pm10);
+    } else {
+      idx = 0;
+    }
+
+    band = std.bands[idx] ?? std.bands[std.bands.length - 1];
+
+    // 헤더에 8단계 이름 그대로 달아버리기
+    const header = document.getElementById('app-header');
+    if (header) {
+      header.classList.remove(
+        'App-header--excellent',
+        'App-header--good',
+        'App-header--fair',
+        'App-header--moderate',
+        'App-header--poor',
+        'App-header--unhealthy',
+        'App-header--severe',
+        'App-header--hazardous',
+      );
+      header.classList.add(`App-header--${band.key}`);
+    }
+
+    // 배경 그라데이션
+    const bg = document.querySelector('.summary_background_component .Rectangle-32');
+    if (bg && band?.gradient) {
+      const { top, bottom } = band.gradient;
+      bg.style.backgroundImage = `linear-gradient(to bottom, ${top} 27%, ${bottom})`;
+    }
+
+    // 헤더 텍스트
+    const gradeEl = document.getElementById('hero-grade-label');
+    if (gradeEl) gradeEl.textContent = band?.label ?? '—';
   }
 
+  // 5) 점수는 표준이 뭘로 와도 같게
   const scoreEl = document.getElementById('hero-score');
-  if (scoreEl) {
-    animateValue(scoreEl, scoreFrom(air), '', 700, 0);
-  }
+  if (scoreEl) scoreEl.textContent = `${scoreFrom(air)}점`;
 
+  // 6) 설명도 대충 레벨로 분기
   const descEl = document.getElementById('hero-desc');
   if (descEl) {
-    descEl.textContent =
-      air.cai_value != null ? `지수 ${air.cai_value}` : '오늘의 대기질 총평입니다.';
+    if (!band) {
+      descEl.textContent = '오늘의 대기질 총평입니다.';
+    } else {
+      // 아주 대충: 좋은 쪽 / 중간 / 나쁜 쪽
+      if (band.key === 'excellent' || band.key === 'good' || band.key === 'fair') {
+        descEl.textContent = '창문 열고 환기해도 무방한 날이에요.';
+      } else if (band.key === 'moderate' || band.key === 'poor') {
+        descEl.textContent = '민감군은 마스크 착용을 권장해요.';
+      } else {
+        descEl.textContent = '불필요한 외출을 줄이고 실내 공기질을 관리하세요.';
+      }
+    }
   }
 }
 
@@ -401,11 +511,15 @@ async function resolvePlaceName(lat, lon) {
  * 6. 전체 업데이트
  * ────────────────────────────── */
 async function updateAll(lat, lon) {
-  const air = await fetchNearest(lat, lon);
+    LAST_COORD = { lat, lon };
+
+    const air = await fetchNearest(lat, lon);
   renderMain(air);
+
   const place = await resolvePlaceName(lat, lon);
   const sta = document.getElementById('station-name');
   if (sta) sta.textContent = place || air.name || '—';
+
   const f = await fetchForecast(lat, lon, 24);
   renderForecast(f);
 }
@@ -441,6 +555,20 @@ function bindTabs() {
   if (initial) activate(initial);
 }
 
+let CURRENT_STANDARD = 'KOR'; // 기본 4단계
+let LAST_COORD = null;        // {lat, lon} 기억해두자
+
+function setStandard(stdCode){
+  CURRENT_STANDARD = stdCode;
+  // 좌표를 이미 한 번이라도 받아놨으면 그걸로 다시 렌더
+  if (LAST_COORD) {
+    updateAll(LAST_COORD.lat, LAST_COORD.lon);
+  } else {
+    // 아직 위치 모르면 기존 로직 그대로
+    initLocation();
+  }
+}
+
 function bindUIEvents() {
   const logo = document.querySelector('.logo-text, #app-logo');
   const overlay = document.querySelector('.slide-menu-overlay');
@@ -462,6 +590,16 @@ function bindUIEvents() {
     });
     inp.addEventListener('input', autoSearch);
   }
+  
+    document.querySelectorAll('input[name="standard"]').forEach(radio => {
+    radio.addEventListener('change', e => {
+      if (e.target.value === 'cai') {
+        setStandard('KOR');
+      } else if (e.target.value === 'who') {
+        setStandard('HUDADAK8'); // or WHO8
+      }
+    });
+  });
 }
 
 /* ──────────────────────────────

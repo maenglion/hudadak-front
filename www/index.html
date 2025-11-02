@@ -18,7 +18,7 @@
         <span class="logo-text">HUDADAK</span>
         <img class="notification-icon" src="assets/notification-icon.svg" alt="location">
       </div>
-      <div class="location-button">인천 연수구 송도동</div>
+   <div class="location-button">인천 연수구 송도동</div>
       <div class="timestamp-row">
         <span class="timestamp-date">2025.10.27.</span>
         <span class="timestamp-ampm">오전</span>
@@ -53,67 +53,108 @@
               <div class="ring-fill ring-pm25-fill"></div>
             </div>
           </div>
-          <div class="components-pm10">
-            <div class="pm10">
-              <div class="title-line">
-                <span class="gauge-title">미세먼지</span> <img src="assets/forecast-badge.svg" class="forecast-badges" alt="등급 아이콘">
-              </div>
-              <div class="value-line">
-                <span class="level">나쁨</span>
-                <span class="unit">135µg/m³</span>
-              </div>
-            </div>
-          </div>
-          <div class="components-pm25">
-            <div class="pm25">
-              <div class="title-line">
-                <span class="gauge-title">초미세먼지</span> <img src="assets/forecast-badge-pm25.svg" class="forecast-badges" alt="등급 아이콘">
-              </div>
-              <div class="value-line">
-                <span class="level">나쁨</span>
-                <span class="unit">135µg/m³</span>
-              </div>
-            </div>
-          </div>
-        </div> </div> <div class="gas-info-card">
-        <h2 class="gas-info-title">기타 공기지표</h2>
-        <div class="gas-info-list">
-          <div class="gas-info-item">
-            <div class="gas-item-header">
-              <div class="gas-item-title-group">
-                <span class="gas-item-title">아황산가스</span>
-                <img class="gas-item-badge" src="assets/gas-badge.svg" alt="badge">
-              </div>
-              <div class="gas-item-reading-group">
-                <span class="gas-item-formula">SO₂</span>
-                <span class="gas-item-value">135</span>
-                <span class="gas-item-unit">µg/m³</span>
-              </div>
-            </div>
-            <div class="gas-item-bar-container">
-              <div class="gas-item-bar-value gas-bar--so2" style="width: 47%;"></div>
-            </div>
-          </div>
-          <div class="gas-info-item">
-            <div class="gas-item-header">
-              <div class="gas-item-title-group">
-                <span class="gas-item-title">일산화탄소</span>
-                <img class="gas-item-badge" src="assets/gas-badge.svg" alt="badge">
-              </div>
-              <div class="gas-item-reading-group">
-                <span class="gas-item-formula">CO</span>
-                <span class="gas-item-value">0.8</span>
-                <span class="gas-item-unit">ppm</span>
-              </div>
-            </div>
-            <div class="gas-item-bar-container">
-              <div class="gas-item-bar-value gas-bar--co" style="width: 30%;"></div>
-            </div>
-          </div>
-          <div class="gas-info-item"></div>
-          <div class="gas-info-item"></div>
+    <div class="components-pm10">
+  <div class="pm10">
+    <div class="title-line">
+      <span class="gauge-title">미세먼지</span>
+      <img src="assets/forecast-badge.svg" class="forecast-badges" alt="등급 아이콘">
+    </div>
+    <div class="value-line">
+      <span class="level" id="pm10-level">나쁨</span>
+      <span class="unit" id="pm10-unit">135µg/m³</span>
+    </div>
+  </div>
+</div>
+
+<div class="components-pm25">
+  <div class="pm25">
+    <div class="title-line">
+      <span class="gauge-title">초미세먼지</span>
+      <img src="assets/forecast-badge-pm25.svg" class="forecast-badges" alt="등급 아이콘">
+    </div>
+    <div class="value-line">
+      <span class="level" id="pm25-level">나쁨</span>
+      <span class="unit" id="pm25-unit">135µg/m³</span>
+    </div>
+  </div>
+</div>  </div> </div> 
+<div class="gas-info-card">
+  <h2 class="gas-info-title">기타 공기지표</h2>
+  <div class="gas-info-list">
+    <!-- 1) SO2 -->
+    <div class="gas-info-item" id="gas-so2">
+      <div class="gas-item-header">
+        <div class="gas-item-title-group">
+          <span class="gas-item-title">아황산가스</span>
+          <img class="gas-item-badge" src="assets/gas-badge.svg" alt="badge">
+        </div>
+        <div class="gas-item-reading-group">
+          <span class="gas-item-formula">SO₂</span>
+          <span class="gas-item-value" id="gas-so2-value">--</span>
+          <span class="gas-item-unit" id="gas-so2-unit">µg/m³</span>
         </div>
       </div>
+      <div class="gas-item-bar-container">
+        <div class="gas-item-bar-value gas-bar--so2" id="gas-so2-bar" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- 2) CO -->
+    <div class="gas-info-item" id="gas-co">
+      <div class="gas-item-header">
+        <div class="gas-item-title-group">
+          <span class="gas-item-title">일산화탄소</span>
+          <img class="gas-item-badge" src="assets/gas-badge.svg" alt="badge">
+        </div>
+        <div class="gas-item-reading-group">
+          <span class="gas-item-formula">CO</span>
+          <span class="gas-item-value" id="gas-co-value">--</span>
+          <span class="gas-item-unit" id="gas-co-unit">ppm</span>
+        </div>
+      </div>
+      <div class="gas-item-bar-container">
+        <div class="gas-item-bar-value gas-bar--co" id="gas-co-bar" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- 3) O3 -->
+    <div class="gas-info-item" id="gas-o3">
+      <div class="gas-item-header">
+        <div class="gas-item-title-group">
+          <span class="gas-item-title">오존</span>
+          <img class="gas-item-badge" src="assets/gas-badge.svg" alt="badge">
+        </div>
+        <div class="gas-item-reading-group">
+          <span class="gas-item-formula">O₃</span>
+          <span class="gas-item-value" id="gas-o3-value">--</span>
+          <span class="gas-item-unit" id="gas-o3-unit">µg/m³</span>
+        </div>
+      </div>
+      <div class="gas-item-bar-container">
+        <div class="gas-item-bar-value gas-bar--o3" id="gas-o3-bar" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- 4) NO2 -->
+    <div class="gas-info-item" id="gas-no2">
+      <div class="gas-item-header">
+        <div class="gas-item-title-group">
+          <span class="gas-item-title">이산화질소</span>
+          <img class="gas-item-badge" src="assets/gas-badge.svg" alt="badge">
+        </div>
+        <div class="gas-item-reading-group">
+          <span class="gas-item-formula">NO₂</span>
+          <span class="gas-item-value" id="gas-no2-value">--</span>
+          <span class="gas-item-unit" id="gas-no2-unit">µg/m³</span>
+        </div>
+      </div>
+      <div class="gas-item-bar-container">
+        <div class="gas-item-bar-value gas-bar--no2" id="gas-no2-bar" style="width: 0%;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
       
     </div> <div class="tab-content hidden" id="tab-forecast-content">
       <div class="forecast-card">
