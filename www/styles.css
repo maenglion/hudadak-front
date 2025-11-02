@@ -1024,3 +1024,33 @@ html, body {
   background-color: #edeeee;
 }
 
+ .app-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 50px;   /* ↑ 위 콘텐츠와 50px */
+  margin-bottom: 24px;
+  gap: 30px;          /* 개인정보 → 2e Studio 사이 30px */
+}
+
+.app-footer .footer-terms {
+  font-family: 'Paperlogy-5', 'Paperlogy', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+  color: #787878;
+  text-decoration: none;      /* 밑줄 제거 */
+}
+
+.app-footer .footer-terms:hover {
+  text-decoration: underline; /* 원하면 hover 시에만 */
+}
+
+.app-footer .footer-brand {
+  font-family: 'Paperlogy-7', 'Paperlogy', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  color: #787878;
+}
