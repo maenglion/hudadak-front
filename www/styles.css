@@ -15,6 +15,8 @@
   --text-sub-color: #787878; /* 서브 텍스트 색상 */
   --font-paperlogy-5: "Paperlogy-5", sans-serif;
   --font-paperlogy-7: "Paperlogy-7", sans-serif;
+  --pm10-dot-size: 10px;
+  --pm25-dot-size: 10px;
 }
 
 * {
@@ -449,21 +451,21 @@ html, body {
 
 /* --- 상단 텍스트 (미세먼지) --- */
 .components-pm10 {
-  position: absolute;
-  top: 54px;
-  left: 194px;
+   position: absolute;
+  top: 32px;          /* 카드 기준 위치 – 필요하면 조절 */
+  left: 50%;
   transform: translateX(-50%);
-  text-align: center; 
-  --pm10-line-start: 32px;   /* 라벨 아래에서 선이 시작되는 위치 */
-  --pm10-line-len: 80px;    /* 아래로 얼마나 내려갈지 */
-  --pm10-dot-size: 10px;
 }
 
-.components-pm10 .pm10 { /* Frame-60 역할 */
+.components-pm10 .Frame-60 {
+  width: 124px;
+  height: 60px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* 오른쪽 정렬 */
-  gap: 2px; /* [제플린] */
+  gap: 2px;           /* 네가 말한 "그리고 2px 밑에" */
+  align-items: flex-start;
+  padding: 0;
+  position: relative; /* 점선/점용 */
 }
 
 .components-pm10 .title-line { /* Frame-59 역할 */
@@ -478,25 +480,34 @@ html, body {
   object-fit: contain;
 }
 
-.components-pm10 .gauge-title { /* gauge-title 역할 */
-  font-family: var(--font-paperlogy-5);
-  font-size: 20px;
-  font-weight: 500;
-  line-height: normal;
-  color: var(--text-sub-color);
-}
 
-.components-pm10 .value-line { /* PM10-level-container 역할 */
+.components-pm10 .PM10-info-label-container {
+  width: 100%;
   display: flex;
-  align-items: baseline;
-  gap: 8px; /* [제플린] */
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
 }
 
-.components-pm10 .level { /* PM10-level 역할 */
-  font-family: var(--font-paperlogy-7);
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--text-main-color);
+.components-pm10 .PM10-title {
+  font-family: Paperlogy-5, sans-serif;
+  font-size: 16px;
+  color: #252525;
+  line-height: 1;
+}
+
+
+.components-pm10 .forecast-badges {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.components-pm10 .PM10-level-container {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .components-pm10 .unit { /* PM10-level-unit 역할 */
@@ -506,64 +517,160 @@ html, body {
   color: var(--text-sub-color);
 }
 
+.components-pm10 .PM10-level {
+  font-family: Paperlogy-7, sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  line-height: 1;
+}
+
+.components-pm10 .PM10-level-value-container {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.components-pm10 .PM10-level-value {
+  font-family: Paperlogy-5, sans-serif;
+  font-size: 14px;
+  color: #555;
+}
+
+.components-pm10 .PM10-level-unit {
+  font-family: Paperlogy-5, sans-serif;
+  font-size: 14px;
+  color: #b5b5b5;
+}
+
+/* ----- pm10 점선 + 아래쪽 점 ----- */
+.components-pm10 .Frame-60::after {
+  content: '';
+  position: absolute;
+  /* 박스 아래에서 내려가게 */
+  top: 60px;               /* 박스 높이만큼 아래로 */
+  left: 50%;
+  transform: translateX(-50%);
+  height: 110px;           /* 여기 값을 줄여서 링에 맞춰 */
+  border-left: 2px dashed var(--dash-color);
+}
+
+.components-pm10 .Frame-60::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  /* 선 끝에 점 */
+  top: calc(60px + 110px - (var(--pm10-dot-size) / 2));
+  width: var(--pm10-dot-size);
+  height: var(--pm10-dot-size);
+  border-radius: 50%;
+  background: #333;
+  z-index: 5;
+}
+
 /* --- 하단 텍스트 (초미세먼지) --- */
 .components-pm25 {
   position: absolute;
-  bottom: 48px;
-  left: 77px;
-  text-align: left;
-   --pm25-line-len: 110px;    /* 위로 얼마나 올릴지 */
-  --pm25-dot-size: 10px;
-  --pm25-line-offset-x: 12px; /* 글자에서 오른쪽으로 얼마나 뺄지 */
+  bottom: 46px;       /* 카드 기준 아래쪽 – 필요하면 조절 */
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.components-pm25 .pm25 { /* Frame-64 역할 */
+
+.components-pm25 .Frame-64 {
+  width: 124px;
+  height: 60px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* 왼쪽 정렬 */
-  gap: 2px; /* [제플린] */
+  gap: 2px;
+  align-items: flex-start;
+  padding: 0;
+  position: relative; /* 점선/점용 */
 }
 
-.components-pm25 .title-line {
+/* 제목+뱃지 한 줄 */
+.components-pm25 .PM25-info-label-container {
+  width: 100%;
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 6px;
 }
 
-.components-pm25 img.forecast-badges {
-  width: 30px; /* [제플린] */
-  height: 30px; /* [제플린] */
+.components-pm25 .PM25-title {
+  font-family: Paperlogy-5, sans-serif;
+  font-size: 16px;
+  color: #252525;
+  line-height: 1;
+}
+
+.components-pm25 .forecast-badges {
+  width: 20px;
+  height: 20px;
   object-fit: contain;
 }
 
-.components-pm25 .gauge-title {
-  font-family: var(--font-paperlogy-5);
-  font-size: 20px;
-  font-weight: 500;
-  line-height: normal;
-  color: var(--text-sub-color);
-}
-
-.components-pm25 .value-line {
+/* 등급+단위 한 줄 (초미세먼지의 '초'와 정렬) */
+.components-pm25 .PM25-level-container {
   display: flex;
+  flex-direction: row;
   align-items: baseline;
-  gap: 6px; /* [제플린] */
+  gap: 6px;
 }
 
-.components-pm25 .level {
-  font-family: var(--font-paperlogy-7);
+.components-pm25 .PM25-level {
+  font-family: Paperlogy-7, sans-serif;
   font-size: 24px;
   font-weight: bold;
-  color: var(--text-main-color);
+  color: #333;
+  line-height: 1;
 }
 
-.components-pm25 .unit {
-  font-family: var(--font-paperlogy-5);
+.components-pm25 .PM25-level-value-container {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.components-pm25 .PM25-level-value {
+  font-family: Paperlogy-5, sans-serif;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--text-sub-color);
+  color: #555;
 }
 
+.components-pm25 .PM25-level-unit {
+  font-family: Paperlogy-5, sans-serif;
+  font-size: 14px;
+  color: #b5b5b5;
+}
+
+/* ----- pm25 점선 + 위쪽 점 ----- */
+.components-pm25 .Frame-64::after {
+  content: '';
+  position: absolute;
+  /* 초미세먼지는 위로 올라감 */
+  top: -150px;               /* 여기만 조절하면 위쪽 링 중앙에 딱 감 */
+  left: 50%;
+  transform: translateX(-50%);
+  height: 150px;
+  border-left: 2px dashed var(--dash-color);
+}
+
+.components-pm25 .Frame-64::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(-150px - (var(--pm25-dot-size) / 2));
+  width: var(--pm25-dot-size);
+  height: var(--pm25-dot-size);
+  border-radius: 50%;
+  background: #333;
+  z-index: 5;
+}
 
 
 .air-info-header {
