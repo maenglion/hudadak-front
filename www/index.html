@@ -1,20 +1,17 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0/kopubdotum.min.css" type="text/css" />
-
   <title>HUDADAK App</title>
 </head>
-
 <body>
-
   <div class="Main-container">
 
+    <!-- 헤더 -->
     <header class="App-header App-header--hazardous" id="app-header">
       <div class="header-top-row">
         <span class="logo-text">HUDADAK</span>
@@ -34,17 +31,21 @@
       </p>
     </header>
 
+    <!-- 기준 스위치 -->
     <div class="standard-bar">
       <span class="standard-label">기준</span>
       <span class="standard-value standard-value--who">WHO(8단계)</span>
     </div>
+
+    <!-- 탭 -->
     <nav class="tab-navigation">
       <div class="tab-item tab-item--active" data-tab="air">공기질</div>
       <div class="tab-item" data-tab="forecast">기상예보</div>
     </nav>
 
+    <!-- ▼▼ 공기질 탭 ▼▼ -->
     <div class="tab-content active" id="tab-air">
-
+      <!-- 게이지 -->
       <div class="air-quality-card">
         <div class="gauge-card">
           <div class="gauge-rings">
@@ -55,6 +56,7 @@
               <div class="ring-fill ring-pm25-fill"></div>
             </div>
           </div>
+
           <div class="components-pm10">
             <div class="pm10">
               <div class="title-line">
@@ -82,10 +84,12 @@
           </div>
         </div>
       </div>
+
+      <!-- 가스 카드 -->
       <div class="gas-info-card">
         <h2 class="gas-info-title">기타 공기지표</h2>
         <div class="gas-info-list">
-          <!-- 1) SO2 -->
+          <!-- SO2 -->
           <div class="gas-info-item" id="gas-so2">
             <div class="gas-item-header">
               <div class="gas-item-title-group">
@@ -103,7 +107,7 @@
             </div>
           </div>
 
-          <!-- 2) CO -->
+          <!-- CO -->
           <div class="gas-info-item" id="gas-co">
             <div class="gas-item-header">
               <div class="gas-item-title-group">
@@ -121,7 +125,7 @@
             </div>
           </div>
 
-          <!-- 3) O3 -->
+          <!-- O3 -->
           <div class="gas-info-item" id="gas-o3">
             <div class="gas-item-header">
               <div class="gas-item-title-group">
@@ -139,7 +143,7 @@
             </div>
           </div>
 
-          <!-- 4) NO2 -->
+          <!-- NO2 -->
           <div class="gas-info-item" id="gas-no2">
             <div class="gas-item-header">
               <div class="gas-item-title-group">
@@ -156,80 +160,80 @@
               <div class="gas-item-bar-value gas-bar--no2" id="gas-no2-bar" style="width: 0%;"></div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
+    <!-- ▲▲ 공기질 탭 끝 ▲▲ -->
 
+    <!-- ▼▼ 기상예보 탭 ▼▼ -->
     <div class="tab-content" id="tab-forecast">
-      <div class="forecast-card">
-        <div class="forecast-card-header">
-          <span class="forecast-date">2025.10.30.수</span>
-          <img class="forecast-badge" id="forecast-badge-1" src="./assets/forecast-badges-ai.svg" alt="예보 소스" />
-        </div>
-        <div class="forecast-card-body">
-          <img class="forecast-icon" src="./assets/forecastcast-01-sun.svg" alt="날씨 아이콘">
-          <p class="forecast-description">
-            대체로 맑지만 미세먼지 농도는 평소보다 살짝 높아요. 창문 여는 건 오전까지만, 오후엔 공기청정기가 더 든든할 거예요.
-          </p>
+      <!-- JS에서 여기다 카드들을 넣을 거라서 비워두는 게 깔끔함 -->
+      <div id="forecast-grid" class="forecast-grid"></div>
+    </div>
+    <!-- ▲▲ 기상예보 탭 끝 ▲▲ -->
+
+    <!-- 슬라이딩 메뉴 -->
+    <div class="slide-menu-overlay">
+      <div class="slide-menu-content">
+        <span class="slide-menu-logo">HUDADAK</span>
+        <nav class="slide-menu-nav">
+          <div class="menu-item">
+            <span class="menu-item-text">표시기준 설정</span>
+            <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
+          </div>
+          <div class="sub-menu-box">
+            <label class="radio-option">
+              <input type="radio" name="standard" value="cai" checked>
+              <span class="radio-button"></span>
+              <div class="radio-text-group">
+                <span class="radio-title">환경부(4단계)</span>
+                <span class="radio-description">가장 일반적인 기준</span>
+              </div>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="standard" value="who">
+              <span class="radio-button"></span>
+              <div class="radio-text-group">
+                <span class="radio-title">WHO(8단계)</span>
+                <span class="radio-description">세계보건기구 권고 기준</span>
+              </div>
+            </label>
+          </div>
+          <div class="menu-item">
+            <span class="menu-item-text">예보 뱃지 안내</span>
+            <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
+          </div>
+          <div class="sub-menu-box">
+            <p class="sub-menu-description">여기에 '예보 뱃지 안내'에 대한 긴 설명 텍스트가 들어갑니다.</p>
+          </div>
+          <div class="menu-item">
+            <span class="menu-item-text">이 앱의 특별한 이야기</span>
+            <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
+          </div>
+          <div class="sub-menu-box">
+            <p class="sub-menu-description">여기에 '이 앱의 특별한 이야기'에 대한 긴 설명 텍스트가 들어갑니다.</p>
+          </div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- 검색 오버레이 -->
+    <div class="search-overlay">
+      <div class="search-widget">
+        <input type="text" class="search-input-box" placeholder="지역, 위치를 입력하세요">
+        <div class="search-results-list">
+          <div class="search-result-item">인천시 연수구 송도동</div>
+          <div class="search-result-item">서울시 강남구</div>
+          <div class="search-result-item selected">삼성동</div>
         </div>
       </div>
     </div>
 
-  <div class="slide-menu-overlay">
-    <div class="slide-menu-content">
-      <span class="slide-menu-logo">HUDADAK</span>
-      <nav class="slide-menu-nav">
-        <div class="menu-item">
-          <span class="menu-item-text">표시기준 설정</span>
-          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <label class="radio-option">
-            <input type="radio" name="standard" value="cai" checked>
-            <span class="radio-button"></span>
-            <div class="radio-text-group">
-              <span class="radio-title">환경부(4단계)</span>
-              <span class="radio-description">가장 일반적인 기준</span>
-            </div>
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="standard" value="who">
-            <span class="radio-button"></span>
-            <div class="radio-text-group">
-              <span class="radio-title">WHO(8단계)</span>
-              <span class="radio-description">세계보건기구 권고 기준</span>
-            </div>
-          </label>
-        </div>
-        <div class="menu-item">
-          <span class="menu-item-text">예보 뱃지 안내</span>
-          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <p class="sub-menu-description">여기에 '예보 뱃지 안내'에 대한 긴 설명 텍스트가 들어갑니다.</p>
-        </div>
-        <div class="menu-item">
-          <span class="menu-item-text">이 앱의 특별한 이야기</span>
-          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <p class="sub-menu-description">여기에 '이 앱의 특별한 이야기'에 대한 긴 설명 텍스트가 들어갑니다.</p>
-        </div>
-      </nav>
-    </div>
-  </div>
-  <div class="search-overlay">
-    <div class="search-widget">
-      <input type="text" class="search-input-box" placeholder="지역, 위치를 입력하세요">
-      <div class="search-results-list">
-        <div class="search-result-item">인천시 연수구 송도동</div>
-        <div class="search-result-item">서울시 강남구</div>
-        <div class="search-result-item selected">삼성동</div>
-      </div>
-    </div>
-  </div>
+  </div> <!-- Main-container -->
+
+  <!-- 모듈 스크립트 -->
   <script type="module" src="./js/standards.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
-
 </html>

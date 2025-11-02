@@ -297,31 +297,87 @@ function renderGases(air) {
 
 
 
+// 예보 소스 → 배지 svg 매핑
+function pickBadgeSrcFrom(sourceKind = 'model') {
+  // 백엔드가 소문자/대문자/약간 다른 이름을 줄 수도 있으니까 소문자로 맞춰
+  const k = String(sourceKind || '').toLowerCase();
+
+  if (k === 'observed' || k === 'station' || k === 'obs') {
+    return './assets/forecast-badges-observed.svg';
+  }
+  if (k === 'model' || k === 'modeled') {
+    return './assets/forecast-badges-model.svg';
+  }
+  if (k === 'interp' || k === 'interpolated') {
+    return './assets/forecast-badges-interp.svg';
+  }
+  if (k === 'fail' || k === 'error') {
+    return './assets/forecast-badges-fail.svg';
+  }
+  // 나머지는 AI로
+  return './assets/forecast-badges-ai.svg';
+}
+
 function renderForecast(f) {
   const grid = document.getElementById('forecast-grid');
   if (!grid) return;
   grid.innerHTML = '';
-  const take = (f.hourly || []).slice(0, 10);
-  take.forEach((h) => {
-    const dt = new Date(h.ts.replace(' ', 'T'));
-    const hh = `${String(dt.getHours()).padStart(2, '0')}:00`;
-    const g = h.grade ?? caiGrade(h.pm10, h.pm25) ?? 2;
 
+  // f.hourly 가 없으면 그냥 하나만 보여주기
+  const hours = Array.isArray(f?.hourly) ? f.hourly.slice(0, 10) : [];
+
+  hours.forEach((h) => {
+    // 시간 문자열
+    const dt = new Date((h.ts || '').replace(' ', 'T'));
+    const hh = isNaN(dt.getTime())
+      ? (h.ts || '')
+      : String(dt.getHours()).padStart(2, '0') + ':00';
+
+    // 등급 (기존 LABEL 쓰던 거 그대로)
+    const g = h.grade ?? (typeof caiGrade === 'function'
+      ? caiGrade(h.pm10, h.pm25)
+      : 2);
+    const label = typeof LABEL !== 'undefined' ? (LABEL[g] || '-') : '-';
+
+    // 여기서 배지 고르기
+    const badgeSrc = pickBadgeSrcFrom(h.source_kind || f.source_kind || 'model');
+
+    // 카드 만들기
     const card = document.createElement('div');
     card.className = 'forecast-card';
     card.innerHTML = `
-      <div class="forecast-day">${hh}</div>
-      <div class="forecast-icon">🔮</div>
-      <div class="forecast-temp">
-        <div><strong>${LABEL[g]}</strong> · 바람 ${h.wind_spd != null ? h.wind_spd : '-'} m/s</div>
-        <div class="forecast-desc">초미세먼지 ${h.pm25 != null ? h.pm25 : '-'} · 미세먼지 ${
-      h.pm10 != null ? h.pm10 : '-'
-    }</div>
+      <div class="forecast-card-header">
+        <span class="forecast-date">${hh}</span>
+        <img class="forecast-badge" src="${badgeSrc}" alt="예보 소스">
+      </div>
+      <div class="forecast-card-body">
+        <img class="forecast-icon" src="./assets/forecastcast-01-sun.svg" alt="날씨 아이콘">
+        <p class="forecast-description">
+          <strong>${label}</strong> · 바람 ${h.wind_spd != null ? h.wind_spd : '-'} m/s<br>
+          초미세먼지 ${h.pm25 != null ? h.pm25 : '-'} · 미세먼지 ${h.pm10 != null ? h.pm10 : '-'}
+        </p>
       </div>
     `;
     grid.appendChild(card);
   });
+
+  // 예보가 하나도 없을 때
+  if (!hours.length) {
+    const empty = document.createElement('div');
+    empty.className = 'forecast-card';
+    empty.innerHTML = `
+      <div class="forecast-card-header">
+        <span class="forecast-date">예보 없음</span>
+        <img class="forecast-badge" src="./assets/forecast-badges-ai.svg" alt="예보 소스">
+      </div>
+      <div class="forecast-card-body">
+        <p class="forecast-description">예보 데이터를 불러오지 못했습니다.</p>
+      </div>
+    `;
+    grid.appendChild(empty);
+  }
 }
+
 
 function renderMain(air) {
   if (!air) return;
@@ -528,32 +584,29 @@ async function updateAll(lat, lon) {
  * 7. UI 바인딩
  * ────────────────────────────── */
 function bindTabs() {
-  const btns = Array.from(
-    document.querySelectorAll('.tab-button, .tab-item')
-  );
+  const btns  = Array.from(document.querySelectorAll('.tab-button, .tab-item'));
   const panes = Array.from(document.querySelectorAll('.tab-content'));
   if (!btns.length || !panes.length) return;
 
   const activate = (key) => {
-    btns.forEach((b) => b.classList.toggle('active', b.dataset.tab === key));
-    panes.forEach((p) => {
+    btns.forEach(b => {
+      const isTarget = b.dataset.tab === key;
+      b.classList.toggle('active', isTarget);
+      b.classList.toggle('tab-item--active', isTarget); // ★ 이 줄 추가
+    });
+    panes.forEach(p => {
       const isTarget = p.id === `tab-${key}`;
       p.classList.toggle('active', isTarget);
-      if (isTarget) {
-        p.classList.remove('fade-in');
-        requestAnimationFrame(() => p.classList.add('fade-in'));
-      }
     });
   };
 
-  btns.forEach((btn) =>
-    btn.addEventListener('click', () => activate(btn.dataset.tab))
-  );
-  const initial =
-    document.querySelector('.tab-button.active, .tab-item.tab-item--active')
-      ?.dataset.tab || btns[0]?.dataset.tab;
+  btns.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.tab)));
+
+  const initial = document.querySelector('.tab-item.tab-item--active')?.dataset.tab
+    || btns[0]?.dataset.tab;
   if (initial) activate(initial);
 }
+
 
 let CURRENT_STANDARD = 'KOR'; // 기본 4단계
 let LAST_COORD = null;        // {lat, lon} 기억해두자
