@@ -35,14 +35,6 @@ html, body {
    [1] 피그마 코드 시작
    ======================================== */
 
-.Main-container {
-  width: 412px;
-  min-height: 100vh;
-  background-color: #edeeee; 
-  margin-left: auto;
-  margin-right: auto;
-}
-
 /* [추가] App-header의 기본 뼈대 */
 .App-header {
   width: 412px;
@@ -226,15 +218,13 @@ html, body {
 
 
 /* 공기질 카드들이 탭에 딱 붙도록 */
-.air-quality-card {
-  padding-top: 46px;
-}
-
-
-.gas-info-card {
+.air-quality-card .gas-info-card {
   margin-top: 0;
 }
 
+.tab-content {
+  padding: 46px 20px 0;   /* ← 위 46, 좌우 20은 카드 정렬용 */
+}
 
 /* =========================================================
    [NEW] ChatGPT 기반 Air Quality Card & Gauge Styles (Zeplin Spec 적용)
@@ -1063,26 +1053,6 @@ html, body {
   pointer-events: none;
 }
 
-/* ====== footer 간격 보정 ====== */
-.Main-container {
-  padding-bottom: 30px;  /* 앱 본문과 푸터 사이 기본 30px */
-}
-.app-footer {
-  margin-top: 0;
-}
-
-/* ==============================================
-   기본 공통
-   ============================================== */
-.Main-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  overflow-x: hidden;
-  background-color: #fafafa;
-}
-
 /* ==============================================
    하단 푸터 (2e Studio / 개인정보)
    ============================================== */
@@ -1106,3 +1076,55 @@ html, body {
   font-weight: bold;
 }
 
+/* 전체 페이지 틀 */
+.page-shell {
+  width: 412px;              /* figma 기준 */
+  min-height: 100vh;         /* 화면 높이 꽉 채우기 */
+  background: #ededed;       /* 네가 말한 배경 */
+  margin: 0 auto;            /* 가운데 정렬 (PC에서 보기 좋게) */
+  display: flex;
+  flex-direction: column;
+}
+
+/* 스크롤 되는 본문 */
+.content {
+  flex: 1 0 auto;            /* 남는 높이 차지 */
+  padding-bottom: 130px;     /* ← footer 높이 + 여유 */
+}
+
+/* ===== footer ===== */
+.app-footer {
+  width: 151px;              /* figma 값 */
+  height: auto;              /* 내용에 맞게 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;                  /* 둘 사이 8px */
+  margin: 46px auto 30px;    /* 위 46, 아래 30, 가운데 정렬 */
+  /* 배경은 전체가 이미 #ededed 이라서 안 넣어도 됨 */
+}
+
+.app-footer .footer-privacy {
+  font-family: "Paperlogy-5", "Paperlogy", sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 21px;
+  text-align: center;
+  color: #787878;
+  width: 131px;              /* figma 값 */
+}
+
+.app-footer .footer-brand {
+  font-family: "Paperlogy-7", "Paperlogy", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 26px;
+  text-align: center;
+  color: #787878;
+  width: 109px;              /* figma 값 */
+}
+
+#tab-air,
+#tab-forecast {
+  padding-bottom: 40px;   /* footer랑 숨쉴 공간 */
+}
