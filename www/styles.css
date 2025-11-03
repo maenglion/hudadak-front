@@ -291,7 +291,7 @@ html, body {
   box-shadow: 0 4px 12px rgba(183, 183, 183, 0.6);
   overflow: hidden; 
   position: relative; 
-  padding-bottom: 46px;
+  padding-bottom: 0px;
 }
 
 .gauge-card {
@@ -367,28 +367,27 @@ html, body {
 /* ===== 미세먼지 (위) 텍스트/꺾쇠 ===== */
 .components-pm10 {
   position: absolute;
-  top: 54px;
-  left: 60px; /* [수정] 좌측 정렬 */
-  transform: none;
-  text-align: left; 
+  /* [수정] 꺾쇠와 간격을 고려하여 왼쪽에서 60px 떨어진 위치로 최종 조정 */
+  left: 60px; 
+  transform: none; 
+  text-align: left;
   z-index: 10;
-  --pm10-line-start: 32px;
-  --pm10-line-len: 80px;
-  --pm10-dot-size: 10px;
-  --pm10-text-gap: 8px;
+  
+  /* [추가] 텍스트가 꺾쇠 오른쪽 8px에 붙도록 padding-left 설정 */
+  padding-left: 10px; 
 }
 
 .components-pm10::after { /* 점선 (아래로) */
   content: '';
   position: absolute;
   z-index: 11;
-  left: 100%; 
-  margin-left: var(--pm10-text-gap); 
+  left: 0; 
+  margin-left:100%;
   top: var(--pm10-line-start);
   width: 2px;
   height: var(--pm10-line-len);
   border-left: 2px dotted var(--dash-color);
-  transform: none; 
+  transform: translateX(8px);
 }
 
 .components-pm10::before { /* 점 */
@@ -415,10 +414,11 @@ html, body {
 /* ===== 초미세먼지 (아래) 텍스트/꺾쇠 ===== */
 .components-pm25 {
   position: absolute;
-  bottom: 77px; 
+  bottom: 37px; 
   left: 60px; 
   text-align: left;
   z-index: 10;
+  padding-left: 10px;
   --pm25-line-len: 135px;
   --pm25-dot-size: 10px;
   --pm25-text-gap: 8px;
@@ -444,10 +444,11 @@ html, body {
   z-index: 12;
   
   bottom: calc(var(--pm25-line-len) - (var(--pm25-dot-size) / 2));
-  left: calc(100% + var(--pm25-text-gap) - (var(--pm25-dot-size) / 2));
-  
+  left:0;
+  margin-left: 100%;
   width: var(--pm25-dot-size);
   height: var(--pm25-dot-size);
+  transform: translateX(8px);
   border-radius: 50%;
   background: #333;
   box-shadow: 0 0 3px rgba(0,0,0,0.25);
