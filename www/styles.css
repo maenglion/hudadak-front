@@ -564,6 +564,7 @@ html, body {
   width: 412px;
   margin-left: auto;
   margin-right: auto;
+  padding-top: 50px;
   padding-bottom: 30px; /* 바탕 하단 30px 여백 */
 }
 
