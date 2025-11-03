@@ -405,74 +405,133 @@ function renderMain(air) {
   renderGases(air);
 }
 
-/* =========================================================
-   7. 탭 / 메뉴 / 검색 바인딩
-   ========================================================= */
-  function activateTab(name) {
-    // 1) 버튼 상태
-    tabs.forEach(t => {
-      t.classList.toggle('tab-item--active', t.dataset.tab === name);
-    });
+function switchTab(clickedTab) {
+    const tabItems = document.querySelectorAll('.tab-navigation .tab-item');
+    const airContent = document.getElementById('tab-air-content');
+    const forecastContent = document.getElementById('tab-forecast-content');
+    const tabNavigation = document.querySelector('.tab-navigation');
 
-    // 2) 패널 표시
-    Object.entries(panels).forEach(([key, el]) => {
-      if (!el) return;
-      el.classList.toggle('tab-panel--active', key === name);
-    });
+    tabItems.forEach(item => item.classList.remove('tab-item--active'));
+    clickedTab.classList.add('tab-item--active');
 
-    // 3) svg 바꿔끼우기
-    if (bar) {
-      bar.src = (name === 'air')
-        ? './assets/tab-select-left.svg'
-        : './assets/tab-select-right.svg';
-    }
-  }
+    const tabKey = clickedTab.dataset.tab; 
+    let position = (tabKey === 'air') ? '0%' : '50%';
+    
+    const showAir = (tabKey === 'air');
 
-  // 클릭 바인딩
-  tabs.forEach(t => {
-    t.addEventListener('click', () => {
-      const key = t.dataset.tab;
-      if (!key) return;
-      activateTab(key);
-    });
-  });
+    // 애니메이션 효과를 위한 CSS 클래스 적용
+    const showEl = showAir ? airContent : forecastContent;
+    const hideEl = showAir ? forecastContent : airContent;
+    
+    hideEl.classList.add('hidden', 'fade-out'); 
+    showEl.classList.remove('hidden'); 
+    showEl.classList.add('fade-in'); 
+    
+    setTimeout(() => {
+        hideEl.classList.add('hidden');
+        hideEl.classList.remove('fade-out');
+        showEl.classList.remove('fade-in');
+    }, 300); // CSS transition 시간과 맞춤
 
-
- const first = document.querySelector('.tab-item.tab-item--active')?.dataset.tab || 'air';
-  activateTab(first);
-
-function bindSideMenu() {
-  const overlay = document.querySelector('.slide-menu-overlay');
-  const logoBtn = document.querySelector('.logo-text');
-  const locationBtn = document.querySelector('.location-button');
-
-  if (logoBtn && overlay) {
-    logoBtn.addEventListener('click', () => {
-      overlay.style.display = 'block';
-    });
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.style.display = 'none';
-    });
-  }
-
-  if (locationBtn) {
-    // 나중에 검색 오버레이 열기
-  }
-
-  // 기준 바꾸기
-  document.querySelectorAll('input[name="standard"]').forEach((r) => {
-    r.addEventListener('change', async (e) => {
-      const v = e.target.value;
-      if (v === 'cai') CURRENT_STANDARD = 'KOR';
-      else CURRENT_STANDARD = 'HUDADAK8';
-      if (LAST_COORD) {
-        const air = await fetchNearest(LAST_COORD.lat, LAST_COORD.lon);
-        renderMain(air);
-      }
-    });
-  });
+    // 밑줄 위치 변경
+    tabNavigation.style.setProperty('--tab-left-position', position);
 }
 
+
+function bindUIEvents() {
+    // UI 요소 참조
+    const tabItems = document.querySelectorAll('.tab-navigation .tab-item');
+    const slideMenuOverlay = document.querySelector('.slide-menu-overlay');
+    const menuButton = document.querySelector('.notification-icon'); 
+    const logoButton = document.querySelector('.logo-text'); // HUDADAK 로고
+    const searchOverlay = document.querySelector('.search-overlay');
+    const searchButton = document.querySelector('.location-button');
+    const menuItems = document.querySelectorAll('.slide-menu-nav .menu-item');
+
+    // 1. 탭 이벤트 연결
+    tabItems.forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab));
+    });
+
+    // 2. 슬라이드 메뉴 열기 (로고 클릭)
+    logoButton?.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        slideMenuOverlay.style.display = 'block';
+    });
+    
+    // 3. 현재 위치 재조회 (알림 아이콘 클릭)
+    menuButton?.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        initLocation(); // 위치 재조회 함수 호출
+    });
+    
+    // 4. 슬라이드 메뉴 닫기 (오버레이 클릭)
+    slideMenuOverlay?.addEventListener('click', (e) => {
+        if (e.target === slideMenuOverlay) { 
+            slideMenuOverlay.style.display = 'none';
+        }
+    });
+
+    // 5. 슬라이드 메뉴 아코디언
+    menuItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const subMenu = item.nextElementSibling;
+            
+            // 다른 메뉴 닫기 (하나만 열리도록)
+            menuItems.forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('active');
+                    const otherSubMenu = otherItem.nextElementSibling;
+                    if (otherSubMenu && otherSubMenu.classList.contains('sub-menu-box')) {
+                         otherSubMenu.classList.remove('active');
+                    }
+                }
+            });
+            
+            // 현재 메뉴 활성화/비활성화
+            item.classList.toggle('active');
+
+            // 하위 메뉴 토글
+            if (subMenu && subMenu.classList.contains('sub-menu-box')) {
+                subMenu.classList.toggle('active');
+            }
+        });
+    });
+
+    // 6. 검색 오버레이 열기/닫기
+    searchButton?.addEventListener('click', () => {
+        searchOverlay.style.display = 'block';
+    });
+    searchOverlay?.addEventListener('click', (e) => {
+        if (e.target === searchOverlay) {
+            searchOverlay.style.display = 'none';
+        }
+    });
+    
+    // 7. 기준 변경 라디오 버튼 이벤트
+    document.querySelectorAll('input[name="standard"]').forEach(radio => {
+        radio.addEventListener('change', e => {
+            if (e.target.value === 'cai') {
+                setStandard('KOR');
+            } else if (e.target.value === 'who') {
+                setStandard('WHO8'); 
+            }
+        });
+    });
+
+    // 검색 입력 관련 이벤트 (디바운스, 엔터)는 기존 로직을 따름
+    const inp = document.getElementById('location-input');
+    if (inp) {
+        const autoSearch = debounce(() => doSearch(inp.value || ''), 350);
+        inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                doSearch(inp.value || '');
+            }
+        });
+        inp.addEventListener('input', autoSearch);
+    }
+}
 /* =========================================================
    8. 위치 → 전체 업데이트
    ========================================================= */
@@ -491,20 +550,25 @@ renderForecast(f, { address: place, lat, lon });
 }
 
 function initLocation() {
-  if (navigator.geolocation) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const lat = urlParams.get('lat');
+  const lon = urlParams.get('lon');
+
+  if (lat && lon) {
+    updateAll(parseFloat(lat), parseFloat(lon));
+  } else {
     navigator.geolocation.getCurrentPosition(
       (pos) => updateAll(pos.coords.latitude, pos.coords.longitude),
-      ()    => updateAll(37.5665, 126.9780) // 서울
+      () => updateAll(37.5665, 126.978),
     );
-  } else {
-    updateAll(37.5665, 126.9780);
   }
 }
 
 /* =========================================================
    9. 시작
    ========================================================= */
-document.addEventListener('DOMContentLoaded', () => {
-  bindTabs();
-  initLocation();   // 너 원래 쓰던 위치 불러오기
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('[app] boot');
+  bindUIEvents();
+  initLocation();
 });
