@@ -256,17 +256,6 @@ html, body {
   font-weight: bold;
 }
 
-/* 밑줄 표시 (녹색 바) */
-#tab-select-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 50%;
-  height: 4px;
-  background: #b0d4cd;
-  transition: left 0.3s ease;
-}
-
 
 /* =========================================================
    [NEW] ChatGPT 기반 Air Quality Card & Gauge Styles (Zeplin Spec 적용)
