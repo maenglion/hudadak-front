@@ -364,17 +364,45 @@ html, body {
   z-index: 2; 
 }
 
+.air-card { position: relative; }
+
+.connector-layer{
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; /* 클릭 방해 X */
+}
+
+.connector {
+  stroke: #6b7280;       /* 중간 회색 */
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4; /* 점선 */
+}
+
+.pin { fill: #6b7280; }
+
+/* 라벨 옆 ‘기준점’(세로 작은 선) */
+.components-pm10 .tick,
+.components-pm25 .tick{
+  position: absolute;
+  left: -10px; top: 6px;   /* 라벨 좌측에 살짝 보이도록 */
+  width: 1px; height: 22px;
+  background: #6b7280;
+  opacity: .9;
+}
+
+
+
 /* ===== 미세먼지 (위) 텍스트/꺾쇠 ===== */
 .components-pm10 {
-  position: absolute;
-  /* [수정] 꺾쇠와 간격을 고려하여 왼쪽에서 60px 떨어진 위치로 최종 조정 */
-  top: 46px; /* [추정 유지] 카드 상단에서 54px 떨어진 위치 */
-  left: 210px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */
-  transform: none; 
-  /* [추가] 애니메이션을 위한 transition 설정 */
-  transition: transform 0.5s ease-out;
-  text-align: left;
-  z-index: 10;
+ position: absolute;
+  top: 46px; left: 194px;
+  text-align: left; z-index: 10;
+  transition: transform .5s ease-out;
+}
+.components-pm10 .pm10,
+.components-pm25 .pm25{
+  position: relative; display: flex; flex-direction: column;
+  gap: 2px; align-items: flex-start; white-space: nowrap;
 }
  
 
@@ -390,10 +418,8 @@ html, body {
 /* ===== 초미세먼지 (아래) 텍스트/꺾쇠 ===== */
 /* --- 초미세먼지 텍스트 라벨 박스 --- */
 .components-pm25 {
-  position: absolute;
-  bottom: 57px; 
-  left: 60px; 
-  /* ... (나머지 스타일 유지) ... */
+   position: absolute;
+  bottom: 57px; left: 60px;
 }
 
 
