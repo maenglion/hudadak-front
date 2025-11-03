@@ -228,32 +228,12 @@ html, body {
    [2] 탭 콘텐츠 (공기질/기상예보)
    ======================================== */
 
-.tab-navigation {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  height: 60px;
-  width: 100%;
-  background: #ffffff;
-  border-bottom: 2px solid #e0e0e0;
-  position: relative;
-  z-index: 10;
+.tab-content {
+  padding-top: 46px;
 }
 
-.tab-navigation .tab-item {
-  flex: 1;
-  text-align: center;
-  font-family: 'Paperlogy-7', 'Paperlogy', sans-serif;
-  font-size: 18px;
-  color: #999;
-  cursor: pointer;
-  padding: 16px 0;
-  transition: color 0.2s ease;
-}
-
-.tab-navigation .tab-item--active {
-  color: #333333;
-  font-weight: bold;
+.tab-content.hidden {
+  display: none;
 }
 
 
