@@ -110,17 +110,6 @@ function animateRing(el, toPerc, color = '#b0d4cb', duration = 650) {
   if (!el) return;
   const start = performance.now();
   const from = 0;
-  const midAngle10 = (pm10Perc * 360) / 2; // 바깥휠(미세먼지) 중간각
-  const midAngle25 = (pm25Perc * 360) / 2; // 안쪽휠(초미세먼지) 중간각
-
-  // 도넛 시작각이 12시가 아니면 보정치 추가 (예: 3시 시작이면 +90)
-  const OFFSET = 0; // 필요시 90, -90 등으로 조정
-  if (window.updatePmConnectors) {
-    window.updatePmConnectors({
-      pm10Angle: midAngle10 + OFFSET,
-      pm25Angle: midAngle25 + OFFSET
-    });
-  }
   function frame(ts) {
     const t = Math.min(1, (ts - start) / duration);
     const cur = from + (toPerc - from) * t;
@@ -128,6 +117,14 @@ function animateRing(el, toPerc, color = '#b0d4cb', duration = 650) {
     if (t < 1) requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+}
+
+if (window.updatePmConnectors) {
+  const OFFSET = 0; // 시작각 보정 필요시 90 등
+  const pm10Angle = (pm10Perc * 360) / 2 + OFFSET;
+  const pm25Angle = (pm25Perc * 360) / 2 + OFFSET;
+  window.__lastAngles = { pm10Angle, pm25Angle };
+  window.updatePmConnectors(window.__lastAngles);
 }
 
 function animateValue(el, toValue, unitText = '', duration = 600, dp = 1) {
@@ -591,15 +588,7 @@ function switchTab(clickedTab) {
         });
         inp.addEventListener('input', autoSearch);
     }
-}
 
-
-// ===== 탭 전환 헬퍼 =====
-const TAB_MAP = { air: 'tab-air-content', forecast: 'tab-forecast-content' };
-
-function switchTab(tabOrName){
-  const name = typeof tabOrName === 'string' ? tabOrName : tabOrName?.dataset?.tab;
-  if(!name || !TAB_MAP[name]) return;
 
   // 버튼 상태 토글
   document.querySelectorAll('.tab-navigation .tab-item').forEach(b=>{
@@ -612,11 +601,6 @@ function switchTab(tabOrName){
   document.querySelectorAll('.tab-content').forEach(p=>{
     p.hidden = (p.id !== TAB_MAP[name]);
   });
-}
-
-// ===== 디바운스 유틸 =====
-function debounce(fn, wait=350){
-  let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
 }
 
 // ===== 원래 방식의 addEventListener 바인딩 =====
