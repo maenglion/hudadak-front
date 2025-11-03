@@ -42,9 +42,6 @@ html, body {
   background-color: #F5F5F5; 
   margin-left: auto;
   margin-right: auto;
-  
-  /* 푸터 공간 확보를 위한 패딩 */
-  padding-bottom: 120px; 
   position: relative; 
 }
 
