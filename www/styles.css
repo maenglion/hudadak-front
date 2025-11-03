@@ -397,17 +397,6 @@ html, body {
   transform: translateX(8px);
 }
 
-.components-pm10::before { /* 점 */
-  content: '';
-  position: absolute;
-  left:162px;
-  top: 146px;
-  width: var(--pm10-dot-size);
-  height: var(--pm10-dot-size);
-  border-radius: 50%;
-  background: #333;
-  z-index: 12;
-}
 
 .components-pm10 .pm10 {
   position: relative;
@@ -448,20 +437,6 @@ transition: bottom 1.0s ease-out;
   transform-origin: 0 100%;
 }
 
-.components-pm25::before { /* 끝점 */
-  content: '';
-  position: absolute;
-  z-index: 12;
-  bottom:  318px;
-  left:207px;
-  margin-left: 100%;
-  width: var(--pm25-dot-size);
-  height: var(--pm25-dot-size);
-  transform: translateX(8px);
-  border-radius: 50%;
-  background: #333;
-  box-shadow: 0 0 3px rgba(0,0,0,0.25);
-}
 
 .components-pm25 .pm25 {
   position: relative;
