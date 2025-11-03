@@ -1,264 +1,243 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css" type="text/css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0/kopubdotum.min.css" type="text/css" />
-  <title>HUDADAK App</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0/kopubdotum.min.css" type="text/css" />
+  <title>HUDADAK App</title>
 </head>
 <body>
-  <div class="Main-container">
+  
+    <div class="Main-container">
 
-    <!-- 헤더 -->
-    <header class="App-header App-header--hazardous" id="app-header">
-      <div class="header-top-row">
-        <span class="logo-text" id="app-logo">HUDADAK</span>
-        <img class="notification-icon" src="./assets/notification-icon.svg" alt="location">
-      </div>
-      <div class="location-button" id="location-button">인천 연수구 송도동</div>
-      <div class="timestamp-row">
-        <span class="timestamp-date" id="ts-date">2025.10.27.</span>
-        <span class="timestamp-ampm" id="ts-ampm">오전</span>
-        <span class="timestamp-clock" id="ts-clock">10:30</span>
-      </div>
-      <h1 class="status-title" id="hero-grade-label">위험</h1>
-      <p class="status-score" id="hero-score">65점</p>
-      <p class="status-description" id="hero-desc">
-        불필요한 환기 금지, 실내 공기<br>
-        질 관리 모드로 전환.
-      </p>
-    </header>
+        <header class="App-header App-header--hazardous" id="app-header">
+      <div class="header-top-row">
+        <span class="logo-text" id="app-logo">HUDADAK</span>
+        <img class="notification-icon" src="./assets/notification-icon.svg" alt="location">
+      </div>
+      <div class="location-button" id="location-button">인천 연수구 송도동</div>
+      <div class="timestamp-row">
+        <span class="timestamp-date" id="ts-date">2025.10.27.</span>
+        <span class="timestamp-ampm" id="ts-ampm">오전</span>
+        <span class="timestamp-clock" id="ts-clock">10:30</span>
+      </div>
+      <h1 class="status-title" id="hero-grade-label">위험</h1>
+      <p class="status-score" id="hero-score">65점</p>
+      <p class="status-description" id="hero-desc">
+        불필요한 환기 금지, 실내 공기<br>
+        질 관리 모드로 전환.
+      </p>
+    </header>
 
-    <!-- 기준 스위치 -->
-    <div class="standard-bar">
-      <span class="standard-label">기준</span>
-      <span class="standard-value standard-value--who">WHO(8단계)</span>
-    </div>
+        <div class="standard-bar">
+      <span class="standard-label">기준</span>
+      <span class="standard-value standard-value--who">WHO(8단계)</span>
+    </div>
 
-    <!-- 탭 -->
-    <nav class="tab-navigation">
-      <div class="tab-item tab-item--active" data-tab="air">공기질</div>
-      <div class="tab-item" data-tab="forecast">기상예보</div>
-    </nav>
+        <nav class="tab-navigation">
+      <div class="tab-item tab-item--active" data-tab="air">공기질</div>
+      <div class="tab-item" data-tab="forecast">기상예보</div>
+    </nav>
 
-    <!-- ▼▼ 공기질 탭 ▼▼ -->
-    <div class="tab-content" id="tab-air-content">
-      <div class="air-quality-card">
-        <div class="gauge-card air-card">
-          <div class="gauge-rings">
-            <div class="ring ring-pm10">
-              <div class="ring-fill ring-pm10-fill"></div>
-            </div>
-            <div class="ring ring-pm25">
-              <div class="ring-fill ring-pm25-fill"></div>
-            </div>
-          </div>
+        <div class="tab-content" id="tab-air-content">
+      <div class="air-quality-card">
+        <div class="gauge-card air-card">
+          <div class="gauge-rings">
+            <div class="ring ring-pm10">
+              <div class="ring-fill ring-pm10-fill"></div>
+            </div>
+            <div class="ring ring-pm25">
+              <div class="ring-fill ring-pm25-fill"></div>
+            </div>
+          </div>
 
-          <div class="components-pm10">
-            <div class="pm10">
-              <i class="tick"></i>
-              <div class="title-line">
-                <span class="gauge-title">미세먼지</span>
-                <img src="./assets/forecast-badges-observed.svg" class="forecast-badges" alt="실측">
-              </div>
-              <div class="value-line">
-                <span class="level" id="pm10-level">나쁨</span>
-                <span class="unit" id="pm10-unit">135µg/m³</span>
-              </div>
-            </div>
-          </div>
+          <div class="components-pm10">
+            <div class="pm10">
+              <i class="tick"></i>
+              <div class="title-line">
+                <span class="gauge-title">미세먼지</span>
+                <img src="./assets/forecast-badges-observed.svg" class="forecast-badges" alt="실측">
+              </div>
+              <div class="value-line">
+                <span class="level" id="pm10-level">나쁨</span>
+                <span class="unit" id="pm10-unit">135µg/m³</span>
+              </div>
+            </div>
+          </div>
 
-          <div class="components-pm25">
-            <div class="pm25">
-              <i class="tick"></i>
-              <div class="title-line">
-                <span class="gauge-title">초미세먼지</span>
-                <img src="./assets/forecast-badges-observed.svg" class="forecast-badges" alt="실측">
-              </div>
-              <div class="value-line">
-                <span class="level" id="pm25-level">나쁨</span>
-                <span class="unit" id="pm25-unit">135µg/m³</span>
-              </div>
-            </div>
-          </div>
-         <svg class="connector-layer" viewBox="0 0 420 420" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-    <line id="conn-pm10" class="connector dotted" x1="0" y1="0" x2="0" y2="0"/>
-    <line id="conn-pm25" class="connector dotted" x1="0" y1="0" x2="0" y2="0"/>
-    <!-- 끝점에 작은 점 표시(선택) -->
-    <circle id="pin-pm10" class="pin" r="2" cx="0" cy="0"/>
-    <circle id="pin-pm25" class="pin" r="2" cx="0" cy="0"/>
-  </svg>
+          <div class="components-pm25">
+            <div class="pm25">
+              <i class="tick"></i>
+              <div class="title-line">
+                <span class="gauge-title">초미세먼지</span>
+                <img src="./assets/forecast-badges-observed.svg" class="forecast-badges" alt="실측">
+              </div>
+              <div class="value-line">
+                <span class="level" id="pm25-level">나쁨</span>
+                <span class="unit" id="pm25-unit">135µg/m³</span>
+              </div>
+            </div>
+          </div>
+         <svg class="connector-layer" viewBox="0 0 420 420" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <line id="conn-pm10" class="connector dotted" x1="0" y1="0" x2="0" y2="0"/>
+    <line id="conn-pm25" class="connector dotted" x1="0" y1="0" x2="0" y2="0"/>
+        <circle id="pin-pm10" class="pin" r="2" cx="0" cy="0"/>
+    <circle id="pin-pm25" class="pin" r="2" cx="0" cy="0"/>
+  </svg>
 </div> 
-   
-      <!-- 가스 카드 -->
-      <div class="gas-info-card">
-        <h2 class="gas-info-title">기타 공기지표</h2>
-        <div class="gas-info-list">
-          <!-- SO2 -->
-          <div class="gas-info-item" id="gas-so2">
-            <div class="gas-item-header">
-              <div class="gas-item-title-group">
-                <span class="gas-item-title">아황산가스</span>
-                <img class="gas-item-badge" src="./assets/forecast-badges-observed.svg" alt="badge">
-              </div>
-              <div class="gas-item-reading-group">
-                <span class="gas-item-formula">SO₂</span>
-                <span class="gas-item-value" id="gas-so2-value">--</span>
-                <span class="gas-item-unit" id="gas-so2-unit">µg/m³</span>
-              </div>
-            </div>
-            <div class="gas-item-bar-container">
-              <div class="gas-item-bar-value gas-bar--so2" id="gas-so2-bar" style="width: 0%;"></div>
-            </div>
-          </div>
+   
+            <div class="gas-info-card">
+        <h2 class="gas-info-title">기타 공기지표</h2>
+        <div class="gas-info-list">
+                    <div class="gas-info-item" id="gas-so2">
+            <div class="gas-item-header">
+              <div class="gas-item-title-group">
+                <span class="gas-item-title">아황산가스</span>
+                <img class="gas-item-badge" src="./assets/forecast-badges-observed.svg" alt="badge">
+              </div>
+              <div class="gas-item-reading-group">
+                <span class="gas-item-formula">SO₂</span>
+                <span class="gas-item-value" id="gas-so2-value">--</span>
+                <span class="gas-item-unit" id="gas-so2-unit">µg/m³</span>
+              </div>
+            </div>
+            <div class="gas-item-bar-container">
+              <div class="gas-item-bar-value gas-bar--so2" id="gas-so2-bar" style="width: 0%;"></div>
+            </div>
+          </div>
 
-          <!-- CO -->
-          <div class="gas-info-item" id="gas-co">
-            <div class="gas-item-header">
-              <div class="gas-item-title-group">
-                <span class="gas-item-title">일산화탄소</span>
-                <img class="gas-item-badge" src="./assets/forecast-badges-observed.svg" alt="badge">
-              </div>
-              <div class="gas-item-reading-group">
-                <span class="gas-item-formula">CO</span>
-                <span class="gas-item-value" id="gas-co-value">--</span>
-                <span class="gas-item-unit" id="gas-co-unit">ppm</span>
-              </div>
-            </div>
-            <div class="gas-item-bar-container">
-              <div class="gas-item-bar-value gas-bar--co" id="gas-co-bar" style="width: 0%;"></div>
-            </div>
-          </div>
+                    <div class="gas-info-item" id="gas-co">
+            <div class="gas-item-header">
+              <div class="gas-item-title-group">
+                <span class="gas-item-title">일산화탄소</span>
+                <img class="gas-item-badge" src="./assets/forecast-badges-observed.svg" alt="badge">
+              </div>
+              <div class="gas-item-reading-group">
+                <span class="gas-item-formula">CO</span>
+                <span class="gas-item-value" id="gas-co-value">--</span>
+                <span class="gas-item-unit" id="gas-co-unit">ppm</span>
+              </div>
+            </div>
+            <div class="gas-item-bar-container">
+              <div class="gas-item-bar-value gas-bar--co" id="gas-co-bar" style="width: 0%;"></div>
+            </div>
+          </div>
 
-          <!-- O3 -->
-          <div class="gas-info-item" id="gas-o3">
-            <div class="gas-item-header">
-              <div class="gas-item-title-group">
-                <span class="gas-item-title">오존</span>
-                <img class="gas-item-badge" src="./assets/forecast-badges-observed.svg" alt="badge">
-              </div>
-              <div class="gas-item-reading-group">
-                <span class="gas-item-formula">O₃</span>
-                <span class="gas-item-value" id="gas-o3-value">--</span>
-                <span class="gas-item-unit" id="gas-o3-unit">µg/m³</span>
-              </div>
-            </div>
-            <div class="gas-item-bar-container">
-              <div class="gas-item-bar-value gas-bar--o3" id="gas-o3-bar" style="width: 0%;"></div>
-            </div>
-          </div>
+                    <div class="gas-info-item" id="gas-o3">
+            <div class="gas-item-header">
+              <div class="gas-item-title-group">
+                <span class="gas-item-title">오존</span>
+                <img class="gas-item-badge" src="./assets/forecast-badges-observed.svg" alt="badge">
+              </div>
+              <div class="gas-item-reading-group">
+                <span class="gas-item-formula">O₃</span>
+                <span class="gas-item-value" id="gas-o3-value">--</span>
+                <span class="gas-item-unit" id="gas-o3-unit">µg/m³</span>
+              </div>
+            </div>
+            <div class="gas-item-bar-container">
+              <div class="gas-item-bar-value gas-bar--o3" id="gas-o3-bar" style="width: 0%;"></div>
+            </div>
+          </div>
 
-          <!-- NO2 -->
-          <div class="gas-info-item" id="gas-no2">
-            <div class="gas-item-header">
-              <div class="gas-item-title-group">
-                <span class="gas-item-title">이산화질소</span>
-                <img class="gas-item-badge" src="./assets/forecast-badges-observed.svg" alt="badge">
-              </div>
-              <div class="gas-item-reading-group">
-                <span class="gas-item-formula">NO₂</span>
-                <span class="gas-item-value" id="gas-no2-value">--</span>
-                <span class="gas-item-unit" id="gas-no2-unit">µg/m³</span>
-              </div>
-            </div>
-            <div class="gas-item-bar-container">
-              <div class="gas-item-bar-value gas-bar--no2" id="gas-no2-bar" style="width: 0%;"></div>
-            </div>
-          </div>
+                    <div class="gas-info-item" id="gas-no2">
+            <div class="gas-item-header">
+              <div class="gas-item-title-group">
+                <span class="gas-item-title">이산화질소</span>
+                <img class="gas-item-badge" src="./assets/forecast-badges-observed.svg" alt="badge">
+              </div>
+              <div class="gas-item-reading-group">
+                <span class="gas-item-formula">NO₂</span>
+                <span class="gas-item-value" id="gas-no2-value">--</span>
+                <span class="gas-item-unit" id="gas-no2-unit">µg/m³</span>
+              </div>
+            </div>
+            <div class="gas-item-bar-container">
+              <div class="gas-item-bar-value gas-bar--no2" id="gas-no2-bar" style="width: 0%;"></div>
+            </div>
+          </div>
 
-        </div>
-      </div>
-    </div> 
-    <!-- ▲▲ 공기질 탭 끝 ▲▲ -->
+        </div>
+      </div>
+    </div> 
+            <div class="tab-content hidden" id="tab-forecast-content">
+      <div class="forecast-card">
+        <div class="forecast-card-header">
+          <span class="forecast-date">2025.10.30.수</span>
+          <div class="forecast-badge-ai">AI</div> 
+        </div>
+        <div class="forecast-card-body">
+          <img class="forecast-icon" src="images/forecast-icon.svg" alt="날씨 아이콘">
+          <p class="forecast-description">
+            대체로 맑지만 미세먼지 농도는 평소보다 살짝 높아요. 창문 여는 건 오전까지만, 오후엔 공기청정기가 더 든든할 거예요.
+          </p>
+        </div>
+      </div>
+    </div>
+        
+      </div>     <div class="slide-menu-overlay">
+    <div class="slide-menu-content">
+      <span class="slide-menu-logo">HUDADAK</span>
+      <nav class="slide-menu-nav">
+                <div class="menu-item">
+          <span class="menu-item-text">표시기준 설정</span>
+          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
+        </div>
+        <div class="sub-menu-box">
+          <label class="radio-option">
+            <input type="radio" name="standard" value="cai" checked>
+            <span class="radio-button"></span>
+            <div class="radio-text-group">
+              <span class="radio-title">환경부(4단계)</span>
+              <span class="radio-description">가장 일반적인 기준</span>
+            </div>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="standard" value="who">
+            <span class="radio-button"></span>
+            <div class="radio-text-group">
+              <span class="radio-title">WHO(8단계)</span>
+              <span class="radio-description">세계보건기구 권고 기준</span>
+            </div>
+          </label>
+        </div>
+        <div class="menu-item">
+          <span class="menu-item-text">예보 뱃지 안내</span>
+          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
+        </div>
+        <div class="sub-menu-box">
+          <p class="sub-menu-description">여기에 '예보 뱃지 안내'에 대한 긴 설명 텍스트가 들어갑니다.</p>
+        </div>
+        <div class="menu-item">
+          <span class="menu-item-text">이 앱의 특별한 이야기</span>
+          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
+        </div>
+        <div class="sub-menu-box">
+          <p class="sub-menu-description">여기에 '이 앱의 특별한 이야기'에 대한 긴 설명 텍스트가 들어갑니다.</p>
+        </div>
+      </nav>
+    </div>
+  </div>
 
-    <!-- ▼▼ 기상예보 탭 ▼▼ -->
-    <div class="tab-content hidden" id="tab-forecast-content">
-      <div class="forecast-card">
-        <div class="forecast-card-header">
-          <span class="forecast-date">2025.10.30.수</span>
-          <div class="forecast-badge-ai">AI</div> 
-        </div>
-        <div class="forecast-card-body">
-          <img class="forecast-icon" src="images/forecast-icon.svg" alt="날씨 아이콘">
-          <p class="forecast-description">
-            대체로 맑지만 미세먼지 농도는 평소보다 살짝 높아요. 창문 여는 건 오전까지만, 오후엔 공기청정기가 더 든든할 거예요.
-          </p>
-        </div>
-      </div>
-    </div>
-    <!-- ▲▲ 기상예보 탭 끝 ▲▲ -->
-    
-  </div> <!-- Main-container 끝 -->
+    <div class="search-overlay">
+    <div class="search-widget">
+      <input type="text" class="search-input-box" placeholder="지역, 위치를 입력하세요">
+      <div class="search-results-list">
+        <div class="search-result-item">인천시 연수구 송도동</div>
+        <div class="search-result-item">서울시 강남구</div>
+        <div class="search-result-item selected">삼성동</div>
+      </div>
+    </div>
+  </div>
 
-  <!-- 슬라이딩 메뉴 -->
-  <div class="slide-menu-overlay">
-    <div class="slide-menu-content">
-      <span class="slide-menu-logo">HUDADAK</span>
-      <nav class="slide-menu-nav">
-        <!-- (메뉴 항목...) -->
-        <div class="menu-item">
-          <span class="menu-item-text">표시기준 설정</span>
-          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <label class="radio-option">
-            <input type="radio" name="standard" value="cai" checked>
-            <span class="radio-button"></span>
-            <div class="radio-text-group">
-              <span class="radio-title">환경부(4단계)</span>
-              <span class="radio-description">가장 일반적인 기준</span>
-            </div>
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="standard" value="who">
-            <span class="radio-button"></span>
-            <div class="radio-text-group">
-              <span class="radio-title">WHO(8단계)</span>
-              <span class="radio-description">세계보건기구 권고 기준</span>
-            </div>
-          </label>
-        </div>
-        <div class="menu-item">
-          <span class="menu-item-text">예보 뱃지 안내</span>
-          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <p class="sub-menu-description">여기에 '예보 뱃지 안내'에 대한 긴 설명 텍스트가 들어갑니다.</p>
-        </div>
-        <div class="menu-item">
-          <span class="menu-item-text">이 앱의 특별한 이야기</span>
-          <img class="menu-item-arrow" src="./assets/arrow-down.svg" alt="열기">
-        </div>
-        <div class="sub-menu-box">
-          <p class="sub-menu-description">여기에 '이 앱의 특별한 이야기'에 대한 긴 설명 텍스트가 들어갑니다.</p>
-        </div>
-      </nav>
-    </div>
-  </div>
-
-  <!-- 검색 오버레이 -->
-  <div class="search-overlay">
-    <div class="search-widget">
-      <input type="text" class="search-input-box" placeholder="지역, 위치를 입력하세요">
-      <div class="search-results-list">
-        <div class="search-result-item">인천시 연수구 송도동</div>
-        <div class="search-result-item">서울시 강남구</div>
-        <div class="search-result-item selected">삼성동</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-  
-  <div class="app-footer-wrapper">
-    <div class="app-footer">
-      <span class="Studio-name-text">2e Studio</span>
-      <span class="Privacy-policy-text">개인정보 보호방침</span>
-    </div>
-  </div> <!-- [app-footer-wrapper 끝] -->
- 
+    <div class="app-footer-wrapper">
+    <div class="app-footer">
+      <span class="Studio-name-text">2e Studio</span>
+      <span class="Privacy-policy-text">개인정보 보호방침</span>
+    </div>
+  </div>  
 
 <script type="module" src="./js/standards.js"></script>
 <script type="module" src="./app.js"></script>
