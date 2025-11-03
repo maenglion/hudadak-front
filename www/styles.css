@@ -226,7 +226,11 @@ html, body {
 
 
 /* 공기질 카드들이 탭에 딱 붙도록 */
-.air-quality-card,
+.air-quality-card {
+  padding-top: 46px;
+}
+
+
 .gas-info-card {
   margin-top: 0;
 }
