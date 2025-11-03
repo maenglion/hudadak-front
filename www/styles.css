@@ -222,9 +222,6 @@ html, body {
   margin-top: 0;
 }
 
-.tab-content {
-  padding: 46px 20px 0;   /* ← 위 46, 좌우 20은 카드 정렬용 */
-}
 
 /* =========================================================
    [NEW] ChatGPT 기반 Air Quality Card & Gauge Styles (Zeplin Spec 적용)
