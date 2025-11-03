@@ -233,32 +233,6 @@ html, body {
   border-bottom: 4px solid #ededed; 
 }
 
-.tab-item {
-  flex-grow: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: "Paperlogy";
-  font-weight: 700;
-  font-size: 28px;
-  color: #949494;
-  cursor: pointer;
-}
-
-.tab-item--active {
-  color: #333333;
-}
-
-.tab-navigation::after {
-  content: '';
-  position: absolute;
-  bottom: -4px; 
-  height: 4px;  
-  width: 50%;
-  background-color: #b0d4cb; 
-  left: 0; 
-  transition: left 0.3s ease; 
-}
 
 /* ========================================
    [2] 탭 콘텐츠 (공기질/기상예보)
