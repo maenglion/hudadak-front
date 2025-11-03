@@ -368,7 +368,8 @@ html, body {
 .components-pm10 {
   position: absolute;
   /* [수정] 꺾쇠와 간격을 고려하여 왼쪽에서 60px 떨어진 위치로 최종 조정 */
-  left: 60px; 
+  top: 54px; /* [추정 유지] 카드 상단에서 54px 떨어진 위치 */
+  left: 194px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */
   transform: none; 
   text-align: left;
   z-index: 10;
@@ -393,8 +394,8 @@ html, body {
 .components-pm10::before { /* 점 */
   content: '';
   position: absolute;
-  left: calc(100% + var(--pm10-text-gap) - (var(--pm10-dot-size) / 2));
-  top: calc(var(--pm10-line-start) + var(--pm10-line-len) - (var(--pm10-dot-size) / 2));
+  left:162px;
+  top: 146px;
   width: var(--pm10-dot-size);
   height: var(--pm10-dot-size);
   border-radius: 50%;
@@ -414,8 +415,8 @@ html, body {
 /* ===== 초미세먼지 (아래) 텍스트/꺾쇠 ===== */
 .components-pm25 {
   position: absolute;
-  bottom: 37px; 
-  left: 60px; 
+bottom: 63px; /* [추정 유지] 카드 하단에서 37px 떨어진 위치로 고정 */
+  left: 77px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */ 
   text-align: left;
   z-index: 10;
   padding-left: 10px;
@@ -442,9 +443,8 @@ html, body {
   content: '';
   position: absolute;
   z-index: 12;
-  
-  bottom: calc(var(--pm25-line-len) - (var(--pm25-dot-size) / 2));
-  left:0;
+  bottom:  318px;
+  left:207px;
   margin-left: 100%;
   width: var(--pm25-dot-size);
   height: var(--pm25-dot-size);
