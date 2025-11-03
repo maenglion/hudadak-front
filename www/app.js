@@ -132,6 +132,71 @@ function animateValue(el, toValue, unitText = '', duration = 600, dp = 1) {
   requestAnimationFrame(frame);
 }
 
+(function(){
+  // 카드/도넛의 기하값(너의 SVG/Canvas 크기에 맞게 조정)
+  const CX = 210, CY = 210;      // 도넛 중심
+  const R_OUTER = 138;           // 바깥휠(미세먼지) 반지름
+  const R_INNER = 103;           // 안쪽휠(초미세먼지) 반지름
+
+  const card   = document.querySelector('.air-card');
+  const svg    = card.querySelector('.connector-layer');
+
+  const tick10 = card.querySelector('.components-pm10 .tick');
+  const tick25 = card.querySelector('.components-pm25 .tick');
+
+  const conn10 = svg.querySelector('#conn-pm10');
+  const conn25 = svg.querySelector('#conn-pm25');
+  const pin10  = svg.querySelector('#pin-pm10');
+  const pin25  = svg.querySelector('#pin-pm25');
+
+  function polarToXY(cx, cy, r, degFromTopClockwise){
+    const a = (degFromTopClockwise - 90) * Math.PI/180; // 0°=12시 보정
+    return { x: cx + r*Math.cos(a), y: cy + r*Math.sin(a) };
+  }
+
+  function pageToLocal(x, y, el){
+    const b = el.getBoundingClientRect();
+    return { x: x - b.left, y: y - b.top };
+  }
+
+  function anchorOfTick(tickEl){
+    const r = tickEl.getBoundingClientRect();
+    const c = { x: r.left + r.width/2, y: r.top + r.height/2 };
+    return pageToLocal(c.x, c.y, card);
+  }
+
+  // === 너의 도넛 계산이 끝난 뒤(또는 값 갱신 때마다) 이 함수만 호출 ===
+  // mid angles 예: pm10은 220°, pm25는 140° 처럼 넘겨줘
+  window.updatePmConnectors = function({ pm10Angle, pm25Angle }){
+    const s10 = anchorOfTick(tick10);
+    const s25 = anchorOfTick(tick25);
+
+    const e10 = polarToXY(CX, CY, R_OUTER, pm10Angle); // 바깥휠
+    const e25 = polarToXY(CX, CY, R_INNER, pm25Angle); // 안쪽휠
+
+    // 선 그리기
+    conn10.setAttribute('x1', s10.x); conn10.setAttribute('y1', s10.y);
+    conn10.setAttribute('x2', e10.x); conn10.setAttribute('y2', e10.y);
+
+    conn25.setAttribute('x1', s25.x); conn25.setAttribute('y1', s25.y);
+    conn25.setAttribute('x2', e25.x); conn25.setAttribute('y2', e25.y);
+
+    // 끝점 핀(선택)
+    pin10.setAttribute('cx', e10.x); pin10.setAttribute('cy', e10.y);
+    pin25.setAttribute('cx', e25.x); pin25.setAttribute('cy', e25.y);
+  };
+
+  // 초기 테스트용(원하는 각도로 맞춰줘)
+  // 바깥휠/안쪽휠 “중간 각도”를 넣으면 해당 지점으로 점선이 연결됨
+  window.updatePmConnectors({ pm10Angle: 200, pm25Angle: 160 });
+
+  // 라벨이 움직이는 레이아웃이라면 리사이즈 시 재계산
+  window.addEventListener('resize', ()=> {
+    // 마지막 각도를 기억해두었다가 다시 호출해줘
+    // 예: updatePmConnectors(lastAngles);
+  });
+})();
+
 /* =========================================================
    5. API 호출
    ========================================================= */
