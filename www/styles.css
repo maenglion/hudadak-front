@@ -224,21 +224,6 @@ html, body {
   color: #82A1BF;
 }
 
-/* ========================================
-   [2] 탭 콘텐츠 (공기질/기상예보)
-   ======================================== */
-
-/* 탭 콘텐츠는 기본적으로 안 보이게 */
-.tab-content {
-  display: none;
-  padding: 16px 16px 30px;  /* 위·옆 여백 + 아래 30px은 footer랑 안 붙게 */
-  background: #f7f7f7;
-}
-
-/* 선택된 탭만 보이게 */
-.tab-content.active {
-  display: block;
-}
 
 /* 공기질 카드들이 탭에 딱 붙도록 */
 .air-quality-card,
@@ -1022,42 +1007,96 @@ html, body {
   color: #787878;
 }
 
-/* 탭 바 전체 */
+/* ==============================================
+   탭 네비게이션 정렬 (공기질 / 기상예보)
+   ============================================== */
 .tab-navigation {
+  position: relative;
   display: flex;
-  background: var(--main-white, #fff);
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
-  height: 56px;            /* 너 원래 88px 썼으면 88로 */
-  position: relative;      /* 아래 after 기준 */
+  height: 44px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  font-family: 'Paperlogy-7', 'Paperlogy', sans-serif;
+  overflow: hidden;
 }
 
-/* 각 탭 */
+/* 각 탭 버튼 */
 .tab-navigation .tab-item {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: Paperlogy-7, sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--unselect-grey, #aaa);
+  text-align: center;
+  line-height: 44px;
+  color: #666;
   cursor: pointer;
-  position: relative;
+  transition: color 0.25s ease;
+  font-size: 15px;
 }
 
-/* 선택된 탭 텍스트 색 */
-.tab-navigation .tab-item.tab-item--active {
-  color: #333; /* 선택된 탭 글자 */
+.tab-navigation .tab-item--active {
+  color: #222;
+  font-weight: bold;
 }
 
-/* 선택된 탭 밑줄 */
-.tab-navigation .tab-item.tab-item--active::after {
-  content: "";
+/* 이동하는 바 */
+#tab-select-bar {
   position: absolute;
+  bottom: 0;
   left: 0;
-  bottom: 0;           /* 탭 하단 딱 붙게 */
-  width: 100%;
+  width: 50%;
   height: 4px;
-  background: #32b384; /* 네가 말한 녹색바 */
-  border-radius: 999px;
+  background-color: #b0d4cb;
+  border-radius: 2px;
+  transition: left 0.25s ease;
+  z-index: 2;
 }
+
+/* ==============================================
+   탭 콘텐츠
+   ============================================== */
+.tab-content {
+  display: none;
+  width: 100%;
+  padding: 20px 0 30px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* ==============================================
+   기본 공통
+   ============================================== */
+.Main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  overflow-x: hidden;
+  background-color: #fafafa;
+}
+
+/* ==============================================
+   하단 푸터 (2e Studio / 개인정보)
+   ============================================== */
+.footer {
+  width: 100%;
+  text-align: center;
+  padding: 30px 0;
+}
+
+.footer .Privacy-policy-text {
+  display: block;
+  font-size: 14px;
+  color: #787878;
+  margin-bottom: 8px;
+}
+
+.footer .Studio-name-text {
+  font-family: Paperlogy-7, sans-serif;
+  font-size: 18px;
+  color: #787878;
+  font-weight: bold;
+}
+
