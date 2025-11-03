@@ -408,35 +408,38 @@ function renderMain(air) {
 /* =========================================================
    7. 탭 / 메뉴 / 검색 바인딩
    ========================================================= */
-function bindTabs() {
-  const btns  = document.querySelectorAll('.tab-navigation .tab-item');
-  const panes = document.querySelectorAll('.tab-content');
-  if (!btns.length || !panes.length) return;
-
-  const activate = (key) => {
-    // 버튼
-    btns.forEach(b => {
-      b.classList.toggle('tab-item--active', b.dataset.tab === key);
+  function activateTab(name) {
+    // 1) 버튼 상태
+    tabs.forEach(t => {
+      t.classList.toggle('tab-item--active', t.dataset.tab === name);
     });
-    // 콘텐츠
-    panes.forEach(p => {
-      p.classList.toggle('active', p.id === `tab-${key}`);
-    });
-  };
 
-  // 초기
-  const initial = document.querySelector('.tab-item.tab-item--active')?.dataset.tab
-    || btns[0].dataset.tab;
-  activate(initial);
+    // 2) 패널 표시
+    Object.entries(panels).forEach(([key, el]) => {
+      if (!el) return;
+      el.classList.toggle('tab-panel--active', key === name);
+    });
+
+    // 3) svg 바꿔끼우기
+    if (bar) {
+      bar.src = (name === 'air')
+        ? './assets/tab-select-left.svg'
+        : './assets/tab-select-right.svg';
+    }
+  }
 
   // 클릭 바인딩
-  btns.forEach(b => {
-    b.addEventListener('click', () => {
-      activate(b.dataset.tab);
+  tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      const key = t.dataset.tab;
+      if (!key) return;
+      activateTab(key);
     });
   });
-}
 
+
+ const first = document.querySelector('.tab-item.tab-item--active')?.dataset.tab || 'air';
+  activateTab(first);
 
 function bindSideMenu() {
   const overlay = document.querySelector('.slide-menu-overlay');

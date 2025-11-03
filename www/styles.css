@@ -1010,48 +1010,62 @@ html, body {
 /* ==============================================
    탭 네비게이션 정렬 (공기질 / 기상예보)
    ============================================== */
-.tab-navigation {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* ====== 탭 패널 공통 ====== */
+.tab-panel {
+  display: none;
   width: 100%;
-  height: 44px;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-  font-family: 'Paperlogy-7', 'Paperlogy', sans-serif;
-  overflow: hidden;
+  padding-bottom: 30px;   /* ✅ 어떤 탭이든 아래 30px */
+}
+.tab-panel.tab-panel--active {
+  display: block;
 }
 
-/* 각 탭 버튼 */
+/* ====== 제플린 탭 모양 리셋 ====== */
+.tab-navigation {
+  position: relative;
+  width: 412px;
+  height: 88px;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 0 auto;
+  overflow: visible;
+}
+
 .tab-navigation .tab-item {
-  flex: 1;
+  flex: 1 1 50%;
   text-align: center;
-  line-height: 44px;
-  color: #666;
+  margin-top: 27px;
+  line-height: 33px;
+  font-family: "Paperlogy-7", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #999;          /* 비활성색 */
   cursor: pointer;
-  transition: color 0.25s ease;
-  font-size: 15px;
 }
 
 .tab-navigation .tab-item--active {
-  color: #222;
-  font-weight: bold;
+  color: #333;          /* 활성 텍스트 */
 }
 
-/* 이동하는 바 */
-#tab-select-bar {
+/* svg 바(통) */
+.tab-navigation .tab_select {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 50%;
+  width: 412px;
   height: 4px;
-  background-color: #b0d4cb;
-  border-radius: 2px;
-  transition: left 0.25s ease;
-  z-index: 2;
+  pointer-events: none;
 }
 
+/* ====== footer 간격 보정 ====== */
+.Main-container {
+  padding-bottom: 30px;  /* 앱 본문과 푸터 사이 기본 30px */
+}
+.app-footer {
+  margin-top: 0;
+}
 
 /* ==============================================
    기본 공통
