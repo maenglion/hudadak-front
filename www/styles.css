@@ -665,22 +665,30 @@ html, body {
 }
 
 .gas-bar--so2 {
-  background-color: #59c5a9;
+  background-color: #2da5e5;
 }
 .gas-bar--co {
-  background-color: #59a6c5;
+  background-color: #45d69e;
 }
 .gas-bar--o3 {
-  background-color: #c5c259;
+  background-color: #d7d247;
 }
 .gas-bar--no2 {
-  background-color: #c57b59;
+  background-color: #e67541;
 }
 
 
 /* ========================================
    [2-2] 기상예보 탭
    ======================================== */
+
+   /* 기상예보 카드가 들어오는 컨테이너 */
+.forecast-grid {
+  margin: 46px 26px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 .forecast-card {
   width: 380px;
@@ -1064,35 +1072,80 @@ html, body {
   padding-bottom: 130px;     /* ← footer 높이 + 여유 */
 }
 
-/* ===== footer ===== */
+.hud-tab {
+  position: relative;
+  width: 100%;
+  height: 54px;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  gap: 56px; /* 글자 사이 */
+  align-items: center;
+  margin-top: 0; /* 기준바 바로 밑 */
+  border-bottom: 1px solid #d4d4d4;
+}
+
+.hud-tab .tab-btn {
+  background: none;
+  border: none;
+  font-family: "Paperlogy-7", sans-serif;
+  font-size: 16px;
+  color: #777;
+  cursor: pointer;
+}
+
+.hud-tab .tab-btn.active {
+  color: #222;
+}
+
+.hud-tab .tab-indicator {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 412px;
+  height: 4px;
+  pointer-events: none;
+}
+
+/* 카드 공통: 좌우 26px, 위아래 0 */
+.air-quality-card,
+.gas-info-card,
+.forecast-card {
+  width: calc(100% - 52px); /* 412 - 26*2 */
+  margin: 46px 26px 0;      /* 첫 카드만 46px 위로 띄움 */
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.04);
+}
+
+/* 두 번째 카드(기타 공기지표)는 50px 띄움 */
+.gas-info-card {
+  margin-top: 50px;
+  padding: 24px 20px 24px;
+}
+
+/* footer */
 .app-footer {
-  width: 151px;              /* figma 값 */
-  height: auto;              /* 내용에 맞게 */
+  width: 151px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;                  /* 둘 사이 8px */
-  margin: 46px auto 30px;    /* 위 46, 아래 30, 가운데 정렬 */
-  /* 배경은 전체가 이미 #ededed 이라서 안 넣어도 됨 */
+  gap: 8px;
+  margin: 46px auto 30px;
+  text-align: center;
 }
 
 .app-footer .footer-privacy {
-  font-family: "Paperlogy-5", "Paperlogy", sans-serif;
+  width: 131px;
+  font-family: "Paperlogy-5", sans-serif;
   font-size: 18px;
-  font-weight: 500;
-  line-height: 21px;
-  text-align: center;
   color: #787878;
-  width: 131px;              /* figma 값 */
+  text-decoration: none;
 }
 
 .app-footer .footer-brand {
-  font-family: "Paperlogy-7", "Paperlogy", sans-serif;
+  width: 109px;
+  font-family: "Paperlogy-7", sans-serif;
   font-size: 22px;
-  font-weight: 700;
-  line-height: 26px;
-  text-align: center;
   color: #787878;
-  width: 109px;              /* figma 값 */
 }
 
