@@ -43,6 +43,7 @@ html, body {
   margin-left: auto;
   margin-right: auto;
   position: relative; 
+  padding-bottom: 100px;
 }
 
 /* [추가] App-header의 기본 뼈대 */
@@ -280,7 +281,7 @@ html, body {
    ======================================== */
 
 .air-quality-card {
-  width: 380px;
+  width: var(--card-w);
   height:638px; 
   margin-top: 0px; 
   margin-left: auto;
@@ -832,7 +833,6 @@ html, body {
 
 .gas-info-card {
   width: 380px;
-  height:667px;
   margin-top: 46px; 
   margin-bottom: 46px; 
   margin-left: auto;
