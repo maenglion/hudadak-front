@@ -1031,7 +1031,8 @@ html, body {
   align-items: center;
   margin-top: 50px;   /* ↑ 위 콘텐츠와 50px */
   margin-bottom: 24px;
-  gap: 30px;          /* 개인정보 → 2e Studio 사이 30px */
+  padding-bottom: 30px;
+  gap: 16px;          /* 개인정보 → 2e Studio 사이 30px */
 }
 
 .app-footer .footer-terms {
