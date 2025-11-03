@@ -559,12 +559,11 @@ html, body {
 
 .app-footer-wrapper {
   /* Main-container 하단에 고정되도록 */
-  position: absolute;
+  position: relative;
   bottom: 0;
-  width: 412px;
-left: 50%; /* Main-container의 중심 */
-  transform: translateX(-50%); /* 정확히 중앙으로 이동 */
-  padding-top: 50px;
+  width: 380px;
+margin: 0 auto; /* 중앙 정렬 */
+   padding-top: 50px;
   padding-bottom: 30px; /* 바탕 하단 30px 여백 */
 }
 
@@ -577,8 +576,8 @@ left: 50%; /* Main-container의 중심 */
   
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: bottom;
+  justify-content: flex-end;
+  align-items: center;
   gap: 8px;
 }
 
