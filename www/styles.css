@@ -831,12 +831,14 @@ html, body {
 
 .gas-info-card {
   width: 380px;
+  height:667px;
   margin-top: 46px; 
   margin-bottom: 46px; 
   margin-left: auto;
   margin-right: auto;
   background-color: #ffffff;
   padding-top: 56px; 
+  padding: 50px;
   border-radius: 16px; 
   box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
 }
