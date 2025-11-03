@@ -149,7 +149,7 @@ function animateValue(el, toValue, unitText = '', duration = 600, dp = 1) {
   const R_OUTER = 138;           // 바깥휠(미세먼지) 반지름
   const R_INNER = 103;           // 안쪽휠(초미세먼지) 반지름
 
-  const card   = document.querySelector('.air-card');
+  const card = document.querySelector('.gauge-card');
   const svg    = card.querySelector('.connector-layer');
 
   const tick10 = card.querySelector('.components-pm10 .tick');

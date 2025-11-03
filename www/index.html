@@ -46,7 +46,7 @@
     <!-- ▼▼ 공기질 탭 ▼▼ -->
     <div class="tab-content" id="tab-air-content">
       <div class="air-quality-card">
-        <div class="gauge-card">
+        <div class="gauge-card air-card">
           <div class="gauge-rings">
             <div class="ring ring-pm10">
               <div class="ring-fill ring-pm10-fill"></div>
@@ -83,17 +83,15 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
-        <svg class="connector-layer" viewBox="0 0 420 420" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+         <svg class="connector-layer" viewBox="0 0 420 420" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
     <line id="conn-pm10" class="connector dotted" x1="0" y1="0" x2="0" y2="0"/>
     <line id="conn-pm25" class="connector dotted" x1="0" y1="0" x2="0" y2="0"/>
     <!-- 끝점에 작은 점 표시(선택) -->
     <circle id="pin-pm10" class="pin" r="2" cx="0" cy="0"/>
     <circle id="pin-pm25" class="pin" r="2" cx="0" cy="0"/>
   </svg>
-</div>
-
+</div> 
+   
       <!-- 가스 카드 -->
       <div class="gas-info-card">
         <h2 class="gas-info-title">기타 공기지표</h2>
