@@ -401,6 +401,45 @@ bottom: 63px; /* [추정 유지] 카드 하단에서 37px 떨어진 위치로 �
   padding-left: 4px;
 }
 
+/* 꺾쇠 (점선) */
+.components-pm25::after { 
+  content: '';
+  position: absolute;
+  z-index: 11;
+  
+  /* [수정] 꺾쇠 시작 위치 (텍스트 박스의 왼쪽 위에서 시작) */
+  left: 0;
+  top: 0; 
+  transform: translateX(100%); /* 텍스트 박스 오른쪽으로 뺌 (임시) */
+
+  /* [수정] 스펙 적용 */
+  width: 2px;
+  height: 124px;
+  border-left: 2px dotted var(--dash-color);
+  
+  /* [스펙] 180도 회전 및 기준점 설정 */
+  transform: rotate(180deg);
+  transform-origin: top left;
+}
+
+/* 끝점 (점) */
+.components-pm25::before { 
+  /* 끝점도 꺾쇠의 위치에 맞춰 재조정해야 합니다. */
+  content: '';
+  position: absolute;
+  z-index: 12;
+  
+  /* [계산] 꺾쇠 끝점 위치 (복잡하므로 CSS 변수 대신 임시 픽셀로 지정) */
+  bottom: 318px; 
+  left: 207px;
+  
+  width: var(--pm25-dot-size);
+  height: var(--pm25-dot-size);
+  border-radius: 50%;
+  background: #333;
+  box-shadow: 0 0 3px rgba(0,0,0,0.25);
+}
+
 .components-pm25.animate-end {
     bottom: 33px; /* 30px 아래로 이동 */
 }
