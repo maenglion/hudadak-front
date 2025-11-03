@@ -368,7 +368,7 @@ html, body {
 .components-pm10 {
   position: absolute;
   /* [수정] 꺾쇠와 간격을 고려하여 왼쪽에서 60px 떨어진 위치로 최종 조정 */
-  top: 54px; /* [추정 유지] 카드 상단에서 54px 떨어진 위치 */
+  top: 46px; /* [추정 유지] 카드 상단에서 54px 떨어진 위치 */
   left: 194px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */
   transform: none; 
   /* [추가] 애니메이션을 위한 transition 설정 */
@@ -395,7 +395,7 @@ html, body {
 /* --- 초미세먼지 텍스트 라벨 박스 --- */
 .components-pm25 {
   position: absolute;
-  bottom: 37px; 
+  bottom: 57px; 
   left: 60px; 
   /* ... (나머지 스타일 유지) ... */
   
