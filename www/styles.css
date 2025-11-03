@@ -218,15 +218,7 @@ html, body {
 
 
 /* 공기질 카드들이 탭에 딱 붙도록 */
-.air-quality-card {
-  margin-top: 0;
-}
 
-.gas-info-card {
-  margin-left: 26px;
-  margin-right: 26px;
-  margin-bottom: 50px;
-}
 
 /* =========================================================
    [NEW] ChatGPT 기반 Air Quality Card & Gauge Styles (Zeplin Spec 적용)
@@ -508,7 +500,6 @@ html, body {
 }
 
 
-
 .air-info-header {
   display: flex;
   align-items: center;
@@ -559,6 +550,7 @@ html, body {
 .gas-info-card {
   width: 380px;
   margin-top: 46px; 
+  margin-bottom: 46px; 
   margin-left: auto;
   margin-right: auto;
   background-color: #ffffff;
