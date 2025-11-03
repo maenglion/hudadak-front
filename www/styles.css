@@ -578,7 +578,7 @@ left: 50%; /* Main-container의 중심 */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: center;
+  align-items: bottom;
   gap: 8px;
 }
 
