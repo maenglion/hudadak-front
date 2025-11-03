@@ -283,7 +283,7 @@ html, body {
    ======================================== */
 
 .air-quality-card {
-  width: var(--card-w);
+  width: 380(--card-w);
   height: var(--card-h); 
   margin-top: 0px; 
   margin-left: auto;
