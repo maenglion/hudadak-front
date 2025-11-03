@@ -558,13 +558,17 @@ html, body {
    ======================================== */
 
 .app-footer-wrapper {
-  /* Main-container 하단에 고정되도록 */
-  position: relative;
+  /* [추가] 배경색을 Main-container와 동일하게 설정 */
+  background-color: #F5F5F5;
+  
+  /* ... (나머지 스타일 유지) ... */
+  position: relative; 
   bottom: 0;
-  width: 380px;
-margin: 0 auto; /* 중앙 정렬 */
-   padding-top: 50px;
-  padding-bottom: 30px; /* 바탕 하단 30px 여백 */
+  width: 412px; /* Main-container와 같은 너비 */
+  left: 50%;
+  transform: translateX(-50%);
+  padding-top: 50px;
+  padding-bottom: 30px; 
 }
 
 .app-footer {
