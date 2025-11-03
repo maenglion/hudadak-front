@@ -392,54 +392,56 @@ html, body {
 }
 
 /* ===== 초미세먼지 (아래) 텍스트/꺾쇠 ===== */
+/* --- 초미세먼지 텍스트 라벨 박스 --- */
 .components-pm25 {
   position: absolute;
-bottom: 63px; /* [추정 유지] 카드 하단에서 37px 떨어진 위치로 고정 */
-  left: 77px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */ 
-  text-align: left;
-  z-index: 10;
-  padding-left: 4px;
+  bottom: 37px; 
+  left: 60px; 
+  /* ... (나머지 스타일 유지) ... */
+  
+  /* [추가] 꺾쇠를 위해 텍스트 박스의 너비가 필요함 */
+  width: 200px; 
+  
+  --line-offset: 8px; /* 텍스트와 꺾쇠 사이 8px 간격 */
+  --pm25-line-len: 110px; /* 길이를 임의로 설정 (디자인에 맞게) */
 }
 
 /* 꺾쇠 (점선) */
-.components-pm25::after { 
+.components-pm25::before { 
   content: '';
   position: absolute;
   z-index: 11;
   
-  /* [수정] 꺾쇠 시작 위치 (텍스트 박스의 왼쪽 위에서 시작) */
-  left: 0;
-  top: 0; 
-  transform: translateX(100%); /* 텍스트 박스 오른쪽으로 뺌 (임시) */
-
-  /* [수정] 스펙 적용 */
+  /* [계산] 시작점: 텍스트 박스의 오른쪽 끝(100%)에서 8px 띄우기 */
+  left: calc(100% + var(--line-offset)); 
+  top: 32px; /* Y축 중앙 근처에서 시작 */
+  
   width: 2px;
-  height: 124px;
+  height: var(--pm25-line-len); 
   border-left: 2px dotted var(--dash-color);
   
-  /* [스펙] 180도 회전 및 기준점 설정 */
-  transform: rotate(180deg);
+  /* [추가] 휠 중심으로 향하도록 각도 조정 */
+  transform: rotate(-10deg); 
   transform-origin: top left;
 }
 
-/* 끝점 (점) */
-.components-pm25::before { 
-  /* 끝점도 꺾쇠의 위치에 맞춰 재조정해야 합니다. */
+/* 꺾쇠 끝점 (점) */
+.components-pm25::after { 
   content: '';
   position: absolute;
   z-index: 12;
   
-  /* [계산] 꺾쇠 끝점 위치 (복잡하므로 CSS 변수 대신 임시 픽셀로 지정) */
-  bottom: 400px; 
-  left: 207px;
+  /* 꺾쇠 끝점 위치에 맞춰서 점을 배치 */
+  bottom: calc(32px + var(--pm25-line-len) * cos(10deg));
+  left: calc(100% + var(--line-offset) + var(--pm25-line-len) * sin(10deg));
   
-  width: var(--pm25-dot-size);
-  height: var(--pm25-dot-size);
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #656464;
+  background: #333;
   box-shadow: 0 0 3px rgba(0,0,0,0.25);
+  transform: translate(-50%, -50%); /* 중심 정렬 */
 }
-
 .components-pm25.animate-end {
     bottom: 33px; /* 30px 아래로 이동 */
 }
