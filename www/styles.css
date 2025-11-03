@@ -562,8 +562,8 @@ html, body {
   position: absolute;
   bottom: 0;
   width: 412px;
-  margin-left: auto;
-  margin-right: auto;
+left: 50%; /* Main-container의 중심 */
+  transform: translateX(-50%); /* 정확히 중앙으로 이동 */
   padding-top: 50px;
   padding-bottom: 30px; /* 바탕 하단 30px 여백 */
 }
