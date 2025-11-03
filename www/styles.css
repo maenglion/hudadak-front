@@ -264,19 +264,58 @@ html, body {
    [2] 탭 콘텐츠 (공기질/기상예보)
    ======================================== */
 
-.tab-content {
-  display: none;
-  padding-top: 46px;
-  padding-bottom: 30px; /* 네가 말한 "어떤 탭이든 밑에 30px" */
+.tab-navigation {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
   width: 100%;
+  background: #ffffff;
+  border-bottom: 2px solid #e0e0e0;
+  position: relative;
+  z-index: 10;
 }
 
-/* 선택된 탭만 보이게 */
-.tab-content.active {
-  display: block;
+.tab-navigation .tab-item {
+  flex: 1;
+  text-align: center;
+  font-family: 'Paperlogy-7', 'Paperlogy', sans-serif;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  padding: 16px 0;
+  transition: color 0.2s ease;
 }
 
+.tab-navigation .tab-item--active {
+  color: #333;
+  font-weight: bold;
+}
 
+/* 밑줄 표시 (녹색 바) */
+#tab-select-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  height: 4px;
+  background: #32b384;
+  transition: left 0.3s ease;
+}
+
+/* ========================================
+   [2-1] 공기질 탭
+   ======================================== */
+
+/* styles.css */
+
+/* ... (이 위에는 App-header, tab-navigation, gas-info-card 등은 유지) ... */
+
+
+/* =========================================================
+   [NEW] ChatGPT 기반 Air Quality Card & Gauge Styles (Zeplin Spec 적용)
+   모든 기존 .air-quality-card 내부 스타일은 제거하고 이 코드로 대체합니다.
+   ========================================================= */
 
 /* --- CSS 변수 (루트에서 관리) --- */
 :root {
