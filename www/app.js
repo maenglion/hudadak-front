@@ -110,6 +110,17 @@ function animateRing(el, toPerc, color = '#b0d4cb', duration = 650) {
   if (!el) return;
   const start = performance.now();
   const from = 0;
+  const midAngle10 = (pm10Perc * 360) / 2; // 바깥휠(미세먼지) 중간각
+  const midAngle25 = (pm25Perc * 360) / 2; // 안쪽휠(초미세먼지) 중간각
+
+  // 도넛 시작각이 12시가 아니면 보정치 추가 (예: 3시 시작이면 +90)
+  const OFFSET = 0; // 필요시 90, -90 등으로 조정
+  if (window.updatePmConnectors) {
+    window.updatePmConnectors({
+      pm10Angle: midAngle10 + OFFSET,
+      pm25Angle: midAngle25 + OFFSET
+    });
+  }
   function frame(ts) {
     const t = Math.min(1, (ts - start) / duration);
     const cur = from + (toPerc - from) * t;
