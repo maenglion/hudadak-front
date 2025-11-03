@@ -280,8 +280,8 @@ html, body {
    ======================================== */
 
 .air-quality-card {
-  width: 380(--card-w);
-  height: var(--card-h); 
+  width: 380px;
+  height:638px; 
   margin-top: 0px; 
   margin-left: auto;
   margin-right: auto;
