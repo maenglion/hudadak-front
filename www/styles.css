@@ -228,12 +228,22 @@ html, body {
    [2] 탭 콘텐츠 (공기질/기상예보)
    ======================================== */
 
+/* 탭 콘텐츠는 기본적으로 안 보이게 */
 .tab-content {
-  padding-top: 46px;
+  display: none;
+  padding: 16px 16px 30px;  /* 위·옆 여백 + 아래 30px은 footer랑 안 붙게 */
+  background: #f7f7f7;
 }
 
-.tab-content.hidden {
-  display: none;
+/* 선택된 탭만 보이게 */
+.tab-content.active {
+  display: block;
+}
+
+/* 공기질 카드들이 탭에 딱 붙도록 */
+.air-quality-card,
+.gas-info-card {
+  margin-top: 0;
 }
 
 

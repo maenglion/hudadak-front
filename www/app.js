@@ -409,38 +409,34 @@ function renderMain(air) {
    7. 탭 / 메뉴 / 검색 바인딩
    ========================================================= */
 function bindTabs() {
-  const btns  = Array.from(document.querySelectorAll('.tab-item'));
-  const panes = {
-    air: document.getElementById('tab-air'),
-    forecast: document.getElementById('tab-forecast'),
-  };
-  const bar = document.getElementById('tab-select-bar');
-
-  if (!btns.length) return;
+  const btns  = document.querySelectorAll('.tab-navigation .tab-item');
+  const panes = document.querySelectorAll('.tab-content');
+  if (!btns.length || !panes.length) return;
 
   const activate = (key) => {
-    btns.forEach((b, idx) => {
-      const isTarget = b.dataset.tab === key;
-      b.classList.toggle('tab-item--active', isTarget);
-      if (bar && isTarget) {
-        bar.style.left = `${idx * 50}%`;   // 탭 2개 기준
-      }
+    // 버튼
+    btns.forEach(b => {
+      b.classList.toggle('tab-item--active', b.dataset.tab === key);
     });
-
-    Object.entries(panes).forEach(([k, el]) => {
-      if (!el) return;
-      el.classList.toggle('active', k === key);
-      el.style.display = k === key ? 'block' : 'none';
+    // 콘텐츠
+    panes.forEach(p => {
+      p.classList.toggle('active', p.id === `tab-${key}`);
     });
   };
 
-  btns.forEach((b) => {
-    b.addEventListener('click', () => activate(b.dataset.tab));
-  });
-
   // 초기
-  activate('air');
+  const initial = document.querySelector('.tab-item.tab-item--active')?.dataset.tab
+    || btns[0].dataset.tab;
+  activate(initial);
+
+  // 클릭 바인딩
+  btns.forEach(b => {
+    b.addEventListener('click', () => {
+      activate(b.dataset.tab);
+    });
+  });
 }
+
 
 function bindSideMenu() {
   const overlay = document.querySelector('.slide-menu-overlay');
@@ -505,8 +501,7 @@ function initLocation() {
 /* =========================================================
    9. 시작
    ========================================================= */
-window.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   bindTabs();
-  bindSideMenu();
-  initLocation();
+  initLocation();   // 너 원래 쓰던 위치 불러오기
 });
