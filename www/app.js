@@ -513,22 +513,6 @@ function switchTab(clickedTab) {
     tabNavigation.style.setProperty('--tab-left-position', position);
 }
 
-
-function bindUIEvents() {
-    // UI 요소 참조
-    const tabItems = document.querySelectorAll('.tab-navigation .tab-item');
-    const slideMenuOverlay = document.querySelector('.slide-menu-overlay');
-    const menuButton = document.querySelector('.notification-icon'); 
-    const logoButton = document.querySelector('.logo-text'); // HUDADAK 로고
-    const searchOverlay = document.querySelector('.search-overlay');
-    const searchButton = document.querySelector('.location-button');
-    const menuItems = document.querySelectorAll('.slide-menu-nav .menu-item');
-
-    // 1. 탭 이벤트 연결
-    tabItems.forEach(tab => {
-        tab.addEventListener('click', () => switchTab(tab));
-    });
-
     // 2. 슬라이드 메뉴 열기 (로고 클릭)
     logoButton?.addEventListener('click', (e) => {
         e.stopPropagation(); 
@@ -608,6 +592,134 @@ function bindUIEvents() {
         inp.addEventListener('input', autoSearch);
     }
 }
+
+
+// ===== 탭 전환 헬퍼 =====
+const TAB_MAP = { air: 'tab-air-content', forecast: 'tab-forecast-content' };
+
+function switchTab(tabOrName){
+  const name = typeof tabOrName === 'string' ? tabOrName : tabOrName?.dataset?.tab;
+  if(!name || !TAB_MAP[name]) return;
+
+  // 버튼 상태 토글
+  document.querySelectorAll('.tab-navigation .tab-item').forEach(b=>{
+    const active = b.dataset.tab === name;
+    b.classList.toggle('tab-item--active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+
+  // 패널 표시/숨김 (hidden 속성만 사용 → CSS 불필요)
+  document.querySelectorAll('.tab-content').forEach(p=>{
+    p.hidden = (p.id !== TAB_MAP[name]);
+  });
+}
+
+// ===== 디바운스 유틸 =====
+function debounce(fn, wait=350){
+  let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
+}
+
+// ===== 원래 방식의 addEventListener 바인딩 =====
+let __uiBound = false;
+function bindUIEvents() {
+  if (__uiBound) return;           // 중복 방지
+  __uiBound = true;
+
+  // UI 요소 참조 (너가 준 선택자 그대로)
+  const tabItems         = document.querySelectorAll('.tab-navigation .tab-item');
+  const slideMenuOverlay = document.querySelector('.slide-menu-overlay');
+  const menuButton       = document.querySelector('.notification-icon'); 
+  const logoButton       = document.querySelector('.logo-text'); // HUDADAK 로고
+  const searchOverlay    = document.querySelector('.search-overlay');
+  const searchButton     = document.querySelector('.location-button');
+  const menuItems        = document.querySelectorAll('.slide-menu-nav .menu-item');
+
+  // 1. 탭 이벤트 연결
+  tabItems.forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab));
+  });
+
+  // 2. 슬라이드 메뉴 열기 (로고 클릭)
+  logoButton && logoButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (slideMenuOverlay) slideMenuOverlay.style.display = 'block';
+  });
+
+  // 3. 현재 위치 재조회 (알림 아이콘 클릭)
+  menuButton && menuButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    try { initLocation && initLocation(); } catch(_) {}
+  });
+
+  // 4. 슬라이드 메뉴 닫기 (오버레이 클릭)
+  slideMenuOverlay && slideMenuOverlay.addEventListener('click', (e) => {
+    if (e.target === slideMenuOverlay) slideMenuOverlay.style.display = 'none';
+  });
+
+  // 5. 슬라이드 메뉴 아코디언
+  menuItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const subMenu = item.nextElementSibling;
+
+      // 다른 메뉴 닫기
+      menuItems.forEach(otherItem => {
+        if (otherItem !== item) {
+          otherItem.classList.remove('active');
+          const otherSubMenu = otherItem.nextElementSibling;
+          if (otherSubMenu && otherSubMenu.classList.contains('sub-menu-box')) {
+            otherSubMenu.classList.remove('active');
+          }
+        }
+      });
+
+      // 현재 메뉴 토글
+      item.classList.toggle('active');
+      if (subMenu && subMenu.classList.contains('sub-menu-box')) {
+        subMenu.classList.toggle('active');
+      }
+    });
+  });
+
+  // 6. 검색 오버레이 열기/닫기
+  searchButton && searchButton.addEventListener('click', () => {
+    if (searchOverlay) searchOverlay.style.display = 'block';
+  });
+  searchOverlay && searchOverlay.addEventListener('click', (e) => {
+    if (e.target === searchOverlay) searchOverlay.style.display = 'none';
+  });
+
+  // 7. 기준 변경 라디오 버튼 이벤트
+  document.querySelectorAll('input[name="standard"]').forEach(radio => {
+    radio.addEventListener('change', e => {
+      const v = e.target.value;
+      try {
+        if (v === 'cai') setStandard && setStandard('KOR');
+        else if (v === 'who') setStandard && setStandard('WHO8');
+      } catch(_) {}
+    });
+  });
+
+  // 8. 검색 입력 (디바운스, 엔터)
+  const inp = document.getElementById('location-input');
+  if (inp) {
+    const autoSearch = debounce(() => { try { doSearch && doSearch(inp.value || ''); } catch(_) {} }, 350);
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        try { doSearch && doSearch(inp.value || ''); } catch(_) {}
+      }
+    });
+    inp.addEventListener('input', autoSearch);
+  }
+
+  // 9. 초기 탭 세팅 (HTML에서 active로 표시된 버튼 기준)
+  const initial = document.querySelector('.tab-navigation .tab-item.tab-item--active')?.dataset.tab || 'air';
+  switchTab(initial);
+}
+
+// DOM 로드 후 한 번만 바인딩
+document.addEventListener('DOMContentLoaded', bindUIEvents);
+
 /* =========================================================
    8. 위치 → 전체 업데이트
    ========================================================= */
