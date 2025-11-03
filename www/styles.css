@@ -38,7 +38,7 @@ html, body {
 .Main-container {
   width: 412px;
   min-height: 100vh;
-  background-color: #F5F5F5; 
+  background-color: #edeeee; 
   margin-left: auto;
   margin-right: auto;
 }
@@ -302,14 +302,6 @@ html, body {
   background: #b0d4cd;
   transition: left 0.3s ease;
 }
-
-/* ========================================
-   [2-1] 공기질 탭
-   ======================================== */
-
-/* styles.css */
-
-/* ... (이 위에는 App-header, tab-navigation, gas-info-card 등은 유지) ... */
 
 
 /* =========================================================
