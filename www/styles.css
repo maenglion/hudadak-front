@@ -430,17 +430,20 @@ bottom: 63px; /* [추정 유지] 카드 하단에서 37px 떨어진 위치로 �
 
 .components-pm25::after { /* 점선 (위로) */
 content: '';
-  position: absolute;
-  z-index: 11;
+position: absolute;
+z-index: 11;
   
   /* 텍스트 블록 오른쪽 끝에서 8px 떨어진 위치 */
   left: calc(100% + var(--line-offset));
   bottom: 28px; /* 텍스트 중앙 (Y축) 근처에서 시작 */
   
   width: 2px;
-  height: 80
+  height: 80;
  
-}
+  transform: rotate(0deg); 
+  transform-origin: bottom right; }
+
+
 
 
 .components-pm25 .pm25 {
