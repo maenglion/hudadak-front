@@ -430,13 +430,13 @@ bottom: 63px; /* [추정 유지] 카드 하단에서 37px 떨어진 위치로 �
   z-index: 12;
   
   /* [계산] 꺾쇠 끝점 위치 (복잡하므로 CSS 변수 대신 임시 픽셀로 지정) */
-  bottom: 318px; 
+  bottom: 400px; 
   left: 207px;
   
   width: var(--pm25-dot-size);
   height: var(--pm25-dot-size);
   border-radius: 50%;
-  background: #333;
+  background: #656464;
   box-shadow: 0 0 3px rgba(0,0,0,0.25);
 }
 
