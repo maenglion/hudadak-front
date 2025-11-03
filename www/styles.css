@@ -224,16 +224,6 @@ html, body {
   color: #82A1BF;
 }
 
-.tab-navigation {
-  width: 412px;
-  height: 88px;
-  background-color: #fff;
-  display: flex;
-  position: relative; 
-  border-bottom: 4px solid #ededed; 
-}
-
-
 /* ========================================
    [2] 탭 콘텐츠 (공기질/기상예보)
    ======================================== */

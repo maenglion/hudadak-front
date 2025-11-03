@@ -1,6 +1,7 @@
 // app.js
 // 1) 외부 기준표 가져오기 (KOR, HUDADAK8 이런 거 여기 있다고 했잖아)
 import { STANDARDS } from './js/standards.js';
+import { renderForecast } from './js/forecast.js';
 
 /* =========================================================
    0. 전역 상태
@@ -486,8 +487,8 @@ async function updateAll(lat, lon) {
   const locBtn = document.getElementById('location-button');
   if (locBtn) locBtn.textContent = place || air.name || '—';
 
-  const f = await fetchForecast(lat, lon, 24);
-  renderForecast(f);
+ const f = await fetchForecast(lat, lon, 24);
+renderForecast(f, { address: place, lat, lon });
 }
 
 function initLocation() {
