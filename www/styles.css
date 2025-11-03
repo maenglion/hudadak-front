@@ -288,7 +288,7 @@ html, body {
 }
 
 .tab-navigation .tab-item--active {
-  color: #333;
+  color: #333333;
   font-weight: bold;
 }
 
@@ -299,7 +299,7 @@ html, body {
   left: 0;
   width: 50%;
   height: 4px;
-  background: #32b384;
+  background: #b0d4cd;
   transition: left 0.3s ease;
 }
 
