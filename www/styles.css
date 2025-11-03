@@ -4,19 +4,20 @@
 
 /* 1. 모든 요소의 기본 여백(margin/padding)을 0으로 초기화 */
 :root {
---card-w: 388px; 
-  --card-h: 646px; 
+  --card-w: 388px; /* [제플린] 외부 카드 너비 */
+  --card-h: 646px; /* [제플린] 외부 카드 높이 */
   --ring-outer: 320px; /* PM10 휠 (바깥) */
-  --ring-inner: 260px; /* [수정] PM2.5 휠 (안쪽) - 두께 30px 확보 */
-  --ring-center: 200px; /* [수정] 맨 안쪽 하얀 부분 - 두께 30px 확보 */
+  --ring-inner: 260px; /* PM2.5 휠 (안쪽) - 두께 30px 확보 */
+  --ring-center: 200px; /* 맨 안쪽 하얀 부분 - 두께 30px 확보 */
   --ring-bg-color: #f3f3f3; 
   --dash-color: #333333;
   --text-main-color: #333; /* 제목/수치 메인 텍스트 색상 */
   --text-sub-color: #787878; /* 서브 텍스트 색상 */
-  --font-paperlogy-5: "Paperlogy-5", sans-serif;
-  --font-paperlogy-7: "Paperlogy-7", sans-serif;
+  --font-paperlogy-5: "Paperlogy";
+  --font-paperlogy-7: "Paperlogy";
   --pm10-dot-size: 10px;
   --pm25-dot-size: 10px;
+  --tab-left-position: 0%; /* JS에서 제어하는 탭 밑줄 위치 */
 }
 
 * {
@@ -35,49 +36,46 @@ html, body {
    [1] 피그마 코드 시작
    ======================================== */
 
+.Main-container {
+  width: 412px;
+  min-height: 100vh;
+  background-color: #F5F5F5; 
+  margin-left: auto;
+  margin-right: auto;
+  
+  /* 푸터 공간 확보를 위한 패딩 */
+  padding-bottom: 120px; 
+  position: relative; 
+}
+
 /* [추가] App-header의 기본 뼈대 */
 .App-header {
   width: 412px;
   height: 566px;
-  /* (padding은 내부 요소들이 flex로 정렬될 것이므로 여기선 뺍니다) */
 }
 
-/* '좋음' (excellent) [추가됨] */
+/* 상태별 그라데이션 */
 .App-header--excellent {
   background-image: linear-gradient(to bottom, #23a0e5, #a0cdf8);
 }
-
-/* '양호' (good) [추가됨] */
 .App-header--good {
   background-image: linear-gradient(to bottom, #30b8de, #a0e6d9);
 }
-
-/* '보통' (fair) */
 .App-header--fair {
   background-image: linear-gradient(to bottom, #3dd392, #bbe596);
 }
-
-/* '나쁨' (moderate) */
 .App-header--moderate {
   background-image: linear-gradient(to bottom, #85af36, #ded06d);
 }
-
-/* '상당히 나쁨' (poor) */
 .App-header--poor {
   background-image: linear-gradient(to bottom, #db9f3c 18%, #e6d55c);
 }
-
-/* '매우 나쁨' (unhealthy) */
 .App-header--unhealthy {
   background-image: linear-gradient(to bottom, #df7f59 27%, #e4bb8b);
 }
-
-/* '위험' (hazardous) */
 .App-header--hazardous {
   background-image: linear-gradient(to bottom, #71395e 27%, #d4a5a5);
 }
-
-/* '심각' (severe) */
 .App-header--severe {
   background-image: linear-gradient(to bottom, #a44960 18%, #ffbba7);
 }
@@ -101,11 +99,13 @@ html, body {
   font-weight: 800; 
   font-size: 20px;
   color: #ffffff; 
+  cursor: pointer; 
 }
 
 .notification-icon {
   width: 42px;
   height: 42px;
+  cursor: pointer;
 }
 
 .location-button {
@@ -125,6 +125,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .timestamp-row {
@@ -157,7 +158,7 @@ html, body {
   font-size: 50px;
   color: #ffffff;
   text-align: center;
-  margin-top: 48px; 
+  margin-top: 48px; /* [수정] timestamp와의 간격 48px */
 }
 
 .status-score {
@@ -166,7 +167,7 @@ html, body {
   font-size: 28px;
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
-  margin-top: 10px; 
+  margin-top: 10px; /* [수정] status-title과의 간격 10px */
 }
 
 .status-description {
@@ -175,7 +176,7 @@ html, body {
   font-size: 26px;
   color: #333333; 
   text-align: center;
-  margin-top: 48px;
+  margin-top: 48px; /* [수정] status-score와의 간격 48px */
   max-width: 380px;
   margin-left: auto;
   margin-right: auto;
@@ -216,89 +217,123 @@ html, body {
   color: #82A1BF;
 }
 
-
-/* 공기질 카드들이 탭에 딱 붙도록 */
-
-
-/* =========================================================
-   [NEW] ChatGPT 기반 Air Quality Card & Gauge Styles (Zeplin Spec 적용)
-   모든 기존 .air-quality-card 내부 스타일은 제거하고 이 코드로 대체합니다.
-   ========================================================= */
-
-/* --- CSS 변수 (루트에서 관리) --- */
-:root {
-  --card-w: 388px; /* [제플린] 외부 카드 너비 */
-  --card-h: 646px; /* [제플린] 외부 카드 높이 */
-  --ring-outer: 320px; /* [제플린] PM10 휠 */
-  --ring-inner: 220px; /* [제플린] PM2.5 휠 */
-  --ring-center: 160px; /* [제플린] 맨 안쪽 하얀 부분 */
-  --ring-bg-color: #f3f3f3; /* 링의 배경색 */
-  --dash-color: #ccc; /* 꺾쇠 점선 색상 */
-  --text-main-color: #333; /* 제목/수치 메인 텍스트 색상 */
-  --text-sub-color: #787878; /* 서브 텍스트 색상 */
-  --font-paperlogy-5: "Paperlogy-5", sans-serif;
-  --font-paperlogy-7: "Paperlogy-7", sans-serif;
+.tab-navigation {
+  width: 412px;
+  height: 88px;
+  background-color: #fff;
+  display: flex;
+  position: relative; 
+  border-bottom: 4px solid #ededed; 
+  --tab-left-position: 0%; /* JS에서 제어하는 변수 기본값 */
 }
 
-/* --- 메인 컨테이너: .air-quality-card --- */
+.tab-item {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Paperlogy";
+  font-weight: 700;
+  font-size: 28px;
+  color: #949494;
+  cursor: pointer;
+}
+
+.tab-item--active {
+  color: #333333;
+}
+
+.tab-navigation::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; 
+  height: 4px;  
+  width: 50%;
+  background-color: #b0d4cb; 
+  left: var(--tab-left-position, 0%); 
+  transition: left 0.3s ease; 
+}
+
+/* ========================================
+   [2] 탭 콘텐츠 (공기질/기상예보)
+   ======================================== */
+
+.tab-content {
+  padding-top: 46px;
+  /* 애니메이션 추가 */
+  transition: opacity 0.3s ease;
+}
+
+.tab-content.hidden {
+  display: none;
+}
+
+/* 애니메이션 클래스 */
+.fade-out {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================
+   [2-1] 공기질 탭 - 게이지 (최종)
+   ======================================== */
+
 .air-quality-card {
   width: var(--card-w);
-  height: var(--card-h); /* [제플린] 높이도 고정 */
-  margin-top: 0px; /* tab-navigation과의 간격 */
+  height: var(--card-h); 
+  margin-top: 0px; 
   margin-left: auto;
   margin-right: auto;
   background: #fff;
-  border-radius: 16px; /* [제플린] */
-  box-shadow: 0 4px 12px rgba(183, 183, 183, 0.6); /* [기존 유지] */
-  overflow: hidden; /* 내부 요소가 넘치지 않도록 */
-  position: relative; /* 내부 absolute 요소들의 기준점 */
+  border-radius: 16px; 
+  box-shadow: 0 4px 12px rgba(183, 183, 183, 0.6);
+  overflow: hidden; 
+  position: relative; 
+  padding-bottom: 46px;
 }
 
-/* --- 게이지 카드 (air-quality-card의 내용물) --- */
 .gauge-card {
   position: relative;
   width: 100%;
   height: 100%;
-  /* 내부 absolute 요소들이 air-quality-card 기준으로 배치되도록 */
 }
 
-/* --- 가운데 원들 (게이지 링) --- */
 .gauge-rings {
   position: absolute;
-  /* [제플린] top: 140px; */
   top: 140px; 
   left: 50%;
   transform: translateX(-50%);
   width: var(--ring-outer);
   height: var(--ring-outer);
-  display: flex; /* 내부 링 중앙 정렬용 */
+  display: flex; 
   justify-content: center;
   align-items: center;
 }
 
-/* --- 공통 링 스타일 --- */
 .ring {
   position: absolute;
   border-radius: 50%;
   background: radial-gradient(circle, #fff 20%, #f8f8f8 60%, #f0f0f0 100%);
-  box-shadow: inset 0 4px 6px rgba(0,0,0,0.03);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15); 
 }
 
-/* --- 바깥 링 (PM10) --- */
+/* 휠 크기 및 Z-index */
 .ring-pm10 {
-  width: var(--ring-outer); /* 320px */
+  width: var(--ring-outer); 
   height: var(--ring-outer);
-  z-index: 1; /* 안쪽 링보다 아래에 위치 */
+  z-index: 1; 
 }
-
-/* --- 안쪽 링 (PM2.5) --- */
 .ring-pm25 {
   width: var(--ring-inner); /* 260px */
   height: var(--ring-inner);
   z-index: 2;
 }
 
-/* --- 가장 안쪽 하얀 구멍 (원래 gauge-center 역할) --- */
+/* 가장 안쪽 하얀 구멍 */
 .gauge-rings::before { 
   content: '';
   position: absolute;
@@ -309,386 +344,155 @@ html, body {
   z-index: 3;
 }
 
-/* --- 게이지 채워지는 부분 --- */
+/* 게이지 채워지는 부분 */
 .ring-fill {
   position: absolute;
-  inset: 0; /* 부모 링에 꽉 채움 */
+  inset: 0; 
   border-radius: 50%;
-  /* 기본적으로 비워둠 (JS에서 동적으로 채울 예정) */
-  background: rgba(0,0,0,0); /* 초기 투명 */
+  background: rgba(0,0,0,0); 
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  z-index: 1;
 }
 
-/* PM10 게이지 채우기 (연한 민트) */
+/* PM10 게이지 채우기 */
 .ring-pm10-fill {
-  background: conic-gradient(#b0d4cb 0% 65%, rgba(0,0,0,0) 65% 100%); /* [기존 색상 유지] */
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
-  z-index: 1; /* 링 자체보다 위에, 안쪽 링보다는 아래 */
+  background: conic-gradient(#b0d4cb 0% 65%, rgba(0,0,0,0) 65% 100%);
+  z-index: 1; 
 }
 
-/* PM2.5 게이지 채우기 (주황) */
+/* PM2.5 게이지 채우기 */
 .ring-pm25-fill {
-  background: conic-gradient(#df7f59 0% 80%, rgba(0,0,0,0) 80% 100%); /* [기존 색상 유지] */
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
-  z-index: 2; /* 링 자체보다 위에, PM10 게이지보다 위에 */
+  background: conic-gradient(#df7f59 0% 80%, rgba(0,0,0,0) 80% 100%);
+  z-index: 2; 
 }
 
-/* ===== 미세먼지 (위) ===== */
+/* ===== 미세먼지 (위) 텍스트/꺾쇠 ===== */
 .components-pm10 {
   position: absolute;
   top: 54px;
-  left: 194px;
-  transform: translateX(-50%);
+  left: 60px; /* [수정] 좌측 정렬 */
+  transform: none;
+  text-align: left; 
+  z-index: 10;
   --pm10-line-start: 32px;
   --pm10-line-len: 80px;
   --pm10-dot-size: 10px;
-  --pm10-text-gap: 12px;   /* 선에서 글자까지 띄우는 거리 */
+  --pm10-text-gap: 8px;
 }
 
-/* 점선 (아래로) */
-.components-pm10::after {
+.components-pm10::after { /* 점선 (아래로) */
   content: '';
   position: absolute;
+  z-index: 11;
+  left: 100%; 
+  margin-left: var(--pm10-text-gap); 
   top: var(--pm10-line-start);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
+  width: 2px;
   height: var(--pm10-line-len);
-  border-left: 2px dashed var(--dash-color);
+  border-left: 2px dotted var(--dash-color);
+  transform: none; 
 }
 
-/* 점 */
-.components-pm10::before {
+.components-pm10::before { /* 점 */
   content: '';
   position: absolute;
-  left: 50%;
+  left: calc(100% + var(--pm10-text-gap) - (var(--pm10-dot-size) / 2));
   top: calc(var(--pm10-line-start) + var(--pm10-line-len) - (var(--pm10-dot-size) / 2));
-  transform: translateX(-50%);
   width: var(--pm10-dot-size);
   height: var(--pm10-dot-size);
   border-radius: 50%;
   background: #333;
-  z-index: 5;
+  z-index: 12;
 }
 
-/* ✅ 텍스트 블록: 선 오른쪽에 딱 붙임 */
 .components-pm10 .pm10 {
-  position: absolute;
-  top: 0;
-  left: 50%;                        /* 선 위치 */
-  margin-left: var(--pm10-text-gap); /* 선에서 8px 오른쪽 */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
   align-items: flex-start;
-  white-space: nowrap;               /* 제목 줄바꿈 방지 */
+  white-space: nowrap;
 }
 
-.components-pm10 .title-line {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.components-pm10 img.forecast-badges {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-}
-.components-pm10 .gauge-title {
-  font-family: var(--font-paperlogy-5);
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--text-sub-color);
-}
-.components-pm10 .value-line {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.components-pm10 .level {
-  font-family: var(--font-paperlogy-7);
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-main-color);
-}
-.components-pm10 .unit {
-  font-family: var(--font-paperlogy-5);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-sub-color);
-}
-
-
-/* ===== 초미세먼지 (아래) ===== */
+/* ===== 초미세먼지 (아래) 텍스트/꺾쇠 ===== */
 .components-pm25 {
   position: absolute;
-  bottom: 48px;
-  left: 77px;
+  bottom: 77px; 
+  left: 60px; 
   text-align: left;
-
+  z-index: 10;
   --pm25-line-len: 135px;
   --pm25-dot-size: 10px;
-  --pm25-line-offset-x: 12px;
-  --pm25-text-offset: 8px; /* 선에서 텍스트까지 */
+  --pm25-text-gap: 8px;
 }
 
-/* 위로 뻗는 선 */
-.components-pm25::after {
+.components-pm25::after { /* 점선 (위로) */
   content: '';
   position: absolute;
-  left: calc(100% + var(--pm25-line-offset-x));
-  top: calc(-1 * var(--pm25-line-len));
-  width: 0;
+  z-index: 11;
+  left: 100%;
+  margin-left: var(--pm25-text-gap);
+  top: 0;
+  width: 2px;
   height: var(--pm25-line-len);
-  border-left: 2px dashed var(--dash-color);
+  border-left: 2px dotted var(--dash-color);
+  transform: rotate(180deg); /* 위로 뻗어나가도록 회전 */
+  transform-origin: 0 100%;
 }
 
-/* 끝점 */
-.components-pm25::before {
+.components-pm25::before { /* 끝점 */
   content: '';
   position: absolute;
-  left: calc(100% + var(--pm25-line-offset-x) - (var(--pm25-dot-size) / 2));
-  top: calc(-1 * var(--pm25-line-len) - (var(--pm25-dot-size) / 2));
+  z-index: 12;
+  
+  bottom: calc(var(--pm25-line-len) - (var(--pm25-dot-size) / 2));
+  left: calc(100% + var(--pm25-text-gap) - (var(--pm25-dot-size) / 2));
+  
   width: var(--pm25-dot-size);
   height: var(--pm25-dot-size);
   border-radius: 50%;
   background: #333;
   box-shadow: 0 0 3px rgba(0,0,0,0.25);
-  z-index: 5;
 }
 
-/* ✅ 아래 것도 선에서 8px 오른쪽으로 */
 .components-pm25 .pm25 {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
   align-items: flex-start;
-  margin-left: calc(var(--pm25-line-offset-x) + var(--pm25-text-offset));
+  white-space: nowrap;
 }
 
-.components-pm25 .title-line {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.components-pm25 img.forecast-badges {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-}
-.components-pm25 .gauge-title {
+/* 텍스트 스타일 공통 */
+.gauge-title {
   font-family: var(--font-paperlogy-5);
   font-size: 20px;
   font-weight: 500;
   color: var(--text-sub-color);
 }
-.components-pm25 .value-line {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
+.forecast-badges {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
 }
-.components-pm25 .level {
+.level {
   font-family: var(--font-paperlogy-7);
   font-size: 24px;
   font-weight: 700;
   color: var(--text-main-color);
 }
-.components-pm25 .unit {
+.unit {
   font-family: var(--font-paperlogy-5);
   font-size: 14px;
   font-weight: 500;
   color: var(--text-sub-color);
-}
-
-
-.air-info-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.air-info-title {
-  font-family: "Paperlogy";
-  font-weight: 500;
-  font-size: 20px;
-  color: #787878;
-}
-
-.air-info-badge {
-  width: 30px;
-  height: 30px;
-}
-
-.air-info-reading {
-  display: flex;
-  align-items: baseline;
-  margin-top: 2px; 
-}
-
-.air-info-status {
-  font-family: "Paperlogy";
-  font-weight: 700;
-  font-size: 24px;
-  color: #333333;
-}
-
-.air-info-value {
-  font-family: "Paperlogy";
-  font-weight: 500;
-  font-size: 14px;
-  color: #949494;
-  margin-left: 8px;
-}
-
-.air-info-unit {
-  font-family: "Paperlogy";
-  font-weight: 500;
-  font-size: 14px;
-  color: #949494;
-  margin-left: 6px;
-}
-
-.gas-info-card {
-  width: 380px;
-  margin-top: 46px; 
-  margin-bottom: 46px; 
-  margin-left: auto;
-  margin-right: auto;
-  background-color: #ffffff;
-  padding-top: 56px; 
-  /* [추가] 모서리 둥글게 만들기 */
-  border-radius: 16px; 
-  
-  /* [추가] 그림자도 여기서 같이 넣어주면 좋겠죠? */
-  box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
-} /* [수정] 닫는 중괄호 } 추가 */
-
-.gas-info-title {
-  font-family: "Paperlogy";
-  font-weight: 700;
-  font-size: 28px;
-  color: #333333;
-  text-align: center;
-}
-
-.gas-info-list {
-  margin-top: 42px;
-  padding-left: 20px;
-  padding-right: 20px;
-}
-  
-.gas-info-item {
-  width: 340px;
-  height: 90px;
-  margin-bottom: 22px; 
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 15px 8px;
-  box-sizing: border-box;
-  box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* [추가] gas-info-item 내부 스타일 */
-.gas-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.gas-item-title-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.gas-item-title {
-  font-family: "Paperlogy";
-  font-weight: 700;
-  font-size: 22px;
-  color: #333333;
-}
-
-.gas-item-badge {
-  width: 24px;
-  height: 24px;
-}
-
-.gas-item-reading-group {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.gas-item-formula {
-  font-family: "Paperlogy";
-  font-weight: 700;
-  font-size: 18px;
-  color: #333333;
-}
-
-.gas-item-value {
-  font-family: "Paperlogy";
-  font-weight: 500;
-  font-size: 14px;
-  color: #949494;
-}
-
-.gas-item-unit {
-  font-family: "Paperlogy";
-  font-weight: 500;
-  font-size: 14px;
-  color: #949494;
-}
-/* --- [가스 바 스타일] --- */
-
-.gas-item-bar-container {
-  width: 312px;
-  height: 24px;
-  background-color: #ededed;
-  border-radius: 12px;
-  box-shadow: inset 0px 4px 4px 0px #d9d9d9;
-  position: relative;
-  overflow: hidden;
-  margin-left: auto;
-  margin-right: auto; 
-}
-
-.gas-item-bar-value {
-  height: 100%;
-  border-radius: 12px;
-  width: 47%; /* (임시) */
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.gas-bar--so2 {
-  background-color: #2da5e5;
-}
-.gas-bar--co {
-  background-color: #45d69e;
-}
-.gas-bar--o3 {
-  background-color: #d7d247;
-}
-.gas-bar--no2 {
-  background-color: #e67541;
 }
 
 
 /* ========================================
    [2-2] 기상예보 탭
    ======================================== */
-
-   /* 기상예보 카드가 들어오는 컨테이너 */
-.forecast-grid {
-  margin: 46px 26px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 
 .forecast-card {
   width: 380px;
@@ -715,11 +519,17 @@ html, body {
   color: #555555;
 }
 
-.forecast-badge {
-  width: 30px;
+.forecast-badge-ai {
+  width: 30px; 
   height: 30px;
-  display: inline-block;
-  object-fit: contain;
+  border-radius: 50%;
+  background-color: #7a2ede;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
 }
 
 .forecast-card-body {
@@ -740,7 +550,129 @@ html, body {
   font-weight: 500;
   font-size: 20px;
   color: #6d6d6d;
-} /* [수정] 맨 끝의 불필요한 } 삭제 */
+} 
+
+
+/* ========================================
+   [5] 푸터 (Footer) 스타일
+   ======================================== */
+
+.app-footer-wrapper {
+  /* Main-container 하단에 고정되도록 */
+  position: absolute;
+  bottom: 0;
+  width: 412px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 30px; /* 바탕 하단 30px 여백 */
+}
+
+.app-footer {
+  width: 151px;
+  height: 55px;
+  
+  /* 중앙 정렬 */
+  margin: 0 auto; 
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+}
+
+.Studio-name-text {
+  font-family: "Paperlogy"; 
+  font-weight: 700;
+  font-size: 22px;
+  color: #787878;
+}
+
+.Privacy-policy-text {
+  font-family: "Paperlogy"; 
+  font-weight: 500;
+  font-size: 18px;
+  color: #787878;
+  cursor: pointer;
+}
+
+
+/* ========================================
+   [4] 검색 오버레이
+   ======================================== */
+
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(48, 48, 48, 0.7); 
+  z-index: 101; 
+  display: none; 
+}
+
+.search-widget {
+  position: absolute;
+  top: 152px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 230px; 
+}
+
+.search-input-box {
+  width: 100%;
+  height: 40px;
+  background-color: #f9f9f9;
+  border: 4px solid #ffffff;
+  border-radius: 40px;
+  box-sizing: border-box;
+  padding: 0 20px;
+  font-family: "Paperlogy";
+  font-size: 18px;
+  color: #000000;
+  outline: none;
+}
+
+.search-input-box::placeholder {
+  color: #949494;
+  font-family: "Paperlogy";
+  font-weight: 300;
+}
+
+.search-results-list {
+  width: 100%;
+  margin-top: 4px; 
+  border-radius: 16px;
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+.search-result-item {
+  width: 100%;
+  min-height: 34px;
+  border-bottom: 2px solid #d9d9d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  box-sizing: border-box;
+  font-family: "Paperlogy";
+  font-weight: 300;
+  font-size: 18px;
+  color: #000000;
+  text-align: center;
+  cursor: pointer;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover,
+.search-result-item.selected {
+  background-color: #edeeee;
+}
 
 
 /* ========================================
@@ -754,8 +686,8 @@ html, body {
   width: 100%;
   height: 100%;
   background-color: rgba(48, 48, 48, 0.7); 
-  z-index: 100; /* [추가] */
-  display: none; /* [추가] */
+  z-index: 100;
+  display: none; 
 }
 
 .slide-menu-content {
@@ -780,20 +712,18 @@ html, body {
 }
 
 .menu-item {
-  /* [추가] 빠졌던 width/height/border */
   width: 322px;
   height: 80px;
   padding-left: 26px;
   padding-right: 26px;
   box-sizing: border-box;
   border-bottom: 2px solid #6d6d6d;
-  /* --- */
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   transition: background-color 0.2s ease;
-} /* [수정] 닫는 중괄호 } 추가 */
+} 
 
 .menu-item-text {
   font-family: "Paperlogy";
@@ -894,258 +824,134 @@ html, body {
   color: #b3b2b5;
 }
 
+
 /* ========================================
-   [4] 검색 오버레이
+   [Gases] 기타 공기지표
    ======================================== */
 
-.search-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(48, 48, 48, 0.7); 
-  z-index: 101; 
-  display: none; 
+.gas-info-card {
+  width: 380px;
+  margin-top: 46px; 
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff;
+  padding-top: 56px; 
+  border-radius: 16px; 
+  box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
 }
 
-.search-widget {
-  position: absolute;
-  top: 152px; 
-  left: 50%;
-  transform: translateX(-50%);
-  width: 230px; 
-}
-
-.search-input-box {
-  width: 100%;
-  height: 40px;
-  background-color: #f9f9f9;
-  border: 4px solid #ffffff;
-  border-radius: 40px;
-  box-sizing: border-box;
-  padding: 0 20px;
+.gas-info-title {
   font-family: "Paperlogy";
-  font-size: 18px;
-  color: #000000;
-  outline: none;
-}
-
-.search-input-box::placeholder {
-  color: #949494;
-  font-family: "Paperlogy";
-  font-weight: 300;
-}
-
-.search-results-list {
-  width: 100%;
-  margin-top: 4px; 
-  border-radius: 16px;
-  background-color: #f9f9f9;
-  overflow: hidden;
-}
-
-.search-result-item {
-  width: 100%;
-  min-height: 34px;
-  border-bottom: 2px solid #d9d9d9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 10px;
-  box-sizing: border-box;
-  font-family: "Paperlogy";
-  font-weight: 300;
-  font-size: 18px;
+  font-weight: 700;
+  font-size: 28px;
   color: #000000;
   text-align: center;
-  cursor: pointer;
 }
 
-.search-result-item:last-child {
-  border-bottom: none;
+.gas-info-list {
+  margin-top: 42px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
-
-.search-result-item:hover,
-.search-result-item.selected {
-  background-color: #edeeee;
-}
-
- .app-footer {
-  width: 100%;
+  
+.gas-info-item {
+  width: 340px;
+  height: 90px;
+  margin-bottom: 22px; 
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 15px 8px;
+  box-sizing: border-box;
+  box-shadow: 0px 4px 12px rgba(183, 183, 183, 0.6);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-top: 50px;   /* ↑ 위 콘텐츠와 50px */
-  margin-bottom: 24px;
-  padding-bottom: 30px;
-  gap: 16px;          /* 개인정보 → 2e Studio 사이 30px */
+  gap: 12px;
+  margin-left: auto; /* 중앙 정렬 */
+  margin-right: auto; /* 중앙 정렬 */
 }
 
-.app-footer .footer-terms {
-  font-family: 'Paperlogy-5', 'Paperlogy', sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  text-align: center;
-  color: #787878;
-  text-decoration: none;      /* 밑줄 제거 */
-}
-
-.app-footer .footer-terms:hover {
-  text-decoration: underline; /* 원하면 hover 시에만 */
-}
-
-.app-footer .footer-brand {
-  font-family: 'Paperlogy-7', 'Paperlogy', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  text-align: center;
-  color: #787878;
-}
-
-/* ==============================================
-   탭 네비게이션 정렬 (공기질 / 기상예보)
-   ============================================== */
-/* ====== 탭 패널 공통 ====== */
-.tab-panel {
-  display: none;
-  width: 100%;
-  padding-bottom: 30px;   /* ✅ 어떤 탭이든 아래 30px */
-}
-.tab-panel.tab-panel--active {
-  display: block;
-}
-
-/* ====== 제플린 탭 모양 리셋 ====== */
-.tab-navigation {
-  position: relative;
-  width: 412px;
-  height: 88px;
-  background: #fff;
+.gas-item-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin: 0 auto;
-  overflow: visible;
-}
-
-.tab-navigation .tab-item {
-  flex: 1 1 50%;
-  text-align: center;
-  margin-top: 27px;
-  line-height: 33px;
-  font-family: "Paperlogy-7", sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  color: #999;          /* 비활성색 */
-  cursor: pointer;
-}
-
-.tab-navigation .tab-item--active {
-  color: #333;          /* 활성 텍스트 */
-}
-
-/* svg 바(통) */
-.tab-navigation .tab_select {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 412px;
-  height: 4px;
-  pointer-events: none;
-}
-
-
-/* 전체 페이지 틀 */
-.page-shell {
-  width: 412px;              /* figma 기준 */
-  min-height: 100vh;         /* 화면 높이 꽉 채우기 */
-  background: #d9d8d8;       /* 네가 말한 배경 */
-  margin: 0 auto;            /* 가운데 정렬 (PC에서 보기 좋게) */
-  display: flex;
-  flex-direction: column;
-}
-
-/* 스크롤 되는 본문 */
-.content {
-  flex: 1 0 auto;            /* 남는 높이 차지 */
-  padding-bottom: 130px;     /* ← footer 높이 + 여유 */
-}
-
-.hud-tab {
-  position: relative;
-  width: 100%;
-  height: 54px;
-  background: #fff;
-  display: flex;
-  justify-content: center;
-  gap: 56px; /* 글자 사이 */
   align-items: center;
-  margin-top: 0; /* 기준바 바로 밑 */
-  border-bottom: 1px solid #d4d4d4;
 }
 
-.hud-tab .tab-btn {
-  background: none;
-  border: none;
-  font-family: "Paperlogy-7", sans-serif;
-  font-size: 16px;
-  color: #777;
-  cursor: pointer;
-}
-
-.hud-tab .tab-btn.active {
-  color: #222;
-}
-
-.hud-tab .tab-indicator {
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  width: 412px;
-  height: 4px;
-  pointer-events: none;
-}
-
-/* 카드 공통: 좌우 26px, 위아래 0 */
-.air-quality-card,
-.gas-info-card,
-.forecast-card {
-  width: calc(100% - 52px); /* 412 - 26*2 */
-  margin: 46px 26px 0;      /* 첫 카드만 46px 위로 띄움 */
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.04);
-}
-
-/* 두 번째 카드(기타 공기지표)는 50px 띄움 */
-.gas-info-card {
-  margin-top: 50px;
-  padding: 24px 20px 24px;
-}
-
-/* footer */
-.app-footer {
-  width: 151px;
+.gas-item-title-group {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 46px auto 30px;
-  text-align: center;
+  align-items: center;
+  gap: 6px;
 }
 
-.app-footer .footer-privacy {
-  width: 131px;
-  font-family: "Paperlogy-5", sans-serif;
-  font-size: 18px;
-  color: #787878;
-  text-decoration: none;
-}
-
-.app-footer .footer-brand {
-  width: 109px;
-  font-family: "Paperlogy-7", sans-serif;
+.gas-item-title {
+  font-family: "Paperlogy";
+  font-weight: 700;
   font-size: 22px;
-  color: #787878;
+  color: #333333;
 }
 
+.gas-item-badge {
+  width: 24px;
+  height: 24px;
+}
+
+.gas-item-reading-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.gas-item-formula {
+  font-family: "Paperlogy";
+  font-weight: 700;
+  font-size: 18px;
+  color: #333333;
+}
+
+.gas-item-value {
+  font-family: "Paperlogy";
+  font-weight: 500;
+  font-size: 14px;
+  color: #949494;
+}
+
+.gas-item-unit {
+  font-family: "Paperlogy";
+  font-weight: 500;
+  font-size: 14px;
+  color: #949494;
+}
+
+/* --- [가스 바 스타일] --- */
+.gas-item-bar-container {
+  width: 312px;
+  height: 24px;
+  background-color: #ededed;
+  border-radius: 12px;
+  box-shadow: inset 0px 4px 4px 0px #d9d9d9;
+  position: relative;
+  overflow: hidden;
+  margin-left: auto;
+  margin-right: auto; 
+}
+
+.gas-item-bar-value {
+  height: 100%;
+  border-radius: 12px;
+  width: 47%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.gas-bar--so2 {
+  background-color: #59C5A9;
+}
+.gas-bar--co {
+  background-color: #59b1c5;
+}
+.gas-bar--o3 {
+  background-color: #597ac5;
+}
+.gas-bar--no2 {
+  background-color: #6759c5;
+}
