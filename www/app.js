@@ -584,27 +584,49 @@ async function updateAll(lat, lon) {
  * 7. UI 바인딩
  * ────────────────────────────── */
 function bindTabs() {
-  const btns  = Array.from(document.querySelectorAll('.tab-button, .tab-item'));
+  const btns  = Array.from(document.querySelectorAll('.tab-item'));
   const panes = Array.from(document.querySelectorAll('.tab-content'));
+  const tabSelectBar = document.getElementById('tab-select-bar'); // ← 있으면 쓰고 없으면 무시
+
   if (!btns.length || !panes.length) return;
 
   const activate = (key) => {
+    // 1) 탭 버튼 상태 토글
     btns.forEach(b => {
       const isTarget = b.dataset.tab === key;
-      b.classList.toggle('active', isTarget);
-      b.classList.toggle('tab-item--active', isTarget); // ★ 이 줄 추가
+      b.classList.toggle('tab-item--active', isTarget);
     });
+
+    // 2) 패널 표시/숨김
     panes.forEach(p => {
       const isTarget = p.id === `tab-${key}`;
       p.classList.toggle('active', isTarget);
     });
+
+    // 3) 탭 밑줄(svg) 바꿔주기 (선택사항)
+    if (tabSelectBar) {
+      if (key === 'air') {
+        tabSelectBar.src = './assets/tab-select-left.svg';
+      } else {
+        tabSelectBar.src = './assets/tab-select-right.svg';
+      }
+    }
   };
 
-  btns.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.tab)));
+  // 클릭 바인딩
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.tab;
+      activate(key);
+    });
+  });
 
-  const initial = document.querySelector('.tab-item.tab-item--active')?.dataset.tab
-    || btns[0]?.dataset.tab;
-  if (initial) activate(initial);
+  // 초기 탭
+  const initial =
+    document.querySelector('.tab-item.tab-item--active')?.dataset.tab
+    || btns[0]?.dataset.tab
+    || 'air';
+  activate(initial);
 }
 
 

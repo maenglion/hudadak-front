@@ -265,26 +265,18 @@ html, body {
    ======================================== */
 
 .tab-content {
-  padding-top: 46px;
-}
-
-.tab-content.hidden {
   display: none;
+  padding-top: 46px;
+  padding-bottom: 30px; /* 네가 말한 "어떤 탭이든 밑에 30px" */
+  width: 100%;
 }
 
-/* ========================================
-   [2-1] 공기질 탭
-   ======================================== */
-
-/* styles.css */
-
-/* ... (이 위에는 App-header, tab-navigation, gas-info-card 등은 유지) ... */
+/* 선택된 탭만 보이게 */
+.tab-content.active {
+  display: block;
+}
 
 
-/* =========================================================
-   [NEW] ChatGPT 기반 Air Quality Card & Gauge Styles (Zeplin Spec 적용)
-   모든 기존 .air-quality-card 내부 스타일은 제거하고 이 코드로 대체합니다.
-   ========================================================= */
 
 /* --- CSS 변수 (루트에서 관리) --- */
 :root {
@@ -1054,4 +1046,44 @@ html, body {
   font-weight: 700;
   text-align: center;
   color: #787878;
+}
+
+/* 탭 바 전체 */
+.tab-navigation {
+  display: flex;
+  background: var(--main-white, #fff);
+  width: 100%;
+  height: 56px;            /* 너 원래 88px 썼으면 88로 */
+  position: relative;      /* 아래 after 기준 */
+}
+
+/* 각 탭 */
+.tab-navigation .tab-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Paperlogy-7, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--unselect-grey, #aaa);
+  cursor: pointer;
+  position: relative;
+}
+
+/* 선택된 탭 텍스트 색 */
+.tab-navigation .tab-item.tab-item--active {
+  color: #333; /* 선택된 탭 글자 */
+}
+
+/* 선택된 탭 밑줄 */
+.tab-navigation .tab-item.tab-item--active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;           /* 탭 하단 딱 붙게 */
+  width: 100%;
+  height: 4px;
+  background: #32b384; /* 네가 말한 녹색바 */
+  border-radius: 999px;
 }
