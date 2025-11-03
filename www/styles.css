@@ -407,41 +407,6 @@ html, body {
 }
 
 /* 꺾쇠 (점선) */
-.components-pm25::before { 
-  content: '';
-  position: absolute;
-  z-index: 11;
-  
-  /* [계산] 시작점: 텍스트 박스의 오른쪽 끝(100%)에서 8px 띄우기 */
-  left: calc(100% + var(--line-offset)); 
-  top: 32px; /* Y축 중앙 근처에서 시작 */
-  
-  width: 2px;
-  height: var(--pm25-line-len); 
-  border-left: 2px dotted var(--dash-color);
-  
-  /* [추가] 휠 중심으로 향하도록 각도 조정 */
-  transform: rotate(-10deg); 
-  transform-origin: top left;
-}
-
-/* 꺾쇠 끝점 (점) */
-.components-pm25::after { 
-  content: '';
-  position: absolute;
-  z-index: 12;
-  
-  /* 꺾쇠 끝점 위치에 맞춰서 점을 배치 */
-  bottom: calc(32px + var(--pm25-line-len) * cos(10deg));
-  left: calc(100% + var(--line-offset) + var(--pm25-line-len) * sin(10deg));
-  
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #333;
-  box-shadow: 0 0 3px rgba(0,0,0,0.25);
-  transform: translate(-50%, -50%); /* 중심 정렬 */
-}
 .components-pm25.animate-end {
     bottom: 33px; /* 30px 아래로 이동 */
 }
