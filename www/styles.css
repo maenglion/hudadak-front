@@ -371,11 +371,17 @@ html, body {
   top: 54px; /* [추정 유지] 카드 상단에서 54px 떨어진 위치 */
   left: 194px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */
   transform: none; 
+  /* [추가] 애니메이션을 위한 transition 설정 */
+  transition: transform 1.0s ease-out;
   text-align: left;
   z-index: 10;
   
   /* [추가] 텍스트가 꺾쇠 오른쪽 8px에 붙도록 padding-left 설정 */
   padding-left: 10px; 
+}
+
+.components-pm10.animate-end {
+    transform: translateX(20px); /* 오른쪽으로 20px 이동 */
 }
 
 .components-pm10::after { /* 점선 (아래로) */
@@ -420,10 +426,13 @@ bottom: 63px; /* [추정 유지] 카드 하단에서 37px 떨어진 위치로 �
   text-align: left;
   z-index: 10;
   padding-left: 10px;
-  --pm25-line-len: 135px;
-  --pm25-dot-size: 10px;
-  --pm25-text-gap: 8px;
+transition: bottom 1.0s ease-out;
 }
+
+.components-pm25.animate-end {
+    bottom: 33px; /* 30px 아래로 이동 */
+}
+
 
 .components-pm25::after { /* 점선 (위로) */
   content: '';
