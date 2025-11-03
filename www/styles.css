@@ -281,7 +281,7 @@ html, body {
    ======================================== */
 
 .air-quality-card {
-  width: var(--card-w);
+  width: 380px;
   height:638px; 
   margin-top: 0px; 
   margin-left: auto;
@@ -372,31 +372,64 @@ html, body {
   left: 194px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */
   transform: none; 
   /* [추가] 애니메이션을 위한 transition 설정 */
-  transition: transform 1.0s ease-out;
+  transition: transform 0.5s ease-out;
   text-align: left;
   z-index: 10;
-  
-  /* [추가] 텍스트가 꺾쇠 오른쪽 8px에 붙도록 padding-left 설정 */
-  padding-left: 10px; 
+  /* [추가] 꺾쇠에 사용할 CSS 변수 정의 */
+  --pm10-line-len: 60px; /* [요청] 60px 길이 */
+  --line-offset: 4px;    /* [요청] 텍스트 박스에서 4px 왼쪽으로 떼기 */
+  --line-move: 32px;     /* [요청] 32px 왼쪽으로 이동 */
 }
+  
 
 .components-pm10.animate-end {
     transform: translateX(20px); /* 오른쪽으로 20px 이동 */
 }
 
-.components-pm10::after { /* 점선 (아래로) */
+/* 꺾쇠 (점선) */
+.components-pm10::after {
   content: '';
   position: absolute;
   z-index: 11;
-  left: 0; 
-  margin-left:100%;
-  top: var(--pm10-line-start);
+  
+  /* [계산] 시작점: 텍스트 박스 왼쪽(0)에서 4px 떼고, 32px 왼쪽으로 이동 */
+  left: calc(0px - var(--line-offset) - var(--line-move)); 
+  
+  /* [수정] 텍스트 박스의 Y축 중앙 근처 (위/아래 여백을 줘서 조정) */
+  top: 32px; 
+  
   width: 2px;
-  height: var(--pm10-line-len);
+  height: var(--pm10-line-len); /* 60px 길이 */
   border-left: 2px dotted var(--dash-color);
-  transform: translateX(8px);
+  
+  /* [수정] 아래로 뻗어나가도록 회전 각도 90도 (직선) */
+  transform: rotate(0deg); 
+  transform-origin: top left;
 }
 
+/* 끝점 (점)은 꺾쇠 끝에 맞춰 자동으로 이동해야 합니다. */
+.components-pm10::before {
+  /* ... (기존 스타일 유지) ... */
+  
+  /* [수정] 점의 X 위치: 꺾쇠의 X위치와 동일 */
+  left: calc(0% - var(--line-offset) - var(--line-move));
+  /* [수정] 점의 Y 위치: 꺾쇠 시작점 + 길이 */
+  top: calc(32px + var(--pm10-line-len));
+
+  transform: translate(-50%, -50%); /* 중심 정렬 */
+}
+
+.components-pm10::before { /* 점 */
+  content: '';
+  position: absolute;
+  left:162px;
+  top: 146px;
+  width: var(--pm10-dot-size);
+  height: var(--pm10-dot-size);
+  border-radius: 50%;
+  background: #333;
+  z-index: 12;
+}
 
 .components-pm10 .pm10 {
   position: relative;
@@ -415,6 +448,8 @@ bottom: 63px; /* [추정 유지] 카드 하단에서 37px 떨어진 위치로 �
   text-align: left;
   z-index: 10;
   padding-left: 10px;
+  /* [추가] 꺾쇠에 사용할 CSS 변수 정의 */
+  --pm25-line-len: 120px; 
 transition: bottom 1.0s ease-out;
 }
 
@@ -424,19 +459,41 @@ transition: bottom 1.0s ease-out;
 
 
 .components-pm25::after { /* 점선 (위로) */
-  content: '';
+content: '';
   position: absolute;
   z-index: 11;
-  left: 100%;
-  margin-left: var(--pm25-text-gap);
-  top: 0;
+  
+  /* 텍스트 블록 오른쪽 끝에서 8px 떨어진 위치 */
+  left: calc(100% + var(--line-offset));
+  bottom: 28px; /* 텍스트 중앙 (Y축) 근처에서 시작 */
+  
   width: 2px;
   height: var(--pm25-line-len);
   border-left: 2px dotted var(--dash-color);
-  transform: rotate(180deg); /* 위로 뻗어나가도록 회전 */
-  transform-origin: 0 100%;
+  
+  /* [수정] 위로 솟아오르도록 각도 조정 */
+  transform: rotate(-10deg); 
+  transform-origin: bottom left;
 }
 
+/* 끝점 (점) */
+.components-pm25::before { 
+  content: '';
+  position: absolute;
+  z-index: 12;
+  
+  /* 꺾쇠 끝점 위치 계산 (꺾쇠 시작점 + 길이) */
+  left: calc(100% + var(--line-offset) + (var(--pm25-line-len) * sin(10deg)));
+  bottom: calc(28px + (var(--pm25-line-len) * cos(10deg)));
+  
+  width: var(--pm25-dot-size);
+  height: var(--pm25-dot-size);
+  border-radius: 50%;
+  background: #333;
+  box-shadow: 0 0 3px rgba(0,0,0,0.25);
+  /* [수정] 끝점이 원의 중앙에 오도록 조정 */
+  transform: translate(-50%, -50%); 
+}
 
 .components-pm25 .pm25 {
   position: relative;
