@@ -369,18 +369,14 @@ html, body {
   position: absolute;
   /* [수정] 꺾쇠와 간격을 고려하여 왼쪽에서 60px 떨어진 위치로 최종 조정 */
   top: 46px; /* [추정 유지] 카드 상단에서 54px 떨어진 위치 */
-  left: 194px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */
+  left: 210px; /* [수정] 카드 왼쪽에서 60px 떨어진 위치로 고정 */
   transform: none; 
   /* [추가] 애니메이션을 위한 transition 설정 */
   transition: transform 0.5s ease-out;
   text-align: left;
   z-index: 10;
 }
-  
-
-.components-pm10.animate-end {
-    transform: translateX(20px); /* 오른쪽으로 20px 이동 */
-}
+ 
 
 .components-pm10 .pm10 {
   position: relative;
@@ -400,10 +396,6 @@ html, body {
   /* ... (나머지 스타일 유지) ... */
 }
 
-/* 꺾쇠 (점선) */
-.components-pm25.animate-end {
-    bottom: 33px; /* 30px 아래로 이동 */
-}
 
 .components-pm25 .pm25 {
   position: relative;
