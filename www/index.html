@@ -18,7 +18,6 @@
   <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- DNS prefetch / preconnect -->
   <link rel="dns-prefetch" href="https://air-api-350359872967.asia-northeast3.run.app">
   <link rel="preconnect" href="https://air-api-350359872967.asia-northeast3.run.app" crossorigin>
   <link rel="dns-prefetch" href="https://dapi.kakao.com">
@@ -31,12 +30,15 @@
   </script>
 </head>
 <body>
-  <!-- 상단 토글 버튼 -->
+  <!-- 상단 테마 토글 (슬라이드 스위치) -->
   <div class="topbar">
     <div class="topbar-inner">
-      <button id="theme-toggle" class="btn-theme" type="button" aria-label="테마 전환">
-        <span class="btn-theme-icon"></span>
-      </button>
+      <label class="theme-switch" for="theme-checkbox">
+        <span class="theme-switch-label">☀️</span>
+        <input type="checkbox" id="theme-checkbox">
+        <span class="theme-switch-slider"></span>
+        <span class="theme-switch-label">🌙</span>
+      </label>
     </div>
   </div>
 
@@ -78,7 +80,7 @@
     </div>
   </section>
 
-  <!-- 예보 정보 -->
+  <!-- 예보 -->
   <section id="forecast-section" class="criteria-card" style="display: none;">
     <h3>오늘의 예보 <span id="forecast-region" class="forecast-region-text"></span></h3>
     <div id="whyTags" class="tag-container"></div>
@@ -141,7 +143,7 @@
         <div class="gas-info-item">
           <div class="gas-item-header">
             <span class="gas-item-title">일산화탄소 (CO)</span>
-            <span class="gas-item-value"><span id="gas-co-value">--</span> <span class="gas-item-unit">ppm</span></span>
+            <span class="gas-item-value"><span id="gas-co-value">--</span> <span class="gas-item-unit">µg/m³</span></span>
           </div>
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-co-bar"></div>
@@ -170,12 +172,12 @@
   </section>
 
   <footer>
-    <p>2025 2e-studio. All Rights Reserved.</p>
+    <p>© 2025 2e-studio. All Rights Reserved.</p>
     <p class="footer-links">
       <a href="termsofuse.html">개인정보처리방침</a>
     </p>
   </footer>
 
-   <script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
