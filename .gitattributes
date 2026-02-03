@@ -1,0 +1,10 @@
+﻿* text=auto
+*.js   text eol=lf
+*.ts   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.sh   text eol=lf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
