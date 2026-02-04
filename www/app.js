@@ -257,15 +257,7 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     const regionEl = document.getElementById('region');
     if (regionEl) {
       regionEl.textContent = '조회 중...';
-      getAddressFromCoords(lat, lon).then(addr => {
-        regionEl.textContent = addr;
-        // 동적 메타태그 업데이트
-        document.title = `${addr} 미세먼지 - 후다닥`;
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        const ogDesc  = document.querySelector('meta[property="og:description"]');
-        if (ogTitle) ogTitle.setAttribute('content', `${addr}의 미세먼지 정보 - 후다닥`);
-        if (ogDesc)  ogDesc.setAttribute('content', `${addr} 지역의 실시간 미세먼지·초미세먼지·가스 정보를 확인하세요!`);
-      });
+      getAddressFromCoords(lat, lon).then(addr => { regionEl.textContent = addr; });
     }
 
     try {
@@ -360,7 +352,7 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
       const pm25 = lastAirData?.pm25 ?? '--';
 
       const shareUrl = `${location.origin}${location.pathname}?lat=${currentCoords.lat}&lon=${currentCoords.lon}`;
-      const shareTitle = `${regionName}의 미세먼지 정보 - 후다닥`;
+      const shareTitle = '후다닥 미세먼지 피하기';
       const shareText = `${regionName} 미세먼지 PM10: ${pm10}µg/m³ / PM2.5: ${pm25}µg/m³`;
 
       // Web Share API (모바일 우선)
