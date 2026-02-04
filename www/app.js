@@ -257,12 +257,21 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     const regionEl = document.getElementById('region');
     if (regionEl) {
       regionEl.textContent = '조회 중...';
-      getAddressFromCoords(lat, lon).then(addr => { regionEl.textContent = addr; });
+      getAddressFromCoords(lat, lon).then(addr => {
+        regionEl.textContent = addr;
+        // 동적 메타태그 업데이트
+        document.title = `${addr} 미세먼지 - 후다닥`;
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        const ogDesc  = document.querySelector('meta[property="og:description"]');
+        if (ogTitle) ogTitle.setAttribute('content', `${addr}의 미세먼지 정보 - 후다닥`);
+        if (ogDesc)  ogDesc.setAttribute('content', `${addr} 지역의 실시간 미세먼지·초미세먼지·가스 정보를 확인하세요!`);
+      });
     }
 
     try {
       const airData = await fetchAirData(lat, lon);
       if (airData) {
+        lastAirData = airData;
         drawGauge('PM10', airData.pm10, airData.station, airData.sourceKind);
         drawGauge('PM25', airData.pm25, airData.station, airData.sourceKind);
         updateGasData(airData);
@@ -335,6 +344,50 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
   const searchBtn = document.getElementById('searchBtn');
   if (searchBtn) searchBtn.addEventListener('click', () => searchByAddress(inputEl?.value));
   if (inputEl) inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchByAddress(inputEl.value); });
+
+  // ===================
+  //  공유 기능
+  // ===================
+  let lastAirData = null;  // 마지막 조회 데이터 저장
+
+  if (shareResultBtn) {
+    shareResultBtn.addEventListener('click', async () => {
+      if (!currentCoords) return;
+
+      const regionEl = document.getElementById('region');
+      const regionName = regionEl?.textContent || '알 수 없는 지역';
+      const pm10 = lastAirData?.pm10 ?? '--';
+      const pm25 = lastAirData?.pm25 ?? '--';
+
+      const shareUrl = `${location.origin}${location.pathname}?lat=${currentCoords.lat}&lon=${currentCoords.lon}`;
+      const shareTitle = `${regionName}의 미세먼지 정보 - 후다닥`;
+      const shareText = `${regionName} 미세먼지 PM10: ${pm10}µg/m³ / PM2.5: ${pm25}µg/m³`;
+
+      // Web Share API (모바일 우선)
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return; // 사용자 취소
+        }
+      }
+
+      // 폴백: 클립보드 복사
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        const origText = shareResultBtn.querySelector('span');
+        if (origText) {
+          const prev = origText.textContent;
+          origText.textContent = '복사 완료!';
+          setTimeout(() => { origText.textContent = prev; }, 2000);
+        }
+      } catch {
+        // 최종 폴백
+        prompt('아래 링크를 복사하세요:', shareUrl);
+      }
+    });
+  }
 
   // ===================
   //  초기화
