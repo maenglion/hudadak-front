@@ -155,13 +155,21 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
       valueTextEl.textContent  = '- µg/m³';
       wheelEl.style.setProperty('--angle', '0deg');
     } else {
-      const status   = getStatus(pmType, value);
+      const scale = SCALE[pmType];
+      const status = getStatus(pmType, value);
       const colorSet = isDarkMode ? status.color.dark : status.color.light;
-      const deg      = 360 * Math.min(value / status.max, 1);
+
+      // 등급별 구간 각도 계산 (각 등급 90도씩)
+      const gradeIndex = scale.indexOf(status);
+      const prevMax = gradeIndex > 0 ? scale[gradeIndex - 1].max : 0;
+      const rangeMin = prevMax;
+      const rangeMax = status.max;
+      const ratio = Math.min((value - rangeMin) / (rangeMax - rangeMin), 1);
+      const deg = (gradeIndex * 90) + (ratio * 90);
 
       wheelEl.style.setProperty('--gauge-color-start', colorSet[0]);
       wheelEl.style.setProperty('--gauge-color-end', colorSet[1]);
-      wheelEl.style.setProperty('--angle', `${deg}deg`);
+      wheelEl.style.setProperty('--angle', `${Math.min(deg, 360)}deg`);
       statusTextEl.textContent = status.name;
       statusTextEl.style.color = colorSet[0];
       valueTextEl.textContent  = `${value} µg/m³`;
