@@ -25,12 +25,12 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     ]
   };
 
-  // 가스 기준값 (µg/m³ — Open-Meteo 응답 기준)
-  const GAS_MAX = {
-    so2: 350,
-    co:  15000,
-    o3:  300,
-    no2: 400
+  // 가스별 스케일 (µg/m³) — 각 가스마다 다른 최대값
+  const GAS_CONFIG = {
+    so2: { max: 100,  unit: 'µg/m³', thresholds: [20, 80, 100],  labels: ['좋음 0–20', '보통 20–80', '나쁨 80+'] },
+    co:  { max: 10000, unit: 'µg/m³', thresholds: [2000, 9000, 10000], labels: ['좋음 0–2000', '보통 2000–9000', '나쁨 9000+'] },
+    o3:  { max: 200,  unit: 'µg/m³', thresholds: [60, 120, 200],  labels: ['좋음 0–60', '보통 60–120', '나쁨 120+'] },
+    no2: { max: 200,  unit: 'µg/m³', thresholds: [40, 100, 200],  labels: ['좋음 0–40', '보통 40–100', '나쁨 100+'] },
   };
 
   // ===================
@@ -173,49 +173,61 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
 
   // 가스 등급 (µg/m³ 기준)
   function getGasGrade(key, val) {
-    const t = {
-      so2: [80, 265, 350],
-      co:  [5500, 11000, 15000],
-      o3:  [60, 120, 300],
-      no2: [57, 190, 400],
-    }[key];
-    if (!t || val === null) return '';
+    const cfg = GAS_CONFIG[key];
+    if (!cfg || val === null || val === undefined) return '';
+    const t = cfg.thresholds;
     if (val <= t[0]) return 'good';
     if (val <= t[1]) return 'normal';
     if (val <= t[2]) return 'bad';
     return 'very-bad';
   }
 
+  // 가스 지역명 저장용
+  let gasStationName = '';
+
   function updateGasData(airData) {
     const keys = ['so2','co','o3','no2'];
+    const gasStationEl = document.getElementById('gas-station-name');
 
     if (!airData) {
       keys.forEach(key => {
         const valEl = document.getElementById(`gas-${key}-value`);
         const barEl = document.getElementById(`gas-${key}-bar`);
+        const refEl = document.getElementById(`gas-${key}-ref`);
         if (valEl) valEl.textContent = '--';
         if (barEl) { barEl.style.width = '0%'; barEl.className = 'gas-item-bar-value'; }
+        if (refEl) refEl.textContent = '';
       });
+      if (gasStationEl) gasStationEl.textContent = '';
       return;
+    }
+
+    // 지역명 표시
+    if (gasStationEl && airData.station) {
+      gasStationEl.textContent = airData.station;
     }
 
     keys.forEach(key => {
       const valEl = document.getElementById(`gas-${key}-value`);
       const barEl = document.getElementById(`gas-${key}-bar`);
+      const refEl = document.getElementById(`gas-${key}-ref`);
       if (!valEl || !barEl) return;
 
       const val = airData[key];
-      const max = GAS_MAX[key];
+      const cfg = GAS_CONFIG[key];
 
       if (val !== null && val !== undefined) {
         valEl.textContent = Number.isInteger(val) ? val : val.toFixed(1);
-        barEl.style.width = `${Math.min(val / max * 100, 100)}%`;
+        barEl.style.width = `${Math.min(val / cfg.max * 100, 100)}%`;
         const grade = getGasGrade(key, val);
         barEl.className = 'gas-item-bar-value' + (grade ? ` ${grade}` : '');
+        // 기준 표시
+        if (refEl) refEl.textContent = cfg.labels[0] + ' / ' + cfg.labels[1] + ' / ' + cfg.labels[2];
       } else {
         valEl.textContent = '--';
         barEl.style.width = '0%';
         barEl.className = 'gas-item-bar-value';
+        if (refEl) refEl.textContent = '';
       }
     });
   }

@@ -9,7 +9,7 @@
 
   <meta property="og:title" content="후다닥 미세먼지 피하기">
   <meta property="og:description" content="내 주변 가장 가까운 곳의 미세먼지 정보를 확인하세요!">
-<meta property="og:image" content="https://app-hudadak.netlify.app/og.png">
+  <meta property="og:image" content="https://app-hudadak.netlify.app/og.png">
   
   <link rel="stylesheet" href="styles.css">
   
@@ -34,9 +34,9 @@
   <div class="topbar">
     <div class="topbar-inner">
       <label class="theme-switch" for="theme-checkbox">
-  <input type="checkbox" id="theme-checkbox">
-  <span class="theme-switch-slider"></span>
-</label>
+        <input type="checkbox" id="theme-checkbox">
+        <span class="theme-switch-slider"></span>
+      </label>
     </div>
   </div>
 
@@ -95,7 +95,7 @@
   </section>
 
   <div id="post-search-area" class="post-search-area">
-    <p id="data-source-info" class="data-source-info">데이터: DB 실측 우선, 모델 예측 보조 (Open-Meteo)</p>
+    <p id="data-source-info" class="data-source-info">hudadak-air 실측 기반, Open-Meteo 예측은 보조</p>
     <button id="shareResultBtn" class="share-result-btn" style="display: none;">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
       <span>현재 검색 결과 공유하기</span>
@@ -127,7 +127,7 @@
   <!-- 기타 공기지표 -->
   <section id="gas-info">
     <div class="gas-info-card">
-      <h3>기타 공기지표</h3>
+      <h3>기타 공기지표 <span id="gas-station-name" class="gas-station-badge"></span></h3>
       <div class="gas-info-list">
         <div class="gas-info-item">
           <div class="gas-item-header">
@@ -137,6 +137,7 @@
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-so2-bar"></div>
           </div>
+          <div class="gas-item-ref" id="gas-so2-ref"></div>
         </div>
         <div class="gas-info-item">
           <div class="gas-item-header">
@@ -146,6 +147,7 @@
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-co-bar"></div>
           </div>
+          <div class="gas-item-ref" id="gas-co-ref"></div>
         </div>
         <div class="gas-info-item">
           <div class="gas-item-header">
@@ -155,6 +157,7 @@
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-o3-bar"></div>
           </div>
+          <div class="gas-item-ref" id="gas-o3-ref"></div>
         </div>
         <div class="gas-info-item">
           <div class="gas-item-header">
@@ -164,13 +167,14 @@
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-no2-bar"></div>
           </div>
+          <div class="gas-item-ref" id="gas-no2-ref"></div>
         </div>
       </div>
     </div>
   </section>
 
   <footer>
-    <p>© 2025 2e-studio. All Rights Reserved.</p>
+    <p>© 2025 2e-studio all rights reserved.</p>
     <p class="footer-links">
       <a href="termsofuse.html">개인정보처리방침</a>
     </p>
