@@ -355,6 +355,10 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
       const shareTitle = '후다닥 미세먼지 피하기';
       const shareText = `${regionName} 미세먼지 PM10: ${pm10}µg/m³ / PM2.5: ${pm25}µg/m³`;
 
+      // og 메타태그 동적 변경 (공유 시 미리보기용)
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', `${regionName}의 미세먼지 정보를 확인하세요!`);
+
       // Web Share API (모바일 우선)
       if (navigator.share) {
         try {
