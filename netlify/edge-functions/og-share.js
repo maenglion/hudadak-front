@@ -1,10 +1,15 @@
-const BOT_UA = /kakaotalk|facebookexternalhit|twitterbot|slackbot|discordbot|telegrambot|linkedinbot|whatsapp|line-poker|naverbot|yeti/i;
+const BOT_UA = /facebookexternalhit|twitterbot|slackbot|discordbot|telegrambot|linkedinbot|whatsapp|line-poker|naverbot|yeti|kakaotalk-scrap/i;
 
 const API_BASE = 'https://air-api-350359872967.asia-northeast3.run.app';
 
 export default async (request, context) => {
   const ua = request.headers.get('user-agent') || '';
   const url = new URL(request.url);
+
+  // bypass 파라미터가 있으면 통과 (리다이렉트 루프 방지)
+  if (url.searchParams.has('_og')) {
+    return context.next();
+  }
 
   // 봇이 아니면 그냥 통과 (일반 사용자)
   if (!BOT_UA.test(ua)) {
@@ -54,6 +59,10 @@ export default async (request, context) => {
   const ogImage = `${url.origin}/og2.png`;
   const ogUrl = url.toString();
 
+  // 리다이렉트용 URL (_og 붙여서 루프 방지)
+  const redirectUrl = new URL(url.toString());
+  redirectUrl.searchParams.set('_og', '1');
+
   const html = `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -68,7 +77,7 @@ export default async (request, context) => {
   <meta name="twitter:description" content="${ogDesc}">
   <meta name="twitter:image" content="${ogImage}">
   <title>${ogTitle}</title>
-  <meta http-equiv="refresh" content="0;url=${ogUrl}">
+  <meta http-equiv="refresh" content="0;url=${redirectUrl.toString()}">
 </head>
 <body></body>
 </html>`;
