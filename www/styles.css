@@ -40,8 +40,8 @@
     --primary-color: #4dabf7;
     --shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     --gauge-wheel-bg: #3a3a3a;
-    --subtle-bg-color: #3a3a3a;
-    --bar-bg: #444445;
+    --subtle-bg-color: #1b1b1b;
+    --bar-bg: #555559;
   }
 }
 
