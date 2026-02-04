@@ -14,6 +14,7 @@ export default async (request, context) => {
   // lat/lon 파라미터 확인
   const lat = url.searchParams.get('lat');
   const lon = url.searchParams.get('lon');
+  const queryName = url.searchParams.get('q');
 
   if (!lat || !lon) {
     return context.next();
@@ -48,9 +49,9 @@ export default async (request, context) => {
     console.error('Edge function fetch error:', e);
   }
 
-  const ogTitle = `${regionName} 미세먼지 - 후다닥`;
+  const ogTitle = `${queryName || regionName} 미세먼지 - 후다닥`;
   const ogDesc = `PM10: ${pm10}µg/m³ · PM2.5: ${pm25}µg/m³ (${grade}) — 지금 바로 확인하세요!`;
-  const ogImage = `${url.origin}/og.png`;
+  const ogImage = `${url.origin}/og2.png`;
   const ogUrl = url.toString();
 
   const html = `<!DOCTYPE html>

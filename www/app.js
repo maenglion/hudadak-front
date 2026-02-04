@@ -356,12 +356,15 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
 
       const regionEl = document.getElementById('region');
       const regionName = regionEl?.textContent || '알 수 없는 지역';
+      const searchQuery = inputEl?.value?.trim() || '';
+      const displayName = searchQuery || regionName;
       const pm10 = lastAirData?.pm10 ?? '--';
       const pm25 = lastAirData?.pm25 ?? '--';
 
-      const shareUrl = `${location.origin}${location.pathname}?lat=${currentCoords.lat}&lon=${currentCoords.lon}`;
+      let shareUrl = `${location.origin}${location.pathname}?lat=${currentCoords.lat}&lon=${currentCoords.lon}`;
+      if (searchQuery) shareUrl += `&q=${encodeURIComponent(searchQuery)}`;
       const shareTitle = '후다닥 미세먼지 피하기';
-      const shareText = `${regionName} 미세먼지 PM10: ${pm10}µg/m³ / PM2.5: ${pm25}µg/m³`;
+      const shareText = `${displayName} 미세먼지 PM10: ${pm10}µg/m³ / PM2.5: ${pm25}µg/m³`;
 
       // og 메타태그 동적 변경 (공유 시 미리보기용)
       const ogDesc = document.querySelector('meta[property="og:description"]');
