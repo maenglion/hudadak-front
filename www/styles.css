@@ -32,16 +32,16 @@
    ========================== */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background-color: #1a1a2e;
-    --card-color: #16213e;
+    --background-color: #333;
+    --card-color: #242526;
     --text-color: #eee;
     --light-text-color: #aaa;
-    --border-color: #2a2a4a;
+    --border-color: #101010;
     --primary-color: #4dabf7;
     --shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     --gauge-wheel-bg: #3a3a3a;
     --subtle-bg-color: #3a3a3a;
-    --bar-bg: #2a2a4a;
+    --bar-bg: #444445;
   }
 }
 
@@ -50,7 +50,7 @@ body.dark-mode {
   --card-color: #46464a;
   --text-color: #eee;
   --light-text-color: #aaa;
-  --border-color: #2a2a4a;
+  --border-color: #373738;
   --primary-color: #4dabf7;
   --shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   --gauge-wheel-bg: #3a3a3a;
