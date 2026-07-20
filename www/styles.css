@@ -540,6 +540,11 @@ footer {
 }
 
 footer p { margin: 0.5rem 0; }
+.footer-company {
+  font-size: 0.78rem;
+  color: var(--light-text-color);
+  margin: 0.25rem 0;
+}
 
 .footer-links a {
   color: var(--light-text-color);
