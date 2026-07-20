@@ -1,3 +1,4 @@
 {
-    "figma.autocompleteBlocks": true
+    "figma.autocompleteBlocks": true,
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
