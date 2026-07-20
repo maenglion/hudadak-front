@@ -409,7 +409,7 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     if (window.Capacitor?.isNativePlatform()) {
       try {
         const { Geolocation } = Capacitor.Plugins;
-        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 8000 });
         updateAll(pos.coords.latitude, pos.coords.longitude, false);
       } catch (e) {
         console.error("Capacitor 위치 오류", e);
