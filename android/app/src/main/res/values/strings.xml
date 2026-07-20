@@ -4,4 +4,5 @@
     <string name="title_activity_main">후다닥 미세먼지 피하기</string>
     <string name="package_name">app.netlify.app_hudadak.twa</string>
     <string name="custom_url_scheme">app.netlify.app_hudadak.twa</string>
+    <string name="widget_description">현재 위치의 미세먼지·초미세먼지 등급을 홈 화면에서 바로 확인</string>
 </resources>

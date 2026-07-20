@@ -1,14 +1,60 @@
-// sw.js (서비스 워커 파일)
+// sw.js — 후다닥 미세먼지 피하기
+const CACHE_NAME = 'hudadak-v4';
+const API_BASE = 'https://air-api-350359872967.asia-northeast3.run.app';
 
-// 서비스 워커가 설치될 때 실행됩니다.
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/app.js',
+  '/styles.css',
+  '/gps.js',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/manifest.json'
+];
+
+// 설치: 정적 자원 캐시
 self.addEventListener('install', (event) => {
-  console.log('Service worker installing...');
-  // 캐싱할 파일이 있다면 여기에 추가할 수 있습니다.
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+  );
+  self.skipWaiting();
 });
 
-// 네트워크 요청을 가로챌 때 실행됩니다.
-// 이 fetch 이벤트 핸들러가 있어야 PWA 설치가 가능합니다.
+// 활성화: 이전 캐시 삭제
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
 self.addEventListener('fetch', (event) => {
-  // 현재는 네트워크 요청에 아무것도 하지 않고 그대로 전달합니다.
-  event.respondWith(fetch(event.request));
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // API 요청: Network First → 실패 시 캐시
+  if (url.origin === new URL(API_BASE).origin) {
+    event.respondWith(
+      fetch(request)
+        .then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // 정적 자원: Cache First → 없으면 네트워크
+  if (request.method === 'GET') {
+    event.respondWith(
+      caches.match(request).then(cached => cached || fetch(request))
+    );
+  }
 });
