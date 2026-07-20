@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/widget_background"
+    android:gravity="center_vertical">
+
+    <!-- 지역명 -->
+    <TextView
+        android:id="@+id/widget_region"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="위치 확인 중..."
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:alpha="0.85"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <!-- PM10 행 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="미세먼지"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:alpha="0.75" />
+
+        <TextView
+            android:id="@+id/widget_pm10_grade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/widget_pm10_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:alpha="0.75" />
+    </LinearLayout>
+
+    <!-- PM2.5 행 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="초미세먼지"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:alpha="0.75" />
+
+        <TextView
+            android:id="@+id/widget_pm25_grade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/widget_pm25_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:alpha="0.75" />
+    </LinearLayout>
+
+    <!-- 업데이트 시각 -->
+    <TextView
+        android:id="@+id/widget_updated_at"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="--"
+        android:textColor="#FFFFFF"
+        android:textSize="10sp"
+        android:alpha="0.6" />
+
+</LinearLayout>
