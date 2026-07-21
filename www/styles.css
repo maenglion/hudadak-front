@@ -66,7 +66,7 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   margin: 0;
-  padding: 70px 20px 20px;
+  padding: calc(70px + env(safe-area-inset-top, 0px)) 20px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -82,7 +82,8 @@ header {
   margin-bottom: 2rem;
 }
 
-header h1 {
+header h1,
+.app-title {
   font-family: 'ONE-Mobile-Title', sans-serif;
   font-weight: normal;
   font-size: 2.3rem;
@@ -90,6 +91,9 @@ header h1 {
   max-width: 80%;
   margin: 2.5rem auto 0;
   line-height: 1.2;
+}
+.app-title-sub {
+  display: block;
 }
 
 .header-meta {
@@ -129,9 +133,11 @@ header h1 {
   left: 0;
   right: 0;
   z-index: 100;
-  padding: 10px 16px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
   display: flex;
   justify-content: flex-end;
+  background-color: var(--background-color);
+  transition: background-color 0.3s;
 }
 
 .topbar-inner {
@@ -621,8 +627,12 @@ footer p { margin: 0.5rem 0; }
    반응형
    ========================== */
 @media (max-width: 768px) {
-  body { padding: 10px; }
-  header h1 { font-size: 2rem; }
+  body { padding: calc(60px + env(safe-area-inset-top, 0px)) 10px 10px; }
+  header h1,
+  .app-title { font-size: 1.1rem; margin: 0.5rem auto 0; }
+  .app-title-sub { display: inline; }
+  .app-title::after { content: ' '; }
+  .version-info { font-size: 0.65rem; }
 
   .info-row {
     flex-direction: column;
