@@ -297,33 +297,40 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
   // ===================
   //  검색
   // ===================
+  // Android IME(한글 등) 입력 시 input 이벤트가 안 오는 경우 대비
+  // keyup + compositionend + paste 이벤트도 같이 처리
+  function triggerSearch() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const query = inputEl.value.trim();
+      if (!query) { suggestionsEl.style.display = 'none'; return; }
+      try {
+        const url = `${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`;
+        const res = await dedupFetch(url, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
+        const { documents } = await res.json();
+        suggestionsEl.innerHTML = '';
+        if (documents.length > 0) {
+          documents.slice(0, 5).forEach(d => {
+            const li = document.createElement('li');
+            li.textContent = d.address_name;
+            li.onclick = () => {
+              inputEl.value = d.address_name;
+              suggestionsEl.style.display = 'none';
+              updateAll(parseFloat(d.y), parseFloat(d.x), true);
+            };
+            suggestionsEl.appendChild(li);
+          });
+          suggestionsEl.style.display = 'block';
+        } else { suggestionsEl.style.display = 'none'; }
+      } catch { suggestionsEl.style.display = 'none'; }
+    }, 300);
+  }
+
   if (inputEl) {
-    inputEl.addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(async () => {
-        const query = inputEl.value.trim();
-        if (!query) { suggestionsEl.style.display = 'none'; return; }
-        try {
-          const url = `${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`;
-          const res = await dedupFetch(url, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
-          const { documents } = await res.json();
-          suggestionsEl.innerHTML = '';
-          if (documents.length > 0) {
-            documents.slice(0, 5).forEach(d => {
-              const li = document.createElement('li');
-              li.textContent = d.address_name;
-              li.onclick = () => {
-                inputEl.value = d.address_name;
-                suggestionsEl.style.display = 'none';
-                updateAll(parseFloat(d.y), parseFloat(d.x), true);
-              };
-              suggestionsEl.appendChild(li);
-            });
-            suggestionsEl.style.display = 'block';
-          } else { suggestionsEl.style.display = 'none'; }
-        } catch { suggestionsEl.style.display = 'none'; }
-      }, 300);
-    });
+    inputEl.addEventListener('input', triggerSearch);
+    inputEl.addEventListener('keyup', triggerSearch);
+    inputEl.addEventListener('compositionend', triggerSearch);
+    inputEl.addEventListener('paste', () => setTimeout(triggerSearch, 50));
   }
 
   async function searchByAddress(q) {
