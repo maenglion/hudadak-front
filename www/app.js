@@ -492,6 +492,64 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     widgetCheckbox.addEventListener('change', () => applyWidget(widgetCheckbox.checked));
   }
 
+  // ===================
+  //  위젯 설치 버튼 (설정 모달 내)
+  // ===================
+  function requestWidgetPin() {
+    if (window.Capacitor?.isNativePlatform?.()) {
+      // Capacitor 플러그인 호출
+      import('@capacitor/core').then(({ Plugins }) => {
+        const { WidgetPin } = Plugins;
+        if (WidgetPin) {
+          WidgetPin.requestPin().catch((err) => {
+            console.warn('[WidgetPin]', err);
+            alert('이 런청러는 위젯 고정 기능을 지원하지 않습니다.\n홈 화면을 길게 누른 후 위젯 메뉴에서 후다닥을 선택해 추가하세요.');
+          });
+        }
+      }).catch(() => {
+        alert('홈 화면을 길게 누른 후 위젯 메뉴에서 후다닥을 선택해 추가하세요.');
+      });
+    } else {
+      // 웹/에뮬레이터: 안내 텍스트
+      alert('홈 화면을 길게 누른 후 위젯 메뉴에서 후다닥을 선택해 추가하세요.');
+    }
+  }
+  const widgetInstallBtn = document.getElementById('widgetInstallBtn');
+  if (widgetInstallBtn) {
+    widgetInstallBtn.addEventListener('click', requestWidgetPin);
+  }
+
+  // ===================
+  //  첫 실행 위젯 안내 모달
+  // ===================
+  const widgetPromptModal   = document.getElementById('widgetPromptModal');
+  const widgetPromptConfirm = document.getElementById('widgetPromptConfirm');
+  const widgetPromptLater   = document.getElementById('widgetPromptLater');
+
+  function closeWidgetPrompt() {
+    if (widgetPromptModal) widgetPromptModal.classList.remove('open');
+    localStorage.setItem('widgetPromptShown', '1');
+  }
+
+  // 네이티브 앱 환경이고 첫 실행인 경우에만 표시
+  const isNative = window.Capacitor?.isNativePlatform?.();
+  const promptShown = localStorage.getItem('widgetPromptShown');
+  if (isNative && !promptShown && widgetPromptModal) {
+    // 앱 로드 후 1.5초 뒤 표시 (위치 권한 팝업과 겹치지 않도록)
+    setTimeout(() => widgetPromptModal.classList.add('open'), 1500);
+  }
+
+  if (widgetPromptConfirm) {
+    widgetPromptConfirm.addEventListener('click', () => {
+      closeWidgetPrompt();
+      applyWidget(true);  // 위젯 활성화
+      requestWidgetPin(); // 핀 요청
+    });
+  }
+  if (widgetPromptLater) {
+    widgetPromptLater.addEventListener('click', closeWidgetPrompt);
+  }
+
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {
     applyTheme(savedTheme);

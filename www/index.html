@@ -70,6 +70,7 @@
           <span class="modal-mode-label" id="widgetLabel">비활성</span>
         </div>
         <p class="modal-hint">위젯을 활성화하면 홈 화면에서 미세먼지 정보를 바로 확인할 수 있습니다.</p>
+        <button id="widgetInstallBtn" class="widget-install-btn">홈 화면에 위젯 추가하기</button>
       </section>
 
       <section class="modal-section">
@@ -101,6 +102,18 @@
           <a href="https://maenglionworld.notion.site/3a5bcdc037cd8007a5afc19eeda0a106" target="_blank" rel="noopener" class="notion-link-btn">전체 공지 및 업데이트 내역 보기</a>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- 첫 실행 위젯 안내 모달 -->
+  <div id="widgetPromptModal" class="widget-prompt-overlay" role="dialog" aria-modal="true" aria-label="위젯 안내">
+    <div class="widget-prompt-box">
+      <p class="widget-prompt-title">홈 화면에서 바로 확인하세요</p>
+      <p class="widget-prompt-desc">후다닥 위젯을 홈 화면에 추가하면<br>앱을 열지 않아도 미세먼지를 바로 확인할 수 있습니다.</p>
+      <div class="widget-prompt-buttons">
+        <button id="widgetPromptConfirm" class="widget-prompt-btn primary">위젯 추가하기</button>
+        <button id="widgetPromptLater" class="widget-prompt-btn secondary">나중에</button>
+      </div>
     </div>
   </div>
 

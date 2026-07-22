@@ -786,3 +786,85 @@ footer p { margin: 0.5rem 0; }
   .privacy-policy-container h1 { font-size: 1.5rem; }
   .privacy-policy-container h2 { font-size: 1.2rem; }
 }
+
+/* ==========================
+   위젯 설치 버튼 (설정 모달 내)
+   ========================== */
+.widget-install-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 0;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.widget-install-btn:active {
+  opacity: 0.75;
+}
+
+/* ==========================
+   첫 실행 위젯 안내 모달
+   ========================== */
+.widget-prompt-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  align-items: flex-end;
+  justify-content: center;
+}
+.widget-prompt-overlay.open {
+  display: flex;
+}
+.widget-prompt-box {
+  background: var(--background-color);
+  border-radius: 16px 16px 0 0;
+  padding: 28px 24px 36px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+.widget-prompt-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+.widget-prompt-desc {
+  font-size: 0.88rem;
+  color: var(--secondary-text-color, #888);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.widget-prompt-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.widget-prompt-btn {
+  padding: 12px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.widget-prompt-btn.primary {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+.widget-prompt-btn.secondary {
+  background-color: var(--subtle-bg-color, #f0f0f0);
+  color: var(--text-color);
+}
+.widget-prompt-btn:active {
+  opacity: 0.75;
+}
