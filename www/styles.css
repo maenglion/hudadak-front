@@ -789,6 +789,29 @@ footer p { margin: 0.5rem 0; }
 }
 
 /* ==========================
+   위젯 가이드 (설정 모달 내)
+   ========================== */
+.widget-guide-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+.widget-guide-img {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 12px;
+}
+.widget-guide-text {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--light-text-color);
+  margin: 0;
+}
+
+/* ==========================
    위젯 설치 버튼 (설정 모달 내)
    ========================== */
 .widget-install-btn {
