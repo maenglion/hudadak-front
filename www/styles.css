@@ -66,7 +66,11 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   margin: 0;
-  padding: calc(70px + env(safe-area-inset-top, 0px)) 20px 20px;
+  padding-top: 70px;
+  padding-top: calc(70px + env(safe-area-inset-top, 0px));
+  padding-right: 20px;
+  padding-bottom: 20px;
+  padding-left: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -89,7 +93,7 @@ header h1,
   font-size: 2.3rem;
   color: var(--primary-color);
   max-width: 80%;
-  margin: 2.5rem auto 0;
+  margin: 0.5rem auto 0;
   line-height: 1.2;
 }
 .app-title-sub {
@@ -133,11 +137,17 @@ header h1,
   left: 0;
   right: 0;
   z-index: 100;
-  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+  padding-top: 10px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-bottom: 10px;
+  padding-left: 16px;
+  padding-right: 16px;
   display: flex;
   justify-content: flex-end;
   background-color: var(--background-color);
   transition: background-color 0.3s;
+  box-sizing: border-box;
+  min-height: 50px;
 }
 
 .topbar-inner {
@@ -627,11 +637,17 @@ footer p { margin: 0.5rem 0; }
    반응형
    ========================== */
 @media (max-width: 768px) {
-  body { padding: calc(60px + env(safe-area-inset-top, 0px)) 10px 10px; }
+  body {
+    padding-top: 56px;
+    padding-top: calc(56px + env(safe-area-inset-top, 0px));
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+  }
   header h1,
-  .app-title { font-size: 1.1rem; margin: 0.5rem auto 0; }
+  .app-title { font-size: 1.0rem; margin: 0.3rem auto 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
   .app-title-sub { display: inline; }
-  .app-title::after { content: ' '; }
+  .app-title-sub::before { content: ' '; }
   .version-info { font-size: 0.65rem; }
 
   .info-row {
