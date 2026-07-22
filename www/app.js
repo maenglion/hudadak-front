@@ -461,7 +461,7 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
           items.forEach(item => { html += `<li><strong>${item.title}</strong><br>${item.body}</li>`; });
           html += '</ul>';
         });
-        html += `<a href="https://maenglionworld.notion.site/3a5bcdc037cd8007a5afc19eeda0a106" target="_blank" rel="noopener" class="notion-link-btn">전체 공지 및 업데이트 내역 보기</a>`;
+        html += `<a href="https://maenglionworld.notion.site/_HUDADAK-3a5bcdc037cd8007a5afc19eeda0a106" target="_blank" rel="noopener" class="notion-link-btn">전체 공지 및 업데이트 내역 보기</a>`;
         changelogEl.innerHTML = html;
       }
       // FAQ 렌더링
