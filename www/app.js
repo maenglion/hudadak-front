@@ -430,6 +430,28 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
   }
 
   // ===================
+  //  설정 모달
+  // ===================
+  const settingsBtn   = document.getElementById('settingsBtn');
+  const settingsModal = document.getElementById('settingsModal');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+  function openSettings() {
+    if (settingsModal) settingsModal.classList.add('open');
+  }
+  function closeSettings() {
+    if (settingsModal) settingsModal.classList.remove('open');
+  }
+
+  if (settingsBtn)    settingsBtn.addEventListener('click', openSettings);
+  if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeSettings);
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) closeSettings();
+    });
+  }
+
+  // ===================
   //  테마 토글
   // ===================
   const applyTheme = (theme) => {
@@ -438,9 +460,10 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     document.body.classList.toggle('dark-mode', isDark);
     const cb = document.getElementById('theme-checkbox');
     if (cb) cb.checked = isDark;
+    const modeLabel = document.getElementById('modeLabel');
+    if (modeLabel) modeLabel.textContent = isDark ? '다크 모드' : '라이트 모드';
   };
 
-  // 토글 스위치 (체크박스 기반)
   const themeCheckbox = document.getElementById('theme-checkbox');
   if (themeCheckbox) {
     themeCheckbox.addEventListener('change', () => {
@@ -450,14 +473,23 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     });
   }
 
-  // 기존 버튼 호환 (있으면)
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle && !themeCheckbox) {
-    themeToggle.addEventListener('click', () => {
-      const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-      localStorage.setItem('theme', newTheme);
-      applyTheme(newTheme);
-    });
+  // ===================
+  //  위젯 토글 (설정 모달)
+  // ===================
+  const widgetCheckbox = document.getElementById('widget-checkbox');
+  const widgetLabel    = document.getElementById('widgetLabel');
+  const applyWidget = (enabled) => {
+    if (widgetCheckbox) widgetCheckbox.checked = enabled;
+    if (widgetLabel)    widgetLabel.textContent = enabled ? '활성' : '비활성';
+    localStorage.setItem('widgetEnabled', enabled ? '1' : '0');
+    if (window.Capacitor?.isNativePlatform?.()) {
+      window.dispatchEvent(new CustomEvent('widgetToggle', { detail: { enabled } }));
+    }
+  };
+  if (widgetCheckbox) {
+    const savedWidget = localStorage.getItem('widgetEnabled');
+    applyWidget(savedWidget === '1');
+    widgetCheckbox.addEventListener('change', () => applyWidget(widgetCheckbox.checked));
   }
 
   const savedTheme = localStorage.getItem('theme');

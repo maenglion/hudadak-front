@@ -66,8 +66,8 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   margin: 0;
-  padding-top: 70px;
-  padding-top: calc(70px + env(safe-area-inset-top, 0px));
+  padding-top: 20px;
+  padding-top: max(20px, env(safe-area-inset-top));
   padding-right: 20px;
   padding-bottom: 20px;
   padding-left: 20px;
@@ -129,28 +129,115 @@ header h1,
 }
 
 /* ==========================
-   상단 테마 토글 (슬라이드 스위치)
+   설정 버튼
    ========================== */
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  padding-top: 10px;
-  padding-top: max(10px, env(safe-area-inset-top));
-  padding-bottom: 10px;
-  padding-left: 16px;
-  padding-right: 16px;
-  display: flex;
-  justify-content: flex-end;
-  background-color: var(--background-color);
-  transition: background-color 0.3s;
-  box-sizing: border-box;
-  min-height: 50px;
+.settings-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--light-text-color);
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-left: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+.settings-btn:hover {
+  background-color: var(--subtle-bg-color);
+  color: var(--text-color);
 }
 
-.topbar-inner {
+/* ==========================
+   설정 모달
+   ========================== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open {
+  display: flex;
+}
+.modal-box {
+  background: var(--card-color);
+  color: var(--text-color);
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  border-radius: 16px 16px 0 0;
+  padding: 24px 20px 32px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--light-text-color);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+}
+.modal-section {
+  margin-bottom: 24px;
+}
+.modal-section-title {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--light-text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+.modal-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.modal-mode-label {
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+.modal-hint {
+  font-size: 0.78rem;
+  color: var(--light-text-color);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.modal-changelog {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--text-color);
+}
+.modal-changelog .changelog-date {
+  font-size: 0.78rem;
+  color: var(--light-text-color);
+  margin-bottom: 8px;
+}
+.modal-changelog ul {
+  padding-left: 1.2em;
+  margin-top: 8px;
+}
+.modal-changelog li {
+  margin-bottom: 4px;
+}
+
+/* ==========================
+   테마 토글 (모달 내)
+   ========================== */
+.theme-switch {
   display: flex;
   align-items: center;
 }
@@ -638,8 +725,8 @@ footer p { margin: 0.5rem 0; }
    ========================== */
 @media (max-width: 768px) {
   body {
-    padding-top: 56px;
-    padding-top: calc(56px + env(safe-area-inset-top, 0px));
+    padding-top: 12px;
+    padding-top: max(12px, env(safe-area-inset-top));
     padding-right: 10px;
     padding-bottom: 10px;
     padding-left: 10px;

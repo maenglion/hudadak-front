@@ -30,27 +30,65 @@
   </script>
 </head>
 <body>
-  <!-- 상단 테마 토글 (슬라이드 스위치) -->
-  <div class="topbar">
-    <div class="topbar-inner">
-      <label class="theme-switch" for="theme-checkbox">
-        <input type="checkbox" id="theme-checkbox">
-        <span class="theme-switch-slider"></span>
-      </label>
-    </div>
-  </div>
+
 
   <!-- 헤더 -->
   <header>
     <h1 class="app-title">후다닥<span class="app-title-sub">미세먼지 피하기</span></h1>
     <div class="header-meta">
-      <div class="version-info">ver.5.1</div>
+      <div class="version-info">ver.5.1 <button id="settingsBtn" class="settings-btn">[설정]</button></div>
     </div>
     <div class="info-row">
       <p><strong>기준위치:</strong> <span id="region">--</span></p>
       <p><strong>검색일시:</strong> <span id="time">--</span></p>
     </div>
   </header>
+
+  <!-- 설정 모달 -->
+  <div id="settingsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="설정">
+    <div class="modal-box">
+      <button id="modalCloseBtn" class="modal-close" aria-label="닫기">✕</button>
+
+      <section class="modal-section">
+        <h3 class="modal-section-title">모드 변경</h3>
+        <div class="modal-mode-row">
+          <label class="theme-switch" for="theme-checkbox">
+            <input type="checkbox" id="theme-checkbox">
+            <span class="theme-switch-slider"></span>
+          </label>
+          <span class="modal-mode-label" id="modeLabel">라이트 모드</span>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3 class="modal-section-title">위젯 사용</h3>
+        <div class="modal-mode-row">
+          <label class="theme-switch" for="widget-checkbox">
+            <input type="checkbox" id="widget-checkbox">
+            <span class="theme-switch-slider"></span>
+          </label>
+          <span class="modal-mode-label" id="widgetLabel">비활성</span>
+        </div>
+        <p class="modal-hint">위젯을 활성화하면 홈 화면에서 미세먼지 정보를 바로 확인할 수 있습니다.</p>
+      </section>
+
+      <section class="modal-section">
+        <h3 class="modal-section-title">후다닥 미세먼지 v5.1 변경사항</h3>
+        <div class="modal-changelog">
+          <p class="changelog-date">변경일: 2026.07</p>
+          <p>후다닥 미세먼지의 대대적인 DB 업데이트가 있었습니다.</p>
+          <ul>
+            <li>측정소 데이터 DB 리팩토링 — 더 가까운 측정소 우선 제공</li>
+            <li>WAQI, 에어코리아 등 복수 데이터 소스 통합</li>
+            <li>모델 폴백 개선 — 측정소 데이터 없는 지역도 예측값 제공</li>
+            <li>홈 화면 위젯 추가 (Android)</li>
+            <li>개인정보처리방침 업데이트 — 전화번호 제거, 카카오톡 채널 연결</li>
+            <li>UI 개선 — 상단 여백 및 타이틀 표시 최적화</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
 
   <!-- 게이지 -->
   <section id="gauges">
