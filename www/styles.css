@@ -231,7 +231,31 @@ header h1,
   margin-top: 8px;
 }
 .modal-changelog li {
-  margin-bottom: 4px;
+  margin-bottom: 8px;
+}
+.changelog-category {
+  font-size: 0.78rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 16px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.notion-link-btn {
+  display: block;
+  margin-top: 20px;
+  padding: 10px 0;
+  text-align: center;
+  background-color: var(--subtle-bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+.notion-link-btn:hover {
+  background-color: var(--border-color);
 }
 
 /* ==========================

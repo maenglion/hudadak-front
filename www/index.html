@@ -76,15 +76,28 @@
         <h3 class="modal-section-title">후다닥 미세먼지 v5.1 변경사항</h3>
         <div class="modal-changelog">
           <p class="changelog-date">변경일: 2026.07</p>
-          <p>후다닥 미세먼지의 대대적인 DB 업데이트가 있었습니다.</p>
+          <p>이번 v5.1은 사용자에게 보이는 화면보다 데이터 품질과 서비스 안정성 개선에 집중한 버전입니다.</p>
+
+          <p class="changelog-category">데이터 &amp; 백엔드</p>
           <ul>
-            <li>측정소 데이터 DB 리팩토링 — 더 가까운 측정소 우선 제공</li>
-            <li>WAQI, 에어코리아 등 복수 데이터 소스 통합</li>
-            <li>모델 폴백 개선 — 측정소 데이터 없는 지역도 예측값 제공</li>
-            <li>홈 화면 위젯 추가 (Android)</li>
-            <li>개인정보처리방침 업데이트 — 전화번호 제거, 카카오톡 채널 연결</li>
-            <li>UI 개선 — 상단 여백 및 타이틀 표시 최적화</li>
+            <li><strong>측정소 DB 전면 리팩토링</strong><br>기존에는 고정된 측정소 목록에서 데이터를 가져왔다면, 이제는 현재 위치에서 가장 가까운 측정소를 실시간으로 탐색해 데이터를 제공합니다.</li>
+            <li><strong>복수 데이터 소스 통합</strong><br>WAQI(세계 대기질 지수), 에어코리아 등 여러 측정 기관의 데이터를 통합 관리합니다. 한 소스에 문제가 생겨도 다른 소스로 자동 전환됩니다.</li>
+            <li><strong>모델 폴백 개선</strong><br>인근에 측정소가 없는 지역도 기상 모델 기반 예측값으로 공기질 정보를 제공합니다. 데이터 공백 지역이 줄었습니다.</li>
           </ul>
+
+          <p class="changelog-category">기능 추가</p>
+          <ul>
+            <li><strong>홈 화면 위젯 (Android)</strong><br>앱을 열지 않아도 홈 화면에서 현재 위치의 미세먼지 수치를 바로 확인할 수 있습니다.</li>
+            <li><strong>설정 메뉴</strong><br>다크 모드 / 라이트 모드 전환, 위젯 사용 여부를 설정 화면에서 관리할 수 있습니다.</li>
+          </ul>
+
+          <p class="changelog-category">개인정보 &amp; 운영</p>
+          <ul>
+            <li><strong>개인정보처리방침 업데이트</strong><br>담당자 직통 전화번호를 제거하고, 카카오톡 채널(@soulspectrum)으로 문의 창구를 일원화했습니다.</li>
+            <li><strong>사업자 정보 정비</strong><br>운영사 (주)소울스펙트럼의 정식 사업자 정보를 앱 내 표기에 반영했습니다.</li>
+          </ul>
+
+          <a href="https://maenglionworld.notion.site/3a5bcdc037cd8007a5afc19eeda0a106" target="_blank" rel="noopener" class="notion-link-btn">전체 공지 및 업데이트 내역 보기</a>
         </div>
       </section>
     </div>
