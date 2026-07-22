@@ -3,113 +3,18 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="12dp"
+    android:padding="10dp"
     android:background="#1A1A2E">
 
-    <!-- 좌측: 미세먼지 + 초미세먼지 바 -->
-    <LinearLayout
-        android:id="@+id/widget_left"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_toStartOf="@+id/widget_right"
-        android:layout_marginEnd="12dp"
-        android:orientation="vertical"
-        android:gravity="center_vertical">
-
-        <!-- PM10 라벨 행 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="4dp">
-            <TextView
-                android:layout_width="60dp"
-                android:layout_height="wrap_content"
-                android:text="미세먼지"
-                android:textColor="#AAAACC"
-                android:textSize="10sp" />
-            <TextView
-                android:id="@+id/widget_pm10_grade"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="--"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="6dp" />
-            <TextView
-                android:id="@+id/widget_pm10_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="#AAAACC"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <!-- PM10 바 -->
-        <ProgressBar
-            android:id="@+id/widget_pm10_bar"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginBottom="10dp"
-            android:max="200"
-            android:progress="0"
-            android:progressDrawable="@drawable/widget_progress_pm10" />
-
-        <!-- PM2.5 라벨 행 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="4dp">
-            <TextView
-                android:layout_width="60dp"
-                android:layout_height="wrap_content"
-                android:text="초미세먼지"
-                android:textColor="#AAAACC"
-                android:textSize="10sp" />
-            <TextView
-                android:id="@+id/widget_pm25_grade"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="--"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="6dp" />
-            <TextView
-                android:id="@+id/widget_pm25_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="#AAAACC"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <!-- PM2.5 바 -->
-        <ProgressBar
-            android:id="@+id/widget_pm25_bar"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:max="150"
-            android:progress="0"
-            android:progressDrawable="@drawable/widget_progress_pm25" />
-
-    </LinearLayout>
-
-    <!-- 우측: 지역명 (상단) + 현재시간 + 실측 (하단) -->
+    <!-- 우측 고정 컨테이너 (지역명/시간/실측) -->
     <LinearLayout
         android:id="@+id/widget_right"
-        android:layout_width="130dp"
+        android:layout_width="120dp"
         android:layout_height="match_parent"
         android:layout_alignParentEnd="true"
         android:orientation="vertical"
-        android:gravity="end">
+        android:gravity="end|top"
+        android:paddingStart="8dp">
 
         <TextView
             android:id="@+id/widget_region"
@@ -130,23 +35,112 @@
             android:layout_marginTop="4dp"
             android:text="현재시간: --"
             android:textColor="#AAAACC"
-            android:textSize="10sp"
+            android:textSize="9sp"
             android:gravity="end" />
-
-        <!-- 스페이서 -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/widget_source_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="--"
             android:textColor="#7777AA"
             android:textSize="9sp"
             android:gravity="end" />
+
+    </LinearLayout>
+
+    <!-- 좌측 컨테이너 (미세먼지/초미세먼지 바+등급+수치) -->
+    <LinearLayout
+        android:id="@+id/widget_left"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toStartOf="@id/widget_right"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+
+        <!-- PM10 라벨 행 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="3dp">
+            <TextView
+                android:layout_width="56dp"
+                android:layout_height="wrap_content"
+                android:text="미세먼지"
+                android:textColor="#AAAACC"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/widget_pm10_grade"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="4dp" />
+            <TextView
+                android:id="@+id/widget_pm10_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="#AAAACC"
+                android:textSize="9sp" />
+        </LinearLayout>
+
+        <!-- PM10 바 -->
+        <ProgressBar
+            android:id="@+id/widget_pm10_bar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:layout_marginBottom="10dp"
+            android:max="200"
+            android:progress="0"
+            android:progressDrawable="@drawable/widget_progress_pm10" />
+
+        <!-- PM2.5 라벨 행 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="3dp">
+            <TextView
+                android:layout_width="56dp"
+                android:layout_height="wrap_content"
+                android:text="초미세먼지"
+                android:textColor="#AAAACC"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/widget_pm25_grade"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="4dp" />
+            <TextView
+                android:id="@+id/widget_pm25_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="#AAAACC"
+                android:textSize="9sp" />
+        </LinearLayout>
+
+        <!-- PM2.5 바 -->
+        <ProgressBar
+            android:id="@+id/widget_pm25_bar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:max="150"
+            android:progress="0"
+            android:progressDrawable="@drawable/widget_progress_pm25" />
 
     </LinearLayout>
 
