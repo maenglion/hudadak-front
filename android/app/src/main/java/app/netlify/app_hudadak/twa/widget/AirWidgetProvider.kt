@@ -27,28 +27,28 @@ class AirWidgetProvider : AppWidgetProvider() {
 
     companion object {
 
-        // 등급 색상 (앱과 동일한 팔레트)
-        private val GRADE_COLORS = mapOf(
-            "좋음"    to "#FF1E88E5",
-            "보통"    to "#FF43A047",
-            "나쁨"    to "#FFF57C00",
-            "매우나쁨" to "#FFD32F2F"
-        )
-
         fun pm10Grade(v: Double?): String = when {
-            v == null   -> "--"
-            v <= 30.0   -> "좋음"
-            v <= 80.0   -> "보통"
-            v <= 150.0  -> "나쁨"
-            else        -> "매우나쁨"
+            v == null  -> "--"
+            v <= 30.0  -> "좋음"
+            v <= 80.0  -> "보통"
+            v <= 150.0 -> "나쁨"
+            else       -> "매우나쁨"
         }
 
         fun pm25Grade(v: Double?): String = when {
-            v == null  -> "--"
-            v <= 15.0  -> "좋음"
-            v <= 35.0  -> "보통"
-            v <= 75.0  -> "나쁨"
-            else       -> "매우나쁨"
+            v == null -> "--"
+            v <= 15.0 -> "좋음"
+            v <= 35.0 -> "보통"
+            v <= 75.0 -> "나쁨"
+            else      -> "매우나쁨"
+        }
+
+        private fun gradeColor(grade: String): Int = when (grade) {
+            "좋음"    -> Color.parseColor("#FF1E88E5")
+            "보통"    -> Color.parseColor("#FF43A047")
+            "나쁨"    -> Color.parseColor("#FFF57C00")
+            "매우나쁨" -> Color.parseColor("#FFD32F2F")
+            else      -> Color.parseColor("#FF888888")
         }
 
         fun updateWidget(
@@ -56,34 +56,41 @@ class AirWidgetProvider : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
-            val prefs = context.getSharedPreferences(WidgetDataStore.PREFS_NAME, Context.MODE_PRIVATE)
-            val region  = prefs.getString(WidgetDataStore.KEY_REGION, "위치 확인 중...") ?: "위치 확인 중..."
-            val pm10    = prefs.getFloat(WidgetDataStore.KEY_PM10, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
-            val pm25    = prefs.getFloat(WidgetDataStore.KEY_PM25, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
+            val prefs     = context.getSharedPreferences(WidgetDataStore.PREFS_NAME, Context.MODE_PRIVATE)
+            val region    = prefs.getString(WidgetDataStore.KEY_REGION, "위치 확인 중...") ?: "위치 확인 중..."
+            val pm10      = prefs.getFloat(WidgetDataStore.KEY_PM10, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
+            val pm25      = prefs.getFloat(WidgetDataStore.KEY_PM25, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val updatedAt = prefs.getLong(WidgetDataStore.KEY_UPDATED_AT, 0L)
+            val source    = prefs.getString("source", "db") ?: "db"
 
             val pm10GradeStr = pm10Grade(pm10)
             val pm25GradeStr = pm25Grade(pm25)
 
-            // 배경색: PM10 등급 기준
-            val bgColor = GRADE_COLORS[pm10GradeStr] ?: "#FF1E88E5"
-
             val views = RemoteViews(context.packageName, R.layout.widget_air)
 
-            // 배경색 동적 변경
-            views.setInt(R.id.widget_root, "setBackgroundColor", Color.parseColor(bgColor))
-
-            // 텍스트 세팅
+            // 지역명
             views.setTextViewText(R.id.widget_region, region)
+
+            // PM10
             views.setTextViewText(R.id.widget_pm10_grade, pm10GradeStr)
             views.setTextViewText(R.id.widget_pm10_value, if (pm10 != null) "${pm10.toInt()} µg/m³" else "-")
+            views.setInt(R.id.widget_pm10_grade, "setTextColor", gradeColor(pm10GradeStr))
+            views.setProgressBar(R.id.widget_pm10_bar, 200, pm10?.toInt()?.coerceIn(0, 200) ?: 0, false)
+
+            // PM2.5
             views.setTextViewText(R.id.widget_pm25_grade, pm25GradeStr)
             views.setTextViewText(R.id.widget_pm25_value, if (pm25 != null) "${pm25.toInt()} µg/m³" else "-")
+            views.setInt(R.id.widget_pm25_grade, "setTextColor", gradeColor(pm25GradeStr))
+            views.setProgressBar(R.id.widget_pm25_bar, 150, pm25?.toInt()?.coerceIn(0, 150) ?: 0, false)
 
-            val timeStr = if (updatedAt > 0L) {
-                SimpleDateFormat("HH:mm 기준", Locale.KOREA).format(Date(updatedAt))
-            } else "업데이트 대기 중"
+            // 현재시간
+            val timeStr = if (updatedAt > 0L)
+                "현재시간: " + SimpleDateFormat("HH:mm", Locale.KOREA).format(Date(updatedAt))
+            else "현재시간: --"
             views.setTextViewText(R.id.widget_updated_at, timeStr)
+
+            // 실측/모델 라벨
+            views.setTextViewText(R.id.widget_source_label, if (source == "db") "실측" else "모델")
 
             // 터치 → 앱 실행
             val intent = Intent(context, MainActivity::class.java).apply {
