@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.view.View
 import android.widget.RemoteViews
 import app.netlify.app_hudadak.twa.MainActivity
 import app.netlify.app_hudadak.twa.R
@@ -43,30 +44,50 @@ class AirWidgetProvider : AppWidgetProvider() {
             else      -> "매우나쁨"
         }
 
-        // CSS 색상과 동일: good=#1E88E5, normal=#43A047, bad=#F57C00, very-bad=#D32F2F
-        private fun gradeColor(grade: String): Int = when (grade) {
-            "좋음"    -> Color.parseColor("#FF1E88E5")
-            "보통"    -> Color.parseColor("#FF43A047")
-            "나쁨"    -> Color.parseColor("#FFF57C00")
-            "매우나쁨" -> Color.parseColor("#FFD32F2F")
-            else      -> Color.parseColor("#FF555559")
+        // 다크모드 CSS SCALE dark 첫번째 색상
+        private fun gradeTextColor(grade: String): Int = when (grade) {
+            "좋음"    -> Color.parseColor("#FF367BB8")
+            "보통"    -> Color.parseColor("#FF629473")
+            "나쁨"    -> Color.parseColor("#FFF6AA5C")
+            "매우나쁨" -> Color.parseColor("#FFC75959")
+            else      -> Color.parseColor("#FF888888")
         }
 
         /**
          * API name 필드에서 동까지 제거한 지역명 반환.
          * "WAQI 인천" → "인천"
          * "인천시 연수구 송도동" → "인천시 연수구"
-         * "인천시 연수구" → "인천시 연수구" (그대로)
          */
         private fun parseRegion(raw: String): String {
-            // WAQI 접두사 제거
             val cleaned = raw.replace(Regex("^WAQI\\s+", RegexOption.IGNORE_CASE), "").trim()
-            // 동/읍/면으로 끝나는 토큰 직전까지만
             val tokens = cleaned.split(" ")
             val dongIdx = tokens.indexOfFirst { it.endsWith("동") || it.endsWith("읍") || it.endsWith("면") }
             return if (dongIdx > 0) tokens.subList(0, dongIdx).joinToString(" ")
             else if (tokens.size > 2) tokens.subList(0, tokens.size - 1).joinToString(" ")
             else cleaned
+        }
+
+        /** 등급에 맞는 바 ID만 VISIBLE, 나머지 GONE */
+        private fun setBarVisibility(
+            views: RemoteViews,
+            grade: String,
+            goodId: Int, normalId: Int, badId: Int, verybadId: Int,
+            progress: Int, max: Int
+        ) {
+            val allIds = listOf(goodId, normalId, badId, verybadId)
+            val activeId = when (grade) {
+                "좋음"    -> goodId
+                "보통"    -> normalId
+                "나쁨"    -> badId
+                "매우나쁨" -> verybadId
+                else      -> normalId
+            }
+            for (id in allIds) {
+                views.setViewVisibility(id, if (id == activeId) View.VISIBLE else View.GONE)
+                if (id == activeId) {
+                    views.setProgressBar(id, max, progress.coerceIn(0, max), false)
+                }
+            }
         }
 
         fun updateWidget(
@@ -86,22 +107,34 @@ class AirWidgetProvider : AppWidgetProvider() {
 
             val views = RemoteViews(context.packageName, R.layout.widget_air)
 
-            // 지역명 (동 제거, WAQI 접두사 제거)
+            // 지역명
             views.setTextViewText(R.id.widget_region, parseRegion(region))
 
-            // PM10 - 등급 배경색 + 흰 텍스트
+            // PM10 등급 텍스트 (등급 색상, 박스 없음)
             views.setTextViewText(R.id.widget_pm10_grade, pm10GradeStr)
-            views.setInt(R.id.widget_pm10_grade, "setBackgroundColor", gradeColor(pm10GradeStr))
-            views.setInt(R.id.widget_pm10_grade, "setTextColor", Color.WHITE)
+            views.setInt(R.id.widget_pm10_grade, "setTextColor", gradeTextColor(pm10GradeStr))
             views.setTextViewText(R.id.widget_pm10_value, if (pm10 != null) "${pm10.toInt()} µg/m³" else "--")
-            views.setProgressBar(R.id.widget_pm10_bar, 200, pm10?.toInt()?.coerceIn(0, 200) ?: 0, false)
 
-            // PM2.5 - 등급 배경색 + 흰 텍스트
+            // PM10 바 (등급에 따라 하나만 VISIBLE)
+            setBarVisibility(
+                views, pm10GradeStr,
+                R.id.widget_pm10_bar_good, R.id.widget_pm10_bar_normal,
+                R.id.widget_pm10_bar_bad, R.id.widget_pm10_bar_verybad,
+                pm10?.toInt() ?: 0, 200
+            )
+
+            // PM2.5 등급 텍스트
             views.setTextViewText(R.id.widget_pm25_grade, pm25GradeStr)
-            views.setInt(R.id.widget_pm25_grade, "setBackgroundColor", gradeColor(pm25GradeStr))
-            views.setInt(R.id.widget_pm25_grade, "setTextColor", Color.WHITE)
+            views.setInt(R.id.widget_pm25_grade, "setTextColor", gradeTextColor(pm25GradeStr))
             views.setTextViewText(R.id.widget_pm25_value, if (pm25 != null) "${pm25.toInt()} µg/m³" else "--")
-            views.setProgressBar(R.id.widget_pm25_bar, 150, pm25?.toInt()?.coerceIn(0, 150) ?: 0, false)
+
+            // PM2.5 바
+            setBarVisibility(
+                views, pm25GradeStr,
+                R.id.widget_pm25_bar_good, R.id.widget_pm25_bar_normal,
+                R.id.widget_pm25_bar_bad, R.id.widget_pm25_bar_verybad,
+                pm25?.toInt() ?: 0, 150
+            )
 
             // 현재시간
             val timeStr = if (updatedAt > 0L)
@@ -109,7 +142,7 @@ class AirWidgetProvider : AppWidgetProvider() {
             else "현재시간: --:--"
             views.setTextViewText(R.id.widget_updated_at, timeStr)
 
-            // 소스 라벨: db → 실측(WAQI), 그 외 → 예상(Open-Meteo)
+            // 소스 라벨
             views.setTextViewText(
                 R.id.widget_source_label,
                 if (source == "db") "실측(WAQI)" else "예상(Open-Meteo)"

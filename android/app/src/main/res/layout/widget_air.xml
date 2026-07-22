@@ -3,8 +3,8 @@
   위젯 크기: 260×168dp
   좌우 패딩: 18dp | 상단: 16dp | 하단: 23dp
   배경: #242526 (다크모드 card-color)
-  등급 텍스트: 흰색, 등급 배경 뱃지에 색상 적용 (KT에서 setBackgroundColor)
-  수치+단위: 회색 (#80FFFFFF)
+  등급 텍스트: 등급 색상, 박스 없음
+  바: 등급별 4개 ProgressBar (visibility로 전환)
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -46,7 +46,7 @@
             android:textSize="11sp" />
     </RelativeLayout>
 
-    <!-- 현재시간 (지역명 아래 2dp) -->
+    <!-- 현재시간 -->
     <TextView
         android:id="@+id/widget_updated_at"
         android:layout_width="wrap_content"
@@ -56,7 +56,7 @@
         android:textColor="#80FFFFFF"
         android:textSize="11sp" />
 
-    <!-- PM10 박스 (현재시간 기준 22dp 아래) -->
+    <!-- PM10 박스 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -90,14 +90,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="나쁨"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#FFF6AA5C"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:paddingLeft="6dp"
-                    android:paddingRight="6dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
-                    android:layout_marginEnd="6dp" />
+                    android:layout_marginEnd="8dp" />
 
                 <TextView
                     android:id="@+id/widget_pm10_value"
@@ -109,17 +105,30 @@
             </LinearLayout>
         </RelativeLayout>
 
-        <ProgressBar
-            android:id="@+id/widget_pm10_bar"
+        <!-- PM10 바 4종 (등급에 따라 하나만 VISIBLE) -->
+        <ProgressBar android:id="@+id/widget_pm10_bar_good"
             style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:progressDrawable="@drawable/widget_progress_pm10"
-            android:max="200"
-            android:progress="0" />
+            android:layout_width="match_parent" android:layout_height="8dp"
+            android:progressDrawable="@drawable/widget_progress_good"
+            android:max="200" android:progress="0" android:visibility="gone"/>
+        <ProgressBar android:id="@+id/widget_pm10_bar_normal"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="8dp"
+            android:progressDrawable="@drawable/widget_progress_normal"
+            android:max="200" android:progress="0" android:visibility="gone"/>
+        <ProgressBar android:id="@+id/widget_pm10_bar_bad"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="8dp"
+            android:progressDrawable="@drawable/widget_progress_bad"
+            android:max="200" android:progress="0" android:visibility="gone"/>
+        <ProgressBar android:id="@+id/widget_pm10_bar_verybad"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="8dp"
+            android:progressDrawable="@drawable/widget_progress_verybad"
+            android:max="200" android:progress="0" android:visibility="gone"/>
     </LinearLayout>
 
-    <!-- PM25 박스 (PM10 기준 24dp 아래) -->
+    <!-- PM25 박스 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -153,14 +162,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="매우나쁨"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#FFC75959"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:paddingLeft="6dp"
-                    android:paddingRight="6dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
-                    android:layout_marginEnd="6dp" />
+                    android:layout_marginEnd="8dp" />
 
                 <TextView
                     android:id="@+id/widget_pm25_value"
@@ -172,14 +177,27 @@
             </LinearLayout>
         </RelativeLayout>
 
-        <ProgressBar
-            android:id="@+id/widget_pm25_bar"
+        <!-- PM25 바 4종 -->
+        <ProgressBar android:id="@+id/widget_pm25_bar_good"
             style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:progressDrawable="@drawable/widget_progress_pm25"
-            android:max="150"
-            android:progress="0" />
+            android:layout_width="match_parent" android:layout_height="8dp"
+            android:progressDrawable="@drawable/widget_progress_good"
+            android:max="150" android:progress="0" android:visibility="gone"/>
+        <ProgressBar android:id="@+id/widget_pm25_bar_normal"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="8dp"
+            android:progressDrawable="@drawable/widget_progress_normal"
+            android:max="150" android:progress="0" android:visibility="gone"/>
+        <ProgressBar android:id="@+id/widget_pm25_bar_bad"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="8dp"
+            android:progressDrawable="@drawable/widget_progress_bad"
+            android:max="150" android:progress="0" android:visibility="gone"/>
+        <ProgressBar android:id="@+id/widget_pm25_bar_verybad"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="8dp"
+            android:progressDrawable="@drawable/widget_progress_verybad"
+            android:max="150" android:progress="0" android:visibility="gone"/>
     </LinearLayout>
 
 </LinearLayout>
