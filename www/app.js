@@ -510,10 +510,17 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     const isDark = theme === 'dark';
     document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
     document.body.classList.toggle('dark-mode', isDark);
+    document.body.classList.toggle('light-mode', !isDark);
     const cb = document.getElementById('theme-checkbox');
     if (cb) cb.checked = isDark;
     const modeLabel = document.getElementById('modeLabel');
     if (modeLabel) modeLabel.textContent = isDark ? '다크 모드' : '라이트 모드';
+
+    // 게이지 색상은 인라인 CSS 변수이므로 테마 전환 후 다시 계산해야 한다.
+    if (lastAirData) {
+      drawGauge('PM10', lastAirData.pm10, lastAirData.station, lastAirData.sourceKind);
+      drawGauge('PM25', lastAirData.pm25, lastAirData.station, lastAirData.sourceKind);
+    }
   };
 
   const themeCheckbox = document.getElementById('theme-checkbox');

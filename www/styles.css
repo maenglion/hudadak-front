@@ -27,6 +27,20 @@
   --bar-bg: #e0e0e0;
 }
 
+/* 사용자가 라이트 모드를 선택하면 운영체제 다크 설정보다 우선한다. */
+body.light-mode {
+  --background-color: #f4f6f8;
+  --card-color: #ffffff;
+  --text-color: #333;
+  --light-text-color: #777;
+  --border-color: #e0e0e0;
+  --primary-color: #007bff;
+  --shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  --gauge-wheel-bg: #eee;
+  --subtle-bg-color: #e9ecef;
+  --bar-bg: #e0e0e0;
+}
+
 /* ==========================
    다크 모드 변수
    ========================== */

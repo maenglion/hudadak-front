@@ -1,5 +1,5 @@
 // sw.js — 후다닥 미세먼지 피하기
-const CACHE_NAME = 'hudadak-v4';
+const CACHE_NAME = 'hudadak-v5-theme-fix';
 const API_BASE = 'https://air-api-350359872967.asia-northeast3.run.app';
 
 const STATIC_ASSETS = [
