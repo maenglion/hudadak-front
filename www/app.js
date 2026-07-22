@@ -572,35 +572,29 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
   }
 
   // ===================
-  //  첫 실행 위젯 안내 모달
+  //  위젯 설치 안내 모달
   // ===================
   const widgetPromptModal   = document.getElementById('widgetPromptModal');
-  const widgetPromptConfirm = document.getElementById('widgetPromptConfirm');
-  const widgetPromptLater   = document.getElementById('widgetPromptLater');
+  const widgetPromptClose   = document.getElementById('widgetPromptClose');
+  const widgetPromptDismiss = document.getElementById('widgetPromptDismiss');
 
   function closeWidgetPrompt() {
     if (widgetPromptModal) widgetPromptModal.classList.remove('open');
-    localStorage.setItem('widgetPromptShown', '1');
+  }
+  function dismissWidgetPromptWeek() {
+    closeWidgetPrompt();
+    localStorage.setItem('widgetPromptHideUntil', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
   }
 
-  // 네이티브 앱 환경이고 첫 실행인 경우에만 표시
+  // 네이티브 앱 환경에서 매 실행마다 표시 (일주일 보지 않기 누른 경우 제외)
   const isNative = window.Capacitor?.isNativePlatform?.();
-  const promptShown = localStorage.getItem('widgetPromptShown');
-  if (isNative && !promptShown && widgetPromptModal) {
-    // 앱 로드 후 1.5초 뒤 표시 (위치 권한 팝업과 겹치지 않도록)
+  const hideUntil = parseInt(localStorage.getItem('widgetPromptHideUntil') || '0', 10);
+  if (isNative && Date.now() > hideUntil && widgetPromptModal) {
     setTimeout(() => widgetPromptModal.classList.add('open'), 1500);
   }
 
-  if (widgetPromptConfirm) {
-    widgetPromptConfirm.addEventListener('click', () => {
-      closeWidgetPrompt();
-      applyWidget(true);  // 위젯 활성화
-      requestWidgetPin(); // 핀 요청
-    });
-  }
-  if (widgetPromptLater) {
-    widgetPromptLater.addEventListener('click', closeWidgetPrompt);
-  }
+  if (widgetPromptClose)   widgetPromptClose.addEventListener('click', closeWidgetPrompt);
+  if (widgetPromptDismiss) widgetPromptDismiss.addEventListener('click', dismissWidgetPromptWeek);
 
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {

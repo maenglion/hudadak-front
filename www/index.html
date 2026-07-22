@@ -95,15 +95,14 @@
     </div>
   </div>
 
-  <!-- 첫 실행 위젯 안내 모달 -->
+  <!-- 위젯 설치 안내 모달 -->
   <div id="widgetPromptModal" class="widget-prompt-overlay" role="dialog" aria-modal="true" aria-label="위젯 안내">
     <div class="widget-prompt-box">
-      <p class="widget-prompt-title">홈 화면에서 바로 확인하세요</p>
-      <p class="widget-prompt-desc">후다닥 위젯을 홈 화면에 추가하면<br>앱을 열지 않아도 미세먼지를 바로 확인할 수 있습니다.</p>
-      <div class="widget-prompt-buttons">
-        <button id="widgetPromptConfirm" class="widget-prompt-btn primary">위젯 추가하기</button>
-        <button id="widgetPromptLater" class="widget-prompt-btn secondary">나중에</button>
-      </div>
+      <button id="widgetPromptClose" class="widget-prompt-close" aria-label="닫기">✕</button>
+      <img src="img/widgetinstall.png" alt="위젯 설치 방법" class="widget-prompt-img">
+      <p class="widget-prompt-title">위젯을 홈 화면에 추가하세요</p>
+      <p class="widget-prompt-desc">앱 아이콘을 3초 꾹 누른 후<br>위젯을 선택하면 바로 확인할 수 있어요</p>
+      <button id="widgetPromptDismiss" class="widget-prompt-week-btn">일주일간 보지 않기</button>
     </div>
   </div>
 
