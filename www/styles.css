@@ -132,11 +132,12 @@ header h1,
    설정 버튼
    ========================== */
 .settings-btn {
-  background: none;
-  border: 1px solid var(--border-color);
+  display: inline-block;
+  background-color: var(--subtle-bg-color);
+  border: none;
   color: var(--light-text-color);
-  font-size: 0.7rem;
-  padding: 2px 6px;
+  font-size: 0.75rem;
+  padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
   vertical-align: middle;
