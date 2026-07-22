@@ -74,32 +74,16 @@
       </section>
 
       <section class="modal-section">
-        <h3 class="modal-section-title">후다닥 미세먼지 v5.1 변경사항</h3>
-        <div class="modal-changelog">
-          <p class="changelog-date">변경일: 2026.07</p>
-          <p>이번 v5.1은 사용자에게 보이는 화면보다 데이터 품질과 서비스 안정성 개선에 집중한 버전입니다.</p>
+        <h3 class="modal-section-title" id="changelogTitle">후다닥 미세먼지 v5.1 변경사항</h3>
+        <div class="modal-changelog" id="changelogContent">
+          <p class="changelog-loading">불러오는 중...</p>
+        </div>
+      </section>
 
-          <p class="changelog-category">데이터 &amp; 백엔드</p>
-          <ul>
-            <li><strong>다중 데이터 소스 통합 엔진</strong><br>WAQI(세계 대기질 지수 실측), Open-Meteo(기상 모델), OpenAQ(글로벌 집계) 등 복수 데이터 소스를 후다닥이 직접 수집하고 통합합니다. 실측 데이터를 우선하되, 없으면 모델 예측값으로 자동 전환하는 폴백 전략으로 데이터 공백을 최소화합니다.</li>
-            <li><strong>실측 우선 품질 정렬 로직</strong><br>데이터를 가져올 때 실측 관측소 데이터를 우선하고, 없는 경우에만 모델 예측값을 노출하며 "예측" 표시로 구분합니다. 어떤 지역에서도 빈값 없이 공기질 정보를 제공하는 것이 목표입니다.</li>
-            <li><strong>위치 기반 최근접 측정소 탐색</strong><br>현재 위치의 위경도를 기준으로 DB에서 가장 가까운 측정소를 실시간 탐색합니다. 고정된 지역명 매핑 대신 좌표 기반으로 정확도가 높아졌습니다.</li>
-          </ul>
-
-          <p class="changelog-category">기능 추가</p>
-          <ul>
-            <li><strong>홈 화면 위젯 (Android)</strong><br>앱을 열지 않아도 홈 화면에서 현재 위치의 미세먼지 수치를 바로 확인할 수 있습니다.</li>
-            <li><strong>설정 메뉴</strong><br>다크 모드 / 라이트 모드 전환, 위젯 사용 여부를 설정 화면에서 관리할 수 있습니다.</li>
-          </ul>
-
-          <p class="changelog-category">개인정보 &amp; 운영</p>
-          <ul>
-            <li><strong>개인정보처리방침 업데이트</strong><br>카카오톡 채널(@soulspectrum)을 개설하고 문의 창구를 일원화했습니다.</li>
-            <li><strong>사업자 정보 공개</strong><br>운영사 (주)소울스펙트럼의 정식 사업자 정보를 앱 내에 정식 공개합니다.</li>
-            <li><strong>전체 공지사항 및 서비스 개선 내역</strong><br>기능 추가, 유지보수, 개인정보 처리 등 서비스 운영에 관한 전체 공지는 아래 버튼에서 확인할 수 있습니다.</li>
-          </ul>
-
-          <a href="https://maenglionworld.notion.site/3a5bcdc037cd8007a5afc19eeda0a106" target="_blank" rel="noopener" class="notion-link-btn">전체 공지 및 업데이트 내역 보기</a>
+      <section class="modal-section">
+        <h3 class="modal-section-title">자주 묻는 질문</h3>
+        <div class="modal-faq" id="faqContent">
+          <p class="changelog-loading">불러오는 중...</p>
         </div>
       </section>
     </div>

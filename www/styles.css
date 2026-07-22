@@ -869,3 +869,11 @@ footer p { margin: 0.5rem 0; }
 .widget-prompt-btn:active {
   opacity: 0.75;
 }
+
+/* FAQ */
+.modal-faq { padding: 0 0 8px; }
+.faq-item { margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+.faq-item:last-child { border-bottom: none; }
+.faq-q { font-weight: 600; font-size: 0.88rem; margin: 0 0 6px; color: var(--text-color); }
+.faq-a { font-size: 0.82rem; margin: 0; color: var(--light-text-color); line-height: 1.5; }
+.changelog-loading { font-size: 0.82rem; color: var(--light-text-color); text-align: center; padding: 12px 0; }

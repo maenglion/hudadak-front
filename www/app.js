@@ -436,8 +436,53 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
   const settingsModal = document.getElementById('settingsModal');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
 
+  let noticesLoaded = false;
+  async function loadNotices() {
+    if (noticesLoaded) return;
+    const changelogEl = document.getElementById('changelogContent');
+    const faqEl       = document.getElementById('faqContent');
+    const titleEl     = document.getElementById('changelogTitle');
+    try {
+      const res = await fetch(API_BASE + '/notices');
+      if (!res.ok) throw new Error('notices ' + res.status);
+      const data = await res.json();
+      noticesLoaded = true;
+      // 제목 업데이트
+      if (titleEl && data.version) {
+        titleEl.textContent = `후다닥 미세먼지 v${data.version} 변경사항`;
+      }
+      // 공지사항 렌더링
+      if (changelogEl && data.notices && data.notices.length) {
+        const cats = {};
+        data.notices.forEach(n => { if (!cats[n.category]) cats[n.category] = []; cats[n.category].push(n); });
+        let html = data.updated ? `<p class="changelog-date">변경일: ${data.updated}</p>` : '';
+        Object.entries(cats).forEach(([cat, items]) => {
+          html += `<p class="changelog-category">${cat}</p><ul>`;
+          items.forEach(item => { html += `<li><strong>${item.title}</strong><br>${item.body}</li>`; });
+          html += '</ul>';
+        });
+        html += `<a href="https://maenglionworld.notion.site/3a5bcdc037cd8007a5afc19eeda0a106" target="_blank" rel="noopener" class="notion-link-btn">전체 공지 및 업데이트 내역 보기</a>`;
+        changelogEl.innerHTML = html;
+      }
+      // FAQ 렌더링
+      if (faqEl && data.faq && data.faq.length) {
+        let html = '';
+        data.faq.forEach(item => {
+          html += `<div class="faq-item"><p class="faq-q">${item.q}</p><p class="faq-a">${item.a}</p></div>`;
+        });
+        faqEl.innerHTML = html;
+      }
+    } catch (e) {
+      console.warn('[notices] fetch failed:', e);
+      const errMsg = '<p class="changelog-loading">업데이트 정보를 불러오지 못했습니다.</p>';
+      if (changelogEl) changelogEl.innerHTML = errMsg;
+      if (faqEl) faqEl.innerHTML = errMsg;
+    }
+  }
+
   function openSettings() {
     if (settingsModal) settingsModal.classList.add('open');
+    loadNotices();
   }
   function closeSettings() {
     if (settingsModal) settingsModal.classList.remove('open');
