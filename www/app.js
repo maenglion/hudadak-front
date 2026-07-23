@@ -116,6 +116,22 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     };
   }
 
+  function syncWidget(lat, lon, airData) {
+    if (!window.Capacitor?.isNativePlatform?.()) return;
+    const widgetSync = window.Capacitor?.Plugins?.WidgetSync;
+    if (!widgetSync) return;
+    widgetSync.update({
+      lat,
+      lon,
+      region: airData.station,
+      pm10: airData.pm10,
+      pm25: airData.pm25,
+      provider: airData.provider,
+      source: airData.sourceKind,
+      display_ts: airData.displayTs,
+    }).catch((err) => console.warn('[WidgetSync]', err));
+  }
+
   // ===================
   //  주소 조회
   // ===================
@@ -243,10 +259,24 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
   function updateDateTime(displayTs) {
     const timeEl = document.getElementById('time');
     if (!timeEl) return;
-    if (displayTs) {
-      try { timeEl.textContent = new Date(displayTs).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }); return; } catch {}
+    if (!displayTs) {
+      timeEl.textContent = '확인 불가';
+      return;
     }
-    timeEl.textContent = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+    const timestamp = new Date(displayTs);
+    if (Number.isNaN(timestamp.getTime())) {
+      timeEl.textContent = '확인 불가';
+      return;
+    }
+    timeEl.textContent = timestamp.toLocaleString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
   }
 
   function showError(msg) { if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; } }
@@ -276,6 +306,7 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
         drawGauge('PM25', airData.pm25, airData.station, airData.sourceKind);
         updateGasData(airData);
         updateDateTime(airData.displayTs);
+        syncWidget(lat, lon, airData);
         console.log(`[updateAll] 소스: ${airData.sourceKind} / 측정소: ${airData.station}`);
       } else {
         drawGauge('PM10', null, '데이터 없음', 'unknown');
@@ -562,7 +593,7 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
         if (WidgetPin) {
           WidgetPin.requestPin().catch((err) => {
             console.warn('[WidgetPin]', err);
-            alert('이 런청러는 위젯 고정 기능을 지원하지 않습니다.\n홈 화면을 길게 누른 후 위젯 메뉴에서 후다닥을 선택해 추가하세요.');
+            alert('이 런처는 위젯 고정 기능을 지원하지 않습니다.\n홈 화면을 길게 누른 후 위젯 메뉴에서 후다닥을 선택해 추가하세요.');
           });
         }
       }).catch(() => {

@@ -46,13 +46,13 @@
             android:textSize="11sp" />
     </RelativeLayout>
 
-    <!-- 현재시간 -->
+    <!-- 측정/갱신 시간 -->
     <TextView
         android:id="@+id/widget_updated_at"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:text="현재시간: --:--"
+        android:text="갱신: --:--"
         android:textColor="#80FFFFFF"
         android:textSize="11sp" />
 

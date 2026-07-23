@@ -16,6 +16,11 @@ import java.util.Locale
 
 class AirWidgetProvider : AppWidgetProvider() {
 
+    override fun onEnabled(context: Context) {
+        WidgetUpdateWorker.schedule(context)
+        WidgetUpdateWorker.enqueueImmediate(context)
+    }
+
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -23,6 +28,13 @@ class AirWidgetProvider : AppWidgetProvider() {
     ) {
         for (appWidgetId in appWidgetIds) {
             updateWidget(context, appWidgetManager, appWidgetId)
+        }
+        WidgetUpdateWorker.enqueueImmediate(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        if (WidgetDataStore.installedWidgetIds(context).isEmpty()) {
+            WidgetUpdateWorker.cancelPeriodic(context)
         }
     }
 
@@ -100,7 +112,9 @@ class AirWidgetProvider : AppWidgetProvider() {
             val pm10      = prefs.getFloat(WidgetDataStore.KEY_PM10, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val pm25      = prefs.getFloat(WidgetDataStore.KEY_PM25, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val updatedAt = prefs.getLong(WidgetDataStore.KEY_UPDATED_AT, 0L)
-            val source    = prefs.getString("source", "db") ?: "db"
+            val source    = prefs.getString(WidgetDataStore.KEY_SOURCE, null)
+            val provider  = prefs.getString(WidgetDataStore.KEY_PROVIDER, null)
+            val displayTs = prefs.getString(WidgetDataStore.KEY_DISPLAY_TS, null)
 
             val pm10GradeStr = pm10Grade(pm10)
             val pm25GradeStr = pm25Grade(pm25)
@@ -136,16 +150,21 @@ class AirWidgetProvider : AppWidgetProvider() {
                 pm25?.toInt() ?: 0, 150
             )
 
-            // 현재시간
-            val timeStr = if (updatedAt > 0L)
-                "현재시간: " + SimpleDateFormat("HH:mm", Locale.KOREA).format(Date(updatedAt))
-            else "현재시간: --:--"
+            val displayMillis = WidgetRules.parseDisplayTimestamp(displayTs)
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.KOREA).apply {
+                timeZone = java.util.TimeZone.getTimeZone("Asia/Seoul")
+            }
+            val timeStr = when {
+                displayMillis != null -> "측정: ${timeFormat.format(Date(displayMillis))}"
+                updatedAt > 0L -> "갱신: ${timeFormat.format(Date(updatedAt))}"
+                else -> "갱신: --:--"
+            }
             views.setTextViewText(R.id.widget_updated_at, timeStr)
 
             // 소스 라벨
             views.setTextViewText(
                 R.id.widget_source_label,
-                if (source == "db") "실측(WAQI)" else "예상(Open-Meteo)"
+                WidgetRules.providerLabel(provider, source)
             )
 
             // 터치 → 앱 실행

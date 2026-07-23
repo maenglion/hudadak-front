@@ -4,44 +4,72 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 
-/**
- * 앱 ↔ 위젯 간 데이터 공유용 SharedPreferences 헬퍼.
- *
- * 앱이 미세먼지 데이터를 받으면 여기에 저장하고,
- * 위젯은 이 값을 읽어서 표시한다.
- */
 object WidgetDataStore {
-
-    const val PREFS_NAME   = "hudadak_widget_prefs"
-    const val KEY_REGION   = "region"
-    const val KEY_PM10     = "pm10"
-    const val KEY_PM25     = "pm25"
+    const val PREFS_NAME = "hudadak_widget_prefs"
+    const val KEY_REGION = "region"
+    const val KEY_PM10 = "pm10"
+    const val KEY_PM25 = "pm25"
+    const val KEY_LAT = "lat"
+    const val KEY_LON = "lon"
+    const val KEY_PROVIDER = "provider"
+    const val KEY_SOURCE = "source"
+    const val KEY_DISPLAY_TS = "display_ts"
     const val KEY_UPDATED_AT = "updated_at"
 
-    /**
-     * 미세먼지 데이터를 저장하고 모든 위젯을 즉시 갱신한다.
-     * MainActivity(또는 Capacitor 플러그인)에서 호출한다.
-     */
-    fun save(context: Context, region: String, pm10: Double?, pm25: Double?) {
+    data class Coordinates(val lat: Double, val lon: Double)
+
+    fun getCoordinates(context: Context): Coordinates? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (!prefs.contains(KEY_LAT) || !prefs.contains(KEY_LON)) return null
+        return Coordinates(
+            Double.fromBits(prefs.getLong(KEY_LAT, 0L)),
+            Double.fromBits(prefs.getLong(KEY_LON, 0L))
+        )
+    }
+
+    fun saveCoordinates(context: Context, lat: Double, lon: Double) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putLong(KEY_LAT, lat.toBits())
+            .putLong(KEY_LON, lon.toBits())
+            .apply()
+    }
+
+    fun save(
+        context: Context,
+        lat: Double,
+        lon: Double,
+        region: String,
+        pm10: Double?,
+        pm25: Double?,
+        provider: String?,
+        source: String?,
+        displayTs: String?
+    ) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().apply {
+            putLong(KEY_LAT, lat.toBits())
+            putLong(KEY_LON, lon.toBits())
             putString(KEY_REGION, region)
-            if (pm10 != null) putFloat(KEY_PM10, pm10.toFloat()) else remove(KEY_PM10)
-            if (pm25 != null) putFloat(KEY_PM25, pm25.toFloat()) else remove(KEY_PM25)
+            if (pm10 != null) putFloat(KEY_PM10, pm10.toFloat())
+            if (pm25 != null) putFloat(KEY_PM25, pm25.toFloat())
+            if (!provider.isNullOrBlank()) putString(KEY_PROVIDER, provider)
+            if (!source.isNullOrBlank()) putString(KEY_SOURCE, source)
+            if (!displayTs.isNullOrBlank()) putString(KEY_DISPLAY_TS, displayTs)
+            else remove(KEY_DISPLAY_TS)
             putLong(KEY_UPDATED_AT, System.currentTimeMillis())
             apply()
         }
         refreshAllWidgets(context)
     }
 
-    /** 설치된 모든 위젯에 갱신 브로드캐스트를 보낸다. */
-    private fun refreshAllWidgets(context: Context) {
-        val manager = AppWidgetManager.getInstance(context)
-        val ids = manager.getAppWidgetIds(
+    fun installedWidgetIds(context: Context): IntArray =
+        AppWidgetManager.getInstance(context).getAppWidgetIds(
             ComponentName(context, AirWidgetProvider::class.java)
         )
-        if (ids.isEmpty()) return
-        for (id in ids) {
+
+    private fun refreshAllWidgets(context: Context) {
+        val manager = AppWidgetManager.getInstance(context)
+        for (id in installedWidgetIds(context)) {
             AirWidgetProvider.updateWidget(context, manager, id)
         }
     }

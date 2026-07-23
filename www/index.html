@@ -40,7 +40,7 @@
     </div>
     <div class="info-row">
       <p><strong>기준위치:</strong> <span id="region">--</span></p>
-      <p><strong>검색일시:</strong> <span id="time">--</span></p>
+      <p><strong>데이터 기준일시:</strong> <span id="time">확인 불가</span></p>
     </div>
   </header>
 
@@ -75,8 +75,8 @@
           <p style="font-size:0.83rem;line-height:1.6;margin-bottom:12px">후다닥 미세먼지의 대대적인 내부 업데이트가 있었습니다. 사용자에게 보이는 화면보다 데이터 품질과 안정성 개선에 집중한 버전입니다.</p>
           <p class="changelog-category">데이터 &amp; 백엔드</p>
           <ul>
-            <li>다중 데이터 소스 통합 엔진: WAQI 실측 + Open-Meteo 모델 + OpenAQ 집계를 하나로 여어 관리. 실측 없는 지역은 모델 예측값으로 자동 전환하여 데이터 공백을 최소화했습니다.</li>
-            <li>고정된 지역명 매핑 방식에서 보어, 현재 위치의 위경도를 기준으로 DB에서 가장 가까운 측정소를 실시간 탐색하는 방식으로 전환했습니다.</li>
+            <li>다중 데이터 소스 통합 엔진: WAQI 실측, Open-Meteo 모델, OpenAQ 데이터를 하나로 통합 관리합니다. 실측값이 없는 지역은 모델 예측값으로 자동 전환하여 데이터 공백을 최소화했습니다.</li>
+            <li>고정된 지역명 매핑 방식에서 벗어나, 현재 위치의 위경도를 기준으로 DB에서 가장 가까운 측정소를 실시간 탐색하는 방식으로 전환했습니다.</li>
           </ul>
           <p class="changelog-category">기능 추가</p>
           <ul>
