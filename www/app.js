@@ -1,7 +1,143 @@
 console.log("app.js 로드 및 실행! (v4 DB 연동)");
 
+const HudadakSourceUtils = (() => {
+  function toNum(x) {
+    const n = Number(x);
+    return (x != null && x !== '-' && x !== '--' && Number.isFinite(n)) ? n : null;
+  }
+
+  function normalizeResponse(data) {
+    return {
+      station:    data.name || data.station?.name || '정보 없음',
+      provider:   data.provider || null,
+      sourceKind: data.source_kind || data.source || 'unknown',
+      displayTs:  data.display_ts || null,
+      pm10: toNum(data.pm10),
+      pm25: toNum(data.pm25),
+      so2:  toNum(data.so2),
+      co:   toNum(data.co),
+      o3:   toNum(data.o3),
+      no2:  toNum(data.no2),
+      gasProvider: data.gas_provider || null,
+      gasSourceKind: data.gas_source_kind || null,
+      gasDisplayTs: data.gas_display_ts || null,
+      gasStation: data.gas_station || null,
+      gasMeta: data.gas_meta || null,
+      unitPm10:  data.unit_pm10 || 'µg/m³',
+      unitPm25:  data.unit_pm25 || 'µg/m³',
+      caiGrade:  data.cai_grade || null,
+      badges:    data.badges || [],
+      distanceM: data.distance_m || null,
+    };
+  }
+
+  function providerName(provider) {
+    const value = String(provider || '').trim();
+    switch (value.toUpperCase()) {
+      case 'WAQI': return 'WAQI';
+      case 'AIRKOREA': return 'AirKorea';
+      case 'OPENMETEO':
+      case 'OPEN-METEO': return 'Open-Meteo';
+      case 'OWM':
+      case 'OPENWEATHER':
+      case 'OPENWEATHERMAP': return 'OpenWeather';
+      default: return value;
+    }
+  }
+
+  function gasProviders(airData) {
+    if (!airData) return [];
+    const keys = ['so2', 'co', 'o3', 'no2'];
+    const fromMeta = keys
+      .filter(key => airData[key] !== null && airData[key] !== undefined)
+      .map(key => airData.gasMeta?.[key]?.provider)
+      .filter(Boolean);
+    const raw = fromMeta.length
+      ? fromMeta
+      : String(airData.gasProvider || '').split('+').filter(Boolean);
+    return [...new Set(raw.map(providerName).filter(Boolean))];
+  }
+
+  function gasSummaryLabel(airData) {
+    const providers = gasProviders(airData);
+    if (providers.length === 1) return `모델(${providers[0]})`;
+    if (providers.length > 1) return '출처 혼합';
+    return '';
+  }
+
+  function gasItemSourceText(meta) {
+    if (!meta?.provider) return '';
+    const kind = meta.source_kind === 'model' ? ' 모델' : '';
+    return `출처: ${providerName(meta.provider)}${kind}`;
+  }
+
+  function dataSourceText(airData) {
+    if (!airData?.provider) return '데이터 출처 확인 불가';
+    const pmProvider = providerName(airData.provider);
+    if (!pmProvider) return '데이터 출처 확인 불가';
+    const pmType = airData.sourceKind === 'model' ? '예측' : '실측';
+    const providers = gasProviders(airData);
+    const pmText = `미세먼지 ${pmType}: ${pmProvider}`;
+    return providers.length
+      ? `${pmText} · 기타 공기지표: ${providers.join('·')} 모델`
+      : pmText;
+  }
+
+  function formatSeoulDateTime(displayTs) {
+    if (!displayTs) return null;
+    const timestamp = new Date(displayTs);
+    if (Number.isNaN(timestamp.getTime())) return null;
+    return timestamp.toLocaleString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+
+  function gasTimeText(airData) {
+    if (!airData) return '가스 기준일시: 확인 불가';
+    const keys = ['so2', 'co', 'o3', 'no2'];
+    const timestamps = [...new Set(
+      keys
+        .filter(key => airData[key] !== null && airData[key] !== undefined)
+        .map(key => airData.gasMeta?.[key]?.display_ts)
+        .filter(Boolean)
+    )];
+    if (timestamps.length > 1) return '출처별 기준시각 상이';
+    const formatted = formatSeoulDateTime(
+      timestamps[0] || airData.gasDisplayTs
+    );
+    return formatted
+      ? `가스 기준일시: ${formatted}`
+      : '가스 기준일시: 확인 불가';
+  }
+
+  return {
+    toNum,
+    normalizeResponse,
+    providerName,
+    gasProviders,
+    gasSummaryLabel,
+    gasItemSourceText,
+    dataSourceText,
+    formatSeoulDateTime,
+    gasTimeText,
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = HudadakSourceUtils;
+}
+if (typeof window !== 'undefined') {
+  window.HudadakSourceUtils = HudadakSourceUtils;
+}
+
 // app.js – DB-first 리팩터링 버전
-(() => {
+if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   // ===================
   //  설정 & 상수
   // ===================
@@ -48,10 +184,15 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
   // ===================
   //  유틸 함수
   // ===================
-  function toNum(x) {
-    const n = Number(x);
-    return (x != null && x !== '-' && x !== '--' && Number.isFinite(n)) ? n : null;
-  }
+  const {
+    toNum,
+    normalizeResponse,
+    gasSummaryLabel,
+    gasItemSourceText,
+    dataSourceText,
+    formatSeoulDateTime,
+    gasTimeText,
+  } = HudadakSourceUtils;
 
   const inFlight = new Map();
   async function dedupFetch(url, opts = {}) {
@@ -96,34 +237,15 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     return normalizeResponse(await res.json());
   }
 
-  function normalizeResponse(data) {
-    return {
-      station:    data.name || data.station?.name || '정보 없음',
-      provider:   data.provider || 'unknown',
-      sourceKind: data.source_kind || data.source || 'unknown',
-      displayTs:  data.display_ts || null,
-      pm10: toNum(data.pm10),
-      pm25: toNum(data.pm25),
-      so2:  toNum(data.so2),
-      co:   toNum(data.co),
-      o3:   toNum(data.o3),
-      no2:  toNum(data.no2),
-      unitPm10:  data.unit_pm10 || 'µg/m³',
-      unitPm25:  data.unit_pm25 || 'µg/m³',
-      caiGrade:  data.cai_grade || null,
-      badges:    data.badges || [],
-      distanceM: data.distance_m || null,
-    };
-  }
-
-  function syncWidget(lat, lon, airData) {
+  function syncWidget(lat, lon, region, airData) {
     if (!window.Capacitor?.isNativePlatform?.()) return;
     const widgetSync = window.Capacitor?.Plugins?.WidgetSync;
     if (!widgetSync) return;
     widgetSync.update({
       lat,
       lon,
-      region: airData.station,
+      region,
+      station: airData.station,
       pm10: airData.pm10,
       pm25: airData.pm25,
       provider: airData.provider,
@@ -206,35 +328,41 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     return 'very-bad';
   }
 
-  // 가스 지역명 저장용
-  let gasStationName = '';
-
   function updateGasData(airData) {
     const keys = ['so2','co','o3','no2'];
-    const gasStationEl = document.getElementById('gas-station-name');
+    const gasSourceEl = document.getElementById('gas-source-summary');
+    const gasTimeEl = document.getElementById('gas-time-info');
 
     if (!airData) {
       keys.forEach(key => {
         const valEl = document.getElementById(`gas-${key}-value`);
         const barEl = document.getElementById(`gas-${key}-bar`);
         const refEl = document.getElementById(`gas-${key}-ref`);
+        const sourceEl = document.getElementById(`gas-${key}-source`);
         if (valEl) valEl.textContent = '--';
         if (barEl) { barEl.style.width = '0%'; barEl.className = 'gas-item-bar-value'; }
         if (refEl) refEl.textContent = '';
+        if (sourceEl) sourceEl.textContent = '';
       });
-      if (gasStationEl) gasStationEl.textContent = '';
+      if (gasSourceEl) gasSourceEl.textContent = '';
+      if (gasTimeEl) gasTimeEl.textContent = '가스 기준일시: 확인 불가';
       return;
     }
 
-    // 지역명 표시
-    if (gasStationEl && airData.station) {
-      gasStationEl.textContent = airData.station;
+    if (gasSourceEl) {
+      const summary = gasSummaryLabel(airData);
+      gasSourceEl.textContent = summary ? `· ${summary}` : '';
+    }
+
+    if (gasTimeEl) {
+      gasTimeEl.textContent = gasTimeText(airData);
     }
 
     keys.forEach(key => {
       const valEl = document.getElementById(`gas-${key}-value`);
       const barEl = document.getElementById(`gas-${key}-bar`);
       const refEl = document.getElementById(`gas-${key}-ref`);
+      const sourceEl = document.getElementById(`gas-${key}-source`);
       if (!valEl || !barEl) return;
 
       const val = airData[key];
@@ -247,11 +375,21 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
         barEl.className = 'gas-item-bar-value' + (grade ? ` ${grade}` : '');
         // 기준 표시
         if (refEl) refEl.textContent = cfg.labels[0] + ' / ' + cfg.labels[1] + ' / ' + cfg.labels[2];
+        if (sourceEl) {
+          const meta = airData.gasMeta?.[key];
+          const sourceText = gasItemSourceText(meta);
+          const itemTime = formatSeoulDateTime(meta?.display_ts);
+          sourceEl.textContent = [
+            sourceText,
+            itemTime ? `기준: ${itemTime}` : '',
+          ].filter(Boolean).join(' · ');
+        }
       } else {
         valEl.textContent = '--';
         barEl.style.width = '0%';
         barEl.className = 'gas-item-bar-value';
         if (refEl) refEl.textContent = '';
+        if (sourceEl) sourceEl.textContent = '';
       }
     });
   }
@@ -259,24 +397,13 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
   function updateDateTime(displayTs) {
     const timeEl = document.getElementById('time');
     if (!timeEl) return;
-    if (!displayTs) {
-      timeEl.textContent = '확인 불가';
-      return;
+    timeEl.textContent = formatSeoulDateTime(displayTs) || '확인 불가';
+  }
+
+  function updateDataSourceInfo(airData) {
+    if (dataSourceInfo) {
+      dataSourceInfo.textContent = dataSourceText(airData);
     }
-    const timestamp = new Date(displayTs);
-    if (Number.isNaN(timestamp.getTime())) {
-      timeEl.textContent = '확인 불가';
-      return;
-    }
-    timeEl.textContent = timestamp.toLocaleString('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
   }
 
   function showError(msg) { if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; } }
@@ -290,12 +417,13 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
     hideError();
 
     if (shareResultBtn) shareResultBtn.style.display = isManualSearch ? 'inline-flex' : 'none';
-    if (dataSourceInfo) dataSourceInfo.style.display  = isManualSearch ? 'none' : 'block';
+    if (dataSourceInfo) dataSourceInfo.style.display = 'block';
 
     const regionEl = document.getElementById('region');
+    const regionPromise = getAddressFromCoords(lat, lon);
     if (regionEl) {
       regionEl.textContent = '조회 중...';
-      getAddressFromCoords(lat, lon).then(addr => { regionEl.textContent = addr; });
+      regionPromise.then(addr => { regionEl.textContent = addr; });
     }
 
     try {
@@ -306,13 +434,16 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
         drawGauge('PM25', airData.pm25, airData.station, airData.sourceKind);
         updateGasData(airData);
         updateDateTime(airData.displayTs);
-        syncWidget(lat, lon, airData);
+        updateDataSourceInfo(airData);
+        const regionName = await regionPromise;
+        syncWidget(lat, lon, regionName, airData);
         console.log(`[updateAll] 소스: ${airData.sourceKind} / 측정소: ${airData.station}`);
       } else {
         drawGauge('PM10', null, '데이터 없음', 'unknown');
         drawGauge('PM25', null, '데이터 없음', 'unknown');
         updateGasData(null);
         updateDateTime(null);
+        updateDataSourceInfo(null);
         showError('가까운 측정소에서 데이터를 가져올 수 없습니다.');
       }
     } catch (err) {
@@ -321,6 +452,7 @@ console.log("app.js 로드 및 실행! (v4 DB 연동)");
       drawGauge('PM25', null, '오류', 'unknown');
       updateGasData(null);
       updateDateTime(null);
+      updateDataSourceInfo(null);
       showError('데이터를 불러오는 중 오류가 발생했습니다.');
     }
   }

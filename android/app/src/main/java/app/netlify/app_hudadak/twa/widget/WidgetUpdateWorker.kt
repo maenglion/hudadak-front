@@ -111,7 +111,17 @@ class WidgetUpdateWorker(
                 context,
                 coordinates.lat,
                 coordinates.lon,
-                json.optString("name", json.optString("station", "알 수 없는 위치")),
+                context.getSharedPreferences(
+                    WidgetDataStore.PREFS_NAME,
+                    Context.MODE_PRIVATE
+                ).getString(
+                    WidgetDataStore.KEY_REGION,
+                    json.optString("name", "알 수 없는 위치")
+                ) ?: json.optString("name", "알 수 없는 위치"),
+                json.optString(
+                    "name",
+                    json.optString("station", "알 수 없는 측정소")
+                ),
                 pm10,
                 pm25,
                 json.optString("provider").takeIf { it.isNotBlank() },

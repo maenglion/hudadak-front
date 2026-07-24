@@ -149,7 +149,7 @@
   </section>
 
   <div id="post-search-area" class="post-search-area">
-    <p id="data-source-info" class="data-source-info">hudadak-air 실측 기반, Open-Meteo 예측은 보조</p>
+    <p id="data-source-info" class="data-source-info">데이터 출처 확인 불가</p>
     <button id="shareResultBtn" class="share-result-btn" style="display: none;">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
       <span>현재 검색 결과 공유하기</span>
@@ -181,13 +181,15 @@
   <!-- 기타 공기지표 -->
   <section id="gas-info">
     <div class="gas-info-card">
-      <h3>기타 공기지표 <span id="gas-station-name" class="gas-station-badge"></span></h3>
+      <h3>기타 공기지표 <span id="gas-source-summary" class="gas-source-badge"></span></h3>
+      <p id="gas-time-info" class="gas-time-info">가스 기준일시: 확인 불가</p>
       <div class="gas-info-list">
         <div class="gas-info-item">
           <div class="gas-item-header">
             <span class="gas-item-title">아황산가스 (SO₂)</span>
             <span class="gas-item-value"><span id="gas-so2-value">--</span> <span class="gas-item-unit">µg/m³</span></span>
           </div>
+          <div class="gas-item-source" id="gas-so2-source"></div>
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-so2-bar"></div>
           </div>
@@ -198,6 +200,7 @@
             <span class="gas-item-title">일산화탄소 (CO)</span>
             <span class="gas-item-value"><span id="gas-co-value">--</span> <span class="gas-item-unit">µg/m³</span></span>
           </div>
+          <div class="gas-item-source" id="gas-co-source"></div>
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-co-bar"></div>
           </div>
@@ -208,6 +211,7 @@
             <span class="gas-item-title">오존 (O₃)</span>
             <span class="gas-item-value"><span id="gas-o3-value">--</span> <span class="gas-item-unit">µg/m³</span></span>
           </div>
+          <div class="gas-item-source" id="gas-o3-source"></div>
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-o3-bar"></div>
           </div>
@@ -218,6 +222,7 @@
             <span class="gas-item-title">이산화질소 (NO₂)</span>
             <span class="gas-item-value"><span id="gas-no2-value">--</span> <span class="gas-item-unit">µg/m³</span></span>
           </div>
+          <div class="gas-item-source" id="gas-no2-source"></div>
           <div class="gas-item-bar-container">
             <div class="gas-item-bar-value" id="gas-no2-bar"></div>
           </div>

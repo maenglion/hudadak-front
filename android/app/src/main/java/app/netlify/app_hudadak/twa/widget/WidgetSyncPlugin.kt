@@ -31,6 +31,7 @@ class WidgetSyncPlugin : Plugin() {
             lat = lat,
             lon = lon,
             region = call.getString("region") ?: call.getString("station") ?: "알 수 없는 위치",
+            station = call.getString("station"),
             pm10 = call.getDouble("pm10"),
             pm25 = call.getDouble("pm25"),
             provider = call.getString("provider"),

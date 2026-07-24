@@ -65,18 +65,27 @@ class AirWidgetProvider : AppWidgetProvider() {
             else      -> Color.parseColor("#FF888888")
         }
 
-        /**
-         * API name 필드에서 동까지 제거한 지역명 반환.
-         * "WAQI 인천" → "인천"
-         * "인천시 연수구 송도동" → "인천시 연수구"
-         */
-        private fun parseRegion(raw: String): String {
-            val cleaned = raw.replace(Regex("^WAQI\\s+", RegexOption.IGNORE_CASE), "").trim()
-            val tokens = cleaned.split(" ")
-            val dongIdx = tokens.indexOfFirst { it.endsWith("동") || it.endsWith("읍") || it.endsWith("면") }
-            return if (dongIdx > 0) tokens.subList(0, dongIdx).joinToString(" ")
-            else if (tokens.size > 2) tokens.subList(0, tokens.size - 1).joinToString(" ")
-            else cleaned
+        private fun parseRegion(raw: String): String =
+            raw.replace(
+                Regex("^WAQI\\s+", RegexOption.IGNORE_CASE),
+                ""
+            ).trim()
+
+        private fun formatStationName(raw: String): String {
+            val koreanName = Regex("\\(([^)]+)\\)").find(raw)
+                ?.groupValues?.getOrNull(1)
+                ?.trim()
+                ?.split(Regex("\\s+"))
+                ?.firstOrNull()
+                ?.takeIf { value ->
+                    value.any { character -> character in '\uAC00'..'\uD7A3' }
+                }
+            return koreanName
+                ?: raw.substringBefore(",").trim()
+                    .replace(
+                        Regex("^WAQI\\s+", RegexOption.IGNORE_CASE),
+                        ""
+                    )
         }
 
         /** 등급에 맞는 바 ID만 VISIBLE, 나머지 GONE */
@@ -109,6 +118,7 @@ class AirWidgetProvider : AppWidgetProvider() {
         ) {
             val prefs     = context.getSharedPreferences(WidgetDataStore.PREFS_NAME, Context.MODE_PRIVATE)
             val region    = prefs.getString(WidgetDataStore.KEY_REGION, "위치 확인 중...") ?: "위치 확인 중..."
+            val station   = prefs.getString(WidgetDataStore.KEY_STATION, region) ?: region
             val pm10      = prefs.getFloat(WidgetDataStore.KEY_PM10, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val pm25      = prefs.getFloat(WidgetDataStore.KEY_PM25, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val updatedAt = prefs.getLong(WidgetDataStore.KEY_UPDATED_AT, 0L)
@@ -123,6 +133,10 @@ class AirWidgetProvider : AppWidgetProvider() {
 
             // 지역명
             views.setTextViewText(R.id.widget_region, parseRegion(region))
+            views.setTextViewText(
+                R.id.widget_station,
+                "실측: ${formatStationName(station)}"
+            )
 
             // PM10 등급 텍스트 (등급 색상, 박스 없음)
             views.setTextViewText(R.id.widget_pm10_grade, pm10GradeStr)

@@ -7,6 +7,7 @@ import android.content.Context
 object WidgetDataStore {
     const val PREFS_NAME = "hudadak_widget_prefs"
     const val KEY_REGION = "region"
+    const val KEY_STATION = "station"
     const val KEY_PM10 = "pm10"
     const val KEY_PM25 = "pm25"
     const val KEY_LAT = "lat"
@@ -39,6 +40,7 @@ object WidgetDataStore {
         lat: Double,
         lon: Double,
         region: String,
+        station: String?,
         pm10: Double?,
         pm25: Double?,
         provider: String?,
@@ -50,6 +52,7 @@ object WidgetDataStore {
             putLong(KEY_LAT, lat.toBits())
             putLong(KEY_LON, lon.toBits())
             putString(KEY_REGION, region)
+            if (!station.isNullOrBlank()) putString(KEY_STATION, station)
             if (pm10 != null) putFloat(KEY_PM10, pm10.toFloat())
             if (pm25 != null) putFloat(KEY_PM25, pm25.toFloat())
             if (!provider.isNullOrBlank()) putString(KEY_PROVIDER, provider)

@@ -659,12 +659,27 @@ body.dark-mode .error-message {
   opacity: 0.8;
 }
 
-/* 가스 지역 배지 */
-.gas-station-badge {
+/* 가스 출처 요약 */
+.gas-source-badge {
   font-size: 0.8rem;
   font-weight: 400;
   color: var(--light-text-color);
   margin-left: 0.5rem;
+}
+
+.gas-time-info,
+.gas-item-source {
+  color: var(--light-text-color);
+  font-size: 0.75rem;
+}
+
+.gas-time-info {
+  margin: -0.35rem 0 1rem;
+}
+
+.gas-item-source {
+  min-height: 1rem;
+  margin: -0.15rem 0 0.45rem;
 }
 
 /* ==========================
