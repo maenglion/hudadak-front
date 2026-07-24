@@ -16,23 +16,27 @@ class WidgetRulesTest {
     }
 
     @Test
-    fun stationLabelsUseActualPmProvider() {
+    fun topMetadataUsesOneLineWithoutStationDuplication() {
         assertEquals(
-            "아암 (AirKorea)",
-            WidgetRules.stationLabel("아암", "AIRKOREA", "db")
+            "측정 00:00 · 실측(AirKorea)",
+            WidgetRules.topMetadataLabel("00:00", true, "AIRKOREA", "db")
         )
         assertEquals(
-            "WAQI INCHEON (WAQI)",
-            WidgetRules.stationLabel("WAQI INCHEON", "WAQI", "db")
+            "측정 12:30 · 실측(WAQI)",
+            WidgetRules.topMetadataLabel("12:30", true, "WAQI", "db")
         )
-        assertEquals("", WidgetRules.stationLabel("", "WAQI", "db"))
         assertEquals(
-            "예측(Open-Meteo)",
-            WidgetRules.stationLabel(
-                "Open-Meteo grid",
+            "예측 03:00 · Open-Meteo",
+            WidgetRules.topMetadataLabel(
+                "03:00",
+                true,
                 "OPENMETEO",
                 "model"
             )
+        )
+        assertEquals(
+            "갱신 09:15 · 실측(AirKorea)",
+            WidgetRules.topMetadataLabel("09:15", false, "AIRKOREA", "db")
         )
     }
 

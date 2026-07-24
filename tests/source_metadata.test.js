@@ -168,7 +168,7 @@ test('PM station labels use the actual provider without empty parentheses', () =
   );
 });
 
-test('widget layout preserves station space and uses DB-only PM refresh', () => {
+test('widget header uses full-width rows and DB-only PM refresh', () => {
   const root = path.resolve(__dirname, '..');
   const layout = fs.readFileSync(
     path.join(root, 'android', 'app', 'src', 'main', 'res', 'layout', 'widget_air.xml'),
@@ -216,17 +216,19 @@ test('widget layout preserves station space and uses DB-only PM refresh', () => 
   const regionView = layout.match(
     /<TextView\s+android:id="@\+id\/widget_region"([\s\S]*?)\/>/
   )?.[1] || '';
-  const stationView = layout.match(
-    /<TextView\s+android:id="@\+id\/widget_station"([\s\S]*?)\/>/
+  const metadataView = layout.match(
+    /<TextView\s+android:id="@\+id\/widget_updated_at"([\s\S]*?)\/>/
   )?.[1] || '';
 
-  assert.match(regionView, /android:layout_width="0dp"/);
-  assert.match(regionView, /android:layout_weight="1"/);
+  assert.match(regionView, /android:layout_width="match_parent"/);
   assert.match(regionView, /android:singleLine="true"/);
   assert.match(regionView, /android:ellipsize="end"/);
-  assert.match(stationView, /android:layout_width="wrap_content"/);
-  assert.match(stationView, /android:singleLine="true"/);
-  assert.doesNotMatch(stationView, /android:ellipsize=/);
+  assert.match(metadataView, /android:layout_width="match_parent"/);
+  assert.match(metadataView, /android:singleLine="true"/);
+  assert.doesNotMatch(layout, /@\+id\/widget_station/);
+  assert.doesNotMatch(layout, /@\+id\/widget_source_label/);
+  assert.match(provider, /topMetadataLabel/);
+  assert.doesNotMatch(provider, /KEY_STATION/);
   assert.match(worker, /source=db/);
   assert.doesNotMatch(worker, /gas_provider|gas_meta/i);
   assert.doesNotMatch(provider, /tokens\.subList|dongIdx/);

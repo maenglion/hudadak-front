@@ -17,66 +17,30 @@
     android:paddingTop="16dp"
     android:paddingBottom="23dp">
 
-    <!-- 상단 행: 지역명(좌) + 소스라벨(우) -->
-    <LinearLayout
+    <!-- 첫째 줄: 측정 위치 기준 지역명 -->
+    <TextView
+        android:id="@+id/widget_region"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:text="위치 확인 중..."
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:ellipsize="end" />
 
-        <TextView
-            android:id="@+id/widget_region"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="위치 확인 중..."
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:maxLines="1"
-            android:singleLine="true"
-            android:ellipsize="end" />
-
-        <TextView
-            android:id="@+id/widget_station"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="실측(WAQI)"
-            android:textColor="#80FFFFFF"
-            android:textSize="11sp"
-            android:maxLines="1"
-            android:singleLine="true" />
-    </LinearLayout>
-
-    <!-- 측정/갱신 시간 -->
-    <LinearLayout
+    <!-- 둘째 줄: 데이터 시각과 실제 PM provider -->
+    <TextView
+        android:id="@+id/widget_updated_at"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-    <TextView
-        android:id="@+id/widget_updated_at"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="갱신: --:--"
-        android:textColor="#80FFFFFF"
-        android:textSize="11sp" />
-
-    <TextView
-        android:id="@+id/widget_source_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="실측(WAQI)"
+        android:text="갱신 --:-- · 출처 미상"
         android:textColor="#80FFFFFF"
         android:textSize="11sp"
         android:maxLines="1"
         android:singleLine="true" />
-
-    </LinearLayout>
 
     <!-- PM10 박스 -->
     <LinearLayout

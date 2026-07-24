@@ -71,19 +71,6 @@ class AirWidgetProvider : AppWidgetProvider() {
                 ""
             ).trim()
 
-        private fun formatStationName(raw: String): String {
-            val koreanName = Regex("\\(([^)]+)\\)").find(raw)
-                ?.groupValues?.getOrNull(1)
-                ?.trim()
-                ?.split(Regex("\\s+"))
-                ?.firstOrNull()
-                ?.takeIf { value ->
-                    value.any { character -> character in '\uAC00'..'\uD7A3' }
-                }
-            return koreanName
-                ?: raw.substringBefore(",").trim()
-        }
-
         /** 등급에 맞는 바 ID만 VISIBLE, 나머지 GONE */
         private fun setBarVisibility(
             views: RemoteViews,
@@ -114,7 +101,6 @@ class AirWidgetProvider : AppWidgetProvider() {
         ) {
             val prefs     = context.getSharedPreferences(WidgetDataStore.PREFS_NAME, Context.MODE_PRIVATE)
             val region    = prefs.getString(WidgetDataStore.KEY_REGION, "위치 확인 중...") ?: "위치 확인 중..."
-            val station   = prefs.getString(WidgetDataStore.KEY_STATION, null)
             val pm10      = prefs.getFloat(WidgetDataStore.KEY_PM10, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val pm25      = prefs.getFloat(WidgetDataStore.KEY_PM25, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val updatedAt = prefs.getLong(WidgetDataStore.KEY_UPDATED_AT, 0L)
@@ -129,19 +115,6 @@ class AirWidgetProvider : AppWidgetProvider() {
 
             // 지역명
             views.setTextViewText(R.id.widget_region, parseRegion(region))
-            val stationLabel = WidgetRules.stationLabel(
-                station?.let(::formatStationName),
-                provider,
-                source
-            )
-            views.setViewVisibility(
-                R.id.widget_station,
-                if (stationLabel.isNotEmpty()) View.VISIBLE else View.GONE
-            )
-            views.setTextViewText(
-                R.id.widget_station,
-                stationLabel
-            )
 
             // PM10 등급 텍스트 (등급 색상, 박스 없음)
             views.setTextViewText(R.id.widget_pm10_grade, pm10GradeStr)
@@ -173,17 +146,19 @@ class AirWidgetProvider : AppWidgetProvider() {
             val timeFormat = SimpleDateFormat("HH:mm", Locale.KOREA).apply {
                 timeZone = java.util.TimeZone.getTimeZone("Asia/Seoul")
             }
-            val timeStr = when {
-                displayMillis != null -> "측정: ${timeFormat.format(Date(displayMillis))}"
-                updatedAt > 0L -> "갱신: ${timeFormat.format(Date(updatedAt))}"
-                else -> "갱신: --:--"
+            val timeText = when {
+                displayMillis != null -> timeFormat.format(Date(displayMillis))
+                updatedAt > 0L -> timeFormat.format(Date(updatedAt))
+                else -> "--:--"
             }
-            views.setTextViewText(R.id.widget_updated_at, timeStr)
-
-            // 소스 라벨
             views.setTextViewText(
-                R.id.widget_source_label,
-                WidgetRules.providerLabel(provider, source)
+                R.id.widget_updated_at,
+                WidgetRules.topMetadataLabel(
+                    timeText,
+                    displayMillis != null,
+                    provider,
+                    source
+                )
             )
 
             // 터치 → 앱 실행

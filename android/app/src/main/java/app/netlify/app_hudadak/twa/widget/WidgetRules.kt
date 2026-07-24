@@ -18,8 +18,9 @@ object WidgetRules {
         }
     }
 
-    fun stationLabel(
-        station: String?,
+    fun topMetadataLabel(
+        timeText: String,
+        hasDisplayTimestamp: Boolean,
         provider: String?,
         source: String?
     ): String {
@@ -29,11 +30,10 @@ object WidgetRules {
             provider.equals("OPENMETEO", ignoreCase = true) ||
             provider.equals("OPEN-METEO", ignoreCase = true)
         ) {
-            return displayProvider?.let { "예측($it)" } ?: "예측"
+            return "예측 $timeText · ${displayProvider ?: "Open-Meteo"}"
         }
-        val stationName = station?.trim()?.takeIf { it.isNotEmpty() }
-            ?: return ""
-        return displayProvider?.let { "$stationName ($it)" } ?: stationName
+        val timeType = if (hasDisplayTimestamp) "측정" else "갱신"
+        return "$timeType $timeText · ${providerLabel(provider, source)}"
     }
 
     fun providerLabel(provider: String?, source: String?): String {
