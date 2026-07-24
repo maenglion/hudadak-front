@@ -8,6 +8,7 @@ const {
   gasSummaryLabel,
   gasItemSourceText,
   dataSourceText,
+  pmStationText,
   formatSeoulDateTime,
   gasTimeText,
 } = require('../www/app.js');
@@ -146,6 +147,25 @@ test('PM display timestamp uses Seoul time without seconds', () => {
   assert.match(formatted, /5:00/);
   assert.doesNotMatch(formatted, /:45/);
   assert.equal(formatSeoulDateTime('invalid'), null);
+});
+
+test('PM station labels use the actual provider without empty parentheses', () => {
+  assert.equal(
+    pmStationText('아암', 'AIRKOREA', 'airkorea_station'),
+    '측정소: 아암 (AirKorea)'
+  );
+  assert.equal(
+    pmStationText('WAQI INCHEON', 'WAQI', 'waqi_station'),
+    '측정소: WAQI INCHEON (WAQI)'
+  );
+  assert.equal(
+    pmStationText('', 'WAQI', 'waqi_station'),
+    '측정소: 정보 없음'
+  );
+  assert.equal(
+    pmStationText('Open-Meteo grid', 'OPENMETEO', 'model'),
+    '예측 데이터: Open-Meteo'
+  );
 });
 
 test('widget layout preserves station space and uses DB-only PM refresh', () => {

@@ -16,6 +16,27 @@ class WidgetRulesTest {
     }
 
     @Test
+    fun stationLabelsUseActualPmProvider() {
+        assertEquals(
+            "아암 (AirKorea)",
+            WidgetRules.stationLabel("아암", "AIRKOREA", "db")
+        )
+        assertEquals(
+            "WAQI INCHEON (WAQI)",
+            WidgetRules.stationLabel("WAQI INCHEON", "WAQI", "db")
+        )
+        assertEquals("", WidgetRules.stationLabel("", "WAQI", "db"))
+        assertEquals(
+            "예측(Open-Meteo)",
+            WidgetRules.stationLabel(
+                "Open-Meteo grid",
+                "OPENMETEO",
+                "model"
+            )
+        )
+    }
+
+    @Test
     fun futureDisplayTimestampIsRejected() {
         val now = WidgetRules.parseDisplayTimestamp("2026-07-23T12:00:00+09:00")!!
         assertTrue(WidgetRules.isFutureDisplayTs("2026-07-23T12:00:01+09:00", now))

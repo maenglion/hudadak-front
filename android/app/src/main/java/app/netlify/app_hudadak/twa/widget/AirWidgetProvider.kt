@@ -82,10 +82,6 @@ class AirWidgetProvider : AppWidgetProvider() {
                 }
             return koreanName
                 ?: raw.substringBefore(",").trim()
-                    .replace(
-                        Regex("^WAQI\\s+", RegexOption.IGNORE_CASE),
-                        ""
-                    )
         }
 
         /** 등급에 맞는 바 ID만 VISIBLE, 나머지 GONE */
@@ -118,7 +114,7 @@ class AirWidgetProvider : AppWidgetProvider() {
         ) {
             val prefs     = context.getSharedPreferences(WidgetDataStore.PREFS_NAME, Context.MODE_PRIVATE)
             val region    = prefs.getString(WidgetDataStore.KEY_REGION, "위치 확인 중...") ?: "위치 확인 중..."
-            val station   = prefs.getString(WidgetDataStore.KEY_STATION, region) ?: region
+            val station   = prefs.getString(WidgetDataStore.KEY_STATION, null)
             val pm10      = prefs.getFloat(WidgetDataStore.KEY_PM10, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val pm25      = prefs.getFloat(WidgetDataStore.KEY_PM25, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val updatedAt = prefs.getLong(WidgetDataStore.KEY_UPDATED_AT, 0L)
@@ -133,9 +129,18 @@ class AirWidgetProvider : AppWidgetProvider() {
 
             // 지역명
             views.setTextViewText(R.id.widget_region, parseRegion(region))
+            val stationLabel = WidgetRules.stationLabel(
+                station?.let(::formatStationName),
+                provider,
+                source
+            )
+            views.setViewVisibility(
+                R.id.widget_station,
+                if (stationLabel.isNotEmpty()) View.VISIBLE else View.GONE
+            )
             views.setTextViewText(
                 R.id.widget_station,
-                "실측: ${formatStationName(station)}"
+                stationLabel
             )
 
             // PM10 등급 텍스트 (등급 색상, 박스 없음)

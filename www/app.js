@@ -83,6 +83,20 @@ const HudadakSourceUtils = (() => {
       : pmText;
   }
 
+  function pmStationText(station, provider, sourceKind) {
+    const displayProvider = providerName(provider);
+    if (sourceKind === 'model') {
+      return displayProvider
+        ? `예측 데이터: ${displayProvider}`
+        : '예측 데이터';
+    }
+    const stationName = String(station || '').trim();
+    if (!stationName) return '측정소: 정보 없음';
+    return `측정소: ${stationName}${
+      displayProvider ? ` (${displayProvider})` : ''
+    }`;
+  }
+
   function formatSeoulDateTime(displayTs) {
     if (!displayTs) return null;
     const timestamp = new Date(displayTs);
@@ -124,6 +138,7 @@ const HudadakSourceUtils = (() => {
     gasSummaryLabel,
     gasItemSourceText,
     dataSourceText,
+    pmStationText,
     formatSeoulDateTime,
     gasTimeText,
   };
@@ -190,6 +205,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     gasSummaryLabel,
     gasItemSourceText,
     dataSourceText,
+    pmStationText,
     formatSeoulDateTime,
     gasTimeText,
   } = HudadakSourceUtils;
@@ -279,7 +295,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     return SCALE[type].find(c => v <= c.max) || SCALE[type][SCALE[type].length - 1];
   }
 
-  function drawGauge(pmType, value, stationName, sourceKind) {
+  function drawGauge(pmType, value, stationName, provider, sourceKind) {
     const wheelEl      = document.getElementById(`gauge${pmType}`);
     const statusTextEl = document.getElementById(`statusText${pmType}`);
     const valueTextEl  = document.getElementById(`valueText${pmType}`);
@@ -313,8 +329,11 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       valueTextEl.textContent  = `${value} µg/m³`;
     }
 
-    const sourceBadge = sourceKind === 'model' ? ' (예측)' : '';
-    stationEl.textContent = `측정소: ${stationName || '정보 없음'}${sourceBadge}`;
+    stationEl.textContent = pmStationText(
+      stationName,
+      provider,
+      sourceKind
+    );
   }
 
   // 가스 등급 (µg/m³ 기준)
@@ -430,8 +449,20 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       const airData = await fetchAirData(lat, lon);
       if (airData) {
         lastAirData = airData;
-        drawGauge('PM10', airData.pm10, airData.station, airData.sourceKind);
-        drawGauge('PM25', airData.pm25, airData.station, airData.sourceKind);
+        drawGauge(
+          'PM10',
+          airData.pm10,
+          airData.station,
+          airData.provider,
+          airData.sourceKind
+        );
+        drawGauge(
+          'PM25',
+          airData.pm25,
+          airData.station,
+          airData.provider,
+          airData.sourceKind
+        );
         updateGasData(airData);
         updateDateTime(airData.displayTs);
         updateDataSourceInfo(airData);
@@ -439,8 +470,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
         syncWidget(lat, lon, regionName, airData);
         console.log(`[updateAll] 소스: ${airData.sourceKind} / 측정소: ${airData.station}`);
       } else {
-        drawGauge('PM10', null, '데이터 없음', 'unknown');
-        drawGauge('PM25', null, '데이터 없음', 'unknown');
+        drawGauge('PM10', null, '데이터 없음', null, 'unknown');
+        drawGauge('PM25', null, '데이터 없음', null, 'unknown');
         updateGasData(null);
         updateDateTime(null);
         updateDataSourceInfo(null);
@@ -448,8 +479,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       }
     } catch (err) {
       console.error('[updateAll] 오류:', err);
-      drawGauge('PM10', null, '오류', 'unknown');
-      drawGauge('PM25', null, '오류', 'unknown');
+      drawGauge('PM10', null, '오류', null, 'unknown');
+      drawGauge('PM25', null, '오류', null, 'unknown');
       updateGasData(null);
       updateDateTime(null);
       updateDataSourceInfo(null);
@@ -681,8 +712,20 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
 
     // 게이지 색상은 인라인 CSS 변수이므로 테마 전환 후 다시 계산해야 한다.
     if (lastAirData) {
-      drawGauge('PM10', lastAirData.pm10, lastAirData.station, lastAirData.sourceKind);
-      drawGauge('PM25', lastAirData.pm25, lastAirData.station, lastAirData.sourceKind);
+      drawGauge(
+        'PM10',
+        lastAirData.pm10,
+        lastAirData.station,
+        lastAirData.provider,
+        lastAirData.sourceKind
+      );
+      drawGauge(
+        'PM25',
+        lastAirData.pm25,
+        lastAirData.station,
+        lastAirData.provider,
+        lastAirData.sourceKind
+      );
     }
   };
 

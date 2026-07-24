@@ -53,6 +53,7 @@ object WidgetDataStore {
             putLong(KEY_LON, lon.toBits())
             putString(KEY_REGION, region)
             if (!station.isNullOrBlank()) putString(KEY_STATION, station)
+            else remove(KEY_STATION)
             if (pm10 != null) putFloat(KEY_PM10, pm10.toFloat())
             if (pm25 != null) putFloat(KEY_PM25, pm25.toFloat())
             if (!provider.isNullOrBlank()) putString(KEY_PROVIDER, provider)

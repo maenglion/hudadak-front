@@ -7,14 +7,43 @@ import java.util.TimeZone
 object WidgetRules {
     private val seoulTimeZone: TimeZone = TimeZone.getTimeZone("Asia/Seoul")
 
-    fun providerLabel(provider: String?, source: String?): String {
+    private fun providerDisplayName(provider: String?): String? {
+        val value = provider?.trim()?.takeIf { it.isNotEmpty() } ?: return null
         return when {
+            value.equals("AIRKOREA", ignoreCase = true) -> "AirKorea"
+            value.equals("WAQI", ignoreCase = true) -> "WAQI"
+            value.equals("OPENMETEO", ignoreCase = true) ||
+                value.equals("OPEN-METEO", ignoreCase = true) -> "Open-Meteo"
+            else -> value
+        }
+    }
+
+    fun stationLabel(
+        station: String?,
+        provider: String?,
+        source: String?
+    ): String {
+        val displayProvider = providerDisplayName(provider)
+        if (
+            source.equals("model", ignoreCase = true) ||
+            provider.equals("OPENMETEO", ignoreCase = true) ||
+            provider.equals("OPEN-METEO", ignoreCase = true)
+        ) {
+            return displayProvider?.let { "예측($it)" } ?: "예측"
+        }
+        val stationName = station?.trim()?.takeIf { it.isNotEmpty() }
+            ?: return ""
+        return displayProvider?.let { "$stationName ($it)" } ?: stationName
+    }
+
+    fun providerLabel(provider: String?, source: String?): String {
+        val displayProvider = providerDisplayName(provider)
+        return when {
+            source.equals("model", ignoreCase = true) ->
+                "예측(${displayProvider ?: "Open-Meteo"})"
             provider.equals("WAQI", ignoreCase = true) -> "실측(WAQI)"
             provider.equals("AIRKOREA", ignoreCase = true) -> "실측(AirKorea)"
-            provider.equals("OPENMETEO", ignoreCase = true) ||
-                provider.equals("OPEN-METEO", ignoreCase = true) ||
-                source.equals("model", ignoreCase = true) -> "예측(Open-Meteo)"
-            !provider.isNullOrBlank() -> provider
+            !displayProvider.isNullOrBlank() -> displayProvider
             !source.isNullOrBlank() -> source
             else -> "출처 미상"
         }
