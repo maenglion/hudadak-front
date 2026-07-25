@@ -6,12 +6,14 @@ import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
+import java.time.Instant
 
 @CapacitorPlugin(name = "WidgetSync")
 class WidgetSyncPlugin : Plugin() {
 
     @PluginMethod
     fun update(call: PluginCall) {
+        Log.i(TAG, "AUDIT widget_sync_received_at=${Instant.now()}")
         val lat = call.getDouble("lat")
         val lon = call.getDouble("lon")
         if (lat == null || lon == null) {

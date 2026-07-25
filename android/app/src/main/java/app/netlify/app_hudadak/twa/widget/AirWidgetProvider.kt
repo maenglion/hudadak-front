@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import app.netlify.app_hudadak.twa.MainActivity
@@ -13,6 +14,7 @@ import app.netlify.app_hudadak.twa.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.time.Instant
 
 class AirWidgetProvider : AppWidgetProvider() {
 
@@ -172,6 +174,13 @@ class AirWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
+            Log.i(
+                TAG,
+                "AUDIT remote_views_applied_at=${Instant.now()} " +
+                    "widget_id=$appWidgetId display_ts=${displayTs ?: "null"}"
+            )
         }
+
+        private const val TAG = "AirWidgetProvider"
     }
 }

@@ -31,12 +31,46 @@
 </head>
 <body>
 
+  <div
+    id="pullRefreshIndicator"
+    class="pull-refresh-indicator"
+    role="status"
+    aria-live="polite"
+  >
+    <span class="pull-refresh-spinner" aria-hidden="true"></span>
+    <span id="pullRefreshText">당겨서 새로고침</span>
+  </div>
 
   <!-- 헤더 -->
   <header>
     <h1 class="app-title">후다닥<span class="app-title-sub">미세먼지 피하기</span></h1>
     <div class="header-meta">
       <button id="settingsBtn" class="settings-btn">ver.5.1 설정하기</button>
+    </div>
+    <div id="returnLocationWrap" class="return-location-wrap" hidden>
+      <span class="return-location-status">
+        검색 위치:
+        <strong id="searchLocationAddress">--</strong>
+      </span>
+      <button
+        id="returnToCurrentBtn"
+        class="return-location-btn"
+        type="button"
+      >
+        <span class="return-location-icon-wrap" aria-hidden="true">
+          <img
+            class="return-location-icon return-location-icon-light"
+            src="img/location-back-light-blue.svg"
+            alt=""
+          >
+          <img
+            class="return-location-icon return-location-icon-dark"
+            src="img/location-back-white.svg"
+            alt=""
+          >
+        </span>
+        <span>내 위치로</span>
+      </button>
     </div>
     <div class="info-row">
       <p><strong>기준위치:</strong> <span id="region">--</span></p>
@@ -69,6 +103,13 @@
       </section>
 
       <section class="modal-section">
+        <h3 class="modal-section-title">사용 방법</h3>
+        <button id="replayPullOnboardingBtn" class="replay-guide-btn" type="button">
+          사용 방법 다시 보기
+        </button>
+      </section>
+
+      <section class="modal-section">
         <h3 class="modal-section-title">후다닥 미세먼지 v5.1 변경사항</h3>
         <div class="modal-changelog">
           <p class="changelog-date">변경일: 2026.07</p>
@@ -92,6 +133,40 @@
         </div>
       </section>
 
+    </div>
+  </div>
+
+  <div
+    id="pullOnboardingOverlay"
+    class="pull-onboarding-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pullOnboardingTitle"
+    aria-describedby="pullOnboardingDescription"
+    hidden
+  >
+    <div class="pull-onboarding-dialog">
+      <button
+        id="pullOnboardingClose"
+        class="pull-onboarding-close"
+        type="button"
+        aria-label="사용 방법 안내 닫기"
+      >✕</button>
+      <div class="pull-onboarding-pointer" aria-hidden="true">
+        <svg viewBox="0 0 48 76" focusable="false">
+          <path d="M24 4v58M10 49l14 14 14-14"/>
+        </svg>
+      </div>
+      <h2 id="pullOnboardingTitle">내 위치로 돌아가기</h2>
+      <p id="pullOnboardingDescription">
+        검색한 지역을 보고 있어도<br>
+        화면을 아래로 당기면 현재 위치로 돌아와<br>
+        최신 대기질 정보를 불러옵니다.
+      </p>
+      <div class="pull-onboarding-actions">
+        <button id="pullOnboardingTry" type="button">직접 해보기</button>
+        <button id="pullOnboardingDone" type="button">알겠어요</button>
+      </div>
     </div>
   </div>
 
@@ -143,17 +218,22 @@
 
   <!-- 검색 -->
   <section id="search">
-    <input type="text" id="place" placeholder="지역 검색 (예: 송도동, 가평군)">
+    <div class="search-input-row">
+      <input type="text" id="place" placeholder="지역 검색 (예: 송도동, 가평군)">
+      <button id="searchBtn">검색</button>
+    </div>
     <ul id="suggestions"></ul>
-    <button id="searchBtn">검색</button>
   </section>
+
+  <div id="shareActionRow" class="share-action-row" style="display: none;">
+    <button id="shareResultBtn" class="share-result-btn" style="display: none;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+      <span>결과 공유</span>
+    </button>
+  </div>
 
   <div id="post-search-area" class="post-search-area">
     <p id="data-source-info" class="data-source-info">데이터 출처 확인 불가</p>
-    <button id="shareResultBtn" class="share-result-btn" style="display: none;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-      <span>현재 검색 결과 공유하기</span>
-    </button>
   </div>
 
   <!-- 기준 안내 -->

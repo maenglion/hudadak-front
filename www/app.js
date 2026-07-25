@@ -45,6 +45,20 @@ const HudadakSourceUtils = (() => {
     }
   }
 
+  function stationDisplayName(station) {
+    const raw = String(station || '').trim();
+    if (!raw) return '';
+    const koreanAliases = [...raw.matchAll(/\(([^()]*)\)/g)]
+      .map(match => match[1].trim())
+      .filter(alias => /[가-힣]/.test(alias));
+    const alias = koreanAliases.at(-1);
+    if (!alias) return raw;
+    const parts = alias.split(/\s+/).filter(Boolean);
+    return parts.length > 1
+      ? `${parts[0]}(${parts.slice(1).join(' ')})`
+      : parts[0];
+  }
+
   function gasProviders(airData) {
     if (!airData) return [];
     const keys = ['so2', 'co', 'o3', 'no2'];
@@ -90,11 +104,15 @@ const HudadakSourceUtils = (() => {
         ? `예측 데이터: ${displayProvider}`
         : '예측 데이터';
     }
-    const stationName = String(station || '').trim();
+    const stationName = stationDisplayName(station);
     if (!stationName) return '측정소: 정보 없음';
     return `측정소: ${stationName}${
-      displayProvider ? ` (${displayProvider})` : ''
+      displayProvider ? ` · ${displayProvider}` : ''
     }`;
+  }
+
+  function shouldSyncWidget(mode, succeeded = true) {
+    return succeeded && mode === 'current';
   }
 
   function formatSeoulDateTime(displayTs) {
@@ -130,17 +148,317 @@ const HudadakSourceUtils = (() => {
       : '가스 기준일시: 확인 불가';
   }
 
+  function createRefreshCoordinator(options) {
+    const {
+      performUpdate,
+      getGpsCoords,
+      defaultCoords = null,
+      now = () => Date.now(),
+      isVisible = () => true,
+      setIntervalFn = setInterval,
+      clearIntervalFn = clearInterval,
+      autoThrottleMs = 60 * 1000,
+      autoEventDedupeMs = 1500,
+      intervalMs = 30 * 60 * 1000,
+      onStateChange = () => {},
+    } = options;
+
+    let lookupMode = 'current';
+    let currentCoords = null;
+    let lastCurrentCoords = null;
+    let searchAddress = '';
+    let lastSuccessfulRefreshAt = 0;
+    let lastAutomaticTriggerAt = 0;
+    let refreshInProgress = false;
+    let intervalId = null;
+
+    function getState() {
+      return {
+        lookupMode,
+        lastLookupWasManual: lookupMode === 'search',
+        currentCoords: currentCoords ? { ...currentCoords } : null,
+        lastCurrentCoords: lastCurrentCoords
+          ? { ...lastCurrentCoords }
+          : null,
+        searchAddress,
+        lastSuccessfulRefreshAt,
+        refreshInProgress,
+        intervalId,
+      };
+    }
+
+    function notify() {
+      onStateChange(getState());
+    }
+
+    function setLookupMode(mode, coords = null) {
+      lookupMode = mode === 'search' ? 'search' : 'current';
+      if (coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lon)) {
+        currentCoords = { lat: coords.lat, lon: coords.lon };
+        if (lookupMode === 'current') {
+          lastCurrentCoords = { ...currentCoords };
+        }
+      }
+      if (lookupMode === 'current') searchAddress = '';
+      notify();
+    }
+
+    async function resolveCoords() {
+      if (lookupMode === 'search') return currentCoords;
+      try {
+        const gpsCoords = await getGpsCoords();
+        if (
+          gpsCoords &&
+          Number.isFinite(gpsCoords.lat) &&
+          Number.isFinite(gpsCoords.lon)
+        ) {
+          currentCoords = { lat: gpsCoords.lat, lon: gpsCoords.lon };
+        }
+      } catch (error) {
+        console.warn('[refresh] GPS 재조회 실패, 기존 좌표 사용:', error);
+      }
+      return currentCoords || defaultCoords;
+    }
+
+    async function refresh({
+      manual = false,
+      initial = false,
+      reason = 'automatic',
+    } = {}) {
+      const startedAt = now();
+      if (refreshInProgress) {
+        return { started: false, success: false, skipped: 'in-flight' };
+      }
+      if (!manual && !initial) {
+        if (
+          lastAutomaticTriggerAt > 0 &&
+          startedAt - lastAutomaticTriggerAt < autoEventDedupeMs
+        ) {
+          return { started: false, success: false, skipped: 'event-dedupe' };
+        }
+        lastAutomaticTriggerAt = startedAt;
+        if (
+          lastSuccessfulRefreshAt > 0 &&
+          startedAt - lastSuccessfulRefreshAt < autoThrottleMs
+        ) {
+          return { started: false, success: false, skipped: 'throttled' };
+        }
+      }
+
+      refreshInProgress = true;
+      notify();
+      try {
+        const coords = await resolveCoords();
+        if (!coords) {
+          return { started: true, success: false, error: 'no-coordinates' };
+        }
+        currentCoords = { lat: coords.lat, lon: coords.lon };
+        const success = await performUpdate(currentCoords, {
+          initial,
+          manual,
+          mode: lookupMode,
+          reason,
+        });
+        if (success) {
+          lastSuccessfulRefreshAt = now();
+          if (lookupMode === 'current') {
+            lastCurrentCoords = { ...currentCoords };
+          }
+        }
+        return { started: true, success: Boolean(success) };
+      } catch (error) {
+        console.error('[refresh] 조회 실패:', error);
+        return { started: true, success: false, error };
+      } finally {
+        refreshInProgress = false;
+        notify();
+      }
+    }
+
+    async function lookupSearchLocation(coords, {
+      initial = false,
+      reason = 'address-search',
+      address = '',
+    } = {}) {
+      if (refreshInProgress) {
+        return { started: false, success: false, skipped: 'in-flight' };
+      }
+      if (
+        !coords ||
+        !Number.isFinite(coords.lat) ||
+        !Number.isFinite(coords.lon)
+      ) {
+        return { started: false, success: false, error: 'invalid-coordinates' };
+      }
+
+      refreshInProgress = true;
+      notify();
+      try {
+        const nextCoords = { lat: coords.lat, lon: coords.lon };
+        const success = await performUpdate(nextCoords, {
+          initial,
+          manual: true,
+          mode: 'search',
+          reason,
+          searchAddress: address,
+        });
+        if (success) {
+          lookupMode = 'search';
+          currentCoords = nextCoords;
+          searchAddress = String(address || '').trim();
+          lastSuccessfulRefreshAt = now();
+        }
+        return { started: true, success: Boolean(success) };
+      } catch (error) {
+        console.error('[refresh] 검색 위치 조회 실패:', error);
+        return { started: true, success: false, error };
+      } finally {
+        refreshInProgress = false;
+        notify();
+      }
+    }
+
+    async function returnToCurrentLocation({
+      reason = 'return-to-current',
+    } = {}) {
+      if (refreshInProgress) {
+        return { started: false, success: false, skipped: 'in-flight' };
+      }
+
+      refreshInProgress = true;
+      notify();
+      try {
+        let gpsCoords = null;
+        try {
+          gpsCoords = await getGpsCoords();
+        } catch (error) {
+          console.warn(
+            '[refresh] GPS 획득 실패, 마지막 현재 위치 사용:',
+            error
+          );
+        }
+        if (
+          (!gpsCoords ||
+            !Number.isFinite(gpsCoords.lat) ||
+            !Number.isFinite(gpsCoords.lon)) &&
+          lastCurrentCoords
+        ) {
+          gpsCoords = { ...lastCurrentCoords };
+        }
+        if (
+          !gpsCoords ||
+          !Number.isFinite(gpsCoords.lat) ||
+          !Number.isFinite(gpsCoords.lon)
+        ) {
+          return { started: true, success: false, error: 'no-coordinates' };
+        }
+
+        const nextCoords = { lat: gpsCoords.lat, lon: gpsCoords.lon };
+        const success = await performUpdate(nextCoords, {
+          initial: false,
+          manual: true,
+          mode: 'current',
+          reason,
+        });
+        if (success) {
+          lookupMode = 'current';
+          currentCoords = nextCoords;
+          lastCurrentCoords = { ...nextCoords };
+          searchAddress = '';
+          lastSuccessfulRefreshAt = now();
+        }
+        return { started: true, success: Boolean(success) };
+      } catch (error) {
+        console.error('[refresh] 현재 위치 복귀 실패:', error);
+        return { started: true, success: false, error };
+      } finally {
+        refreshInProgress = false;
+        notify();
+      }
+    }
+
+    function stopInterval() {
+      if (intervalId !== null) {
+        clearIntervalFn(intervalId);
+        intervalId = null;
+        notify();
+      }
+    }
+
+    function startInterval() {
+      stopInterval();
+      if (!isVisible()) return;
+      intervalId = setIntervalFn(() => {
+        if (isVisible()) {
+          refresh({ reason: 'interval' });
+        }
+      }, intervalMs);
+      notify();
+    }
+
+    async function handleVisibility(visible = isVisible(), reason = 'visible') {
+      if (!visible) {
+        stopInterval();
+        return { started: false, success: false, skipped: 'hidden' };
+      }
+      const result = await refresh({ reason });
+      startInterval();
+      return result;
+    }
+
+    async function initialize() {
+      const result = await refresh({ initial: true, reason: 'initial' });
+      startInterval();
+      return result;
+    }
+
+    notify();
+    return {
+      getState,
+      setLookupMode,
+      refresh,
+      lookupSearchLocation,
+      returnToCurrentLocation,
+      startInterval,
+      stopInterval,
+      handleVisibility,
+      initialize,
+    };
+  }
+
+  function canStartPullRefresh({ atTop, inProgress, excluded }) {
+    return Boolean(atTop && !inProgress && !excluded);
+  }
+
+  function shouldTriggerPullRefresh({
+    atTop,
+    pullDistance,
+    inProgress,
+    threshold = 70,
+  }) {
+    return Boolean(
+      atTop &&
+      !inProgress &&
+      Number(pullDistance) >= threshold
+    );
+  }
+
   return {
     toNum,
     normalizeResponse,
     providerName,
+    stationDisplayName,
     gasProviders,
     gasSummaryLabel,
     gasItemSourceText,
     dataSourceText,
     pmStationText,
+    shouldSyncWidget,
     formatSeoulDateTime,
     gasTimeText,
+    createRefreshCoordinator,
+    canStartPullRefresh,
+    shouldTriggerPullRefresh,
   };
 })();
 
@@ -192,9 +510,30 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   const errorEl        = document.getElementById('error-message');
   const shareResultBtn = document.getElementById('shareResultBtn');
   const dataSourceInfo = document.getElementById('data-source-info');
+  const returnLocationWrap = document.getElementById('returnLocationWrap');
+  const returnToCurrentBtn = document.getElementById('returnToCurrentBtn');
+  const searchLocationAddress =
+    document.getElementById('searchLocationAddress');
+  const pullOnboardingOverlay =
+    document.getElementById('pullOnboardingOverlay');
+  const pullOnboardingClose =
+    document.getElementById('pullOnboardingClose');
+  const pullOnboardingTry =
+    document.getElementById('pullOnboardingTry');
+  const pullOnboardingDone =
+    document.getElementById('pullOnboardingDone');
 
   let currentCoords = null;
+  let lastLookupWasManual = false;
+  let lastSuccessfulRefreshAt = 0;
+  let refreshInProgress = false;
+  let refreshIntervalId = null;
   let debounceTimer;
+  let suggestionsGeneration = 0;
+  let currentSearchAddress = '';
+  let onboardingTryActive = false;
+  let onboardingIndicatorTimer = null;
+  let onboardingPreviousFocus = null;
 
   // ===================
   //  유틸 함수
@@ -202,12 +541,18 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   const {
     toNum,
     normalizeResponse,
+    providerName,
+    stationDisplayName,
     gasSummaryLabel,
     gasItemSourceText,
     dataSourceText,
     pmStationText,
+    shouldSyncWidget,
     formatSeoulDateTime,
     gasTimeText,
+    createRefreshCoordinator,
+    canStartPullRefresh,
+    shouldTriggerPullRefresh,
   } = HudadakSourceUtils;
 
   const inFlight = new Map();
@@ -225,7 +570,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   async function fetchAirData(lat, lon) {
     try {
       const url = `${API_BASE}/nearest?lat=${lat}&lon=${lon}&source=auto`;
-      const res = await dedupFetch(url);
+      const res = await dedupFetch(url, { cache: 'no-store' });
 
       if (res.status === 204) {
         console.warn('[fetchAirData] DB 데이터 없음, 모델 폴백');
@@ -248,7 +593,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
 
   async function fetchModelFallback(lat, lon) {
     const url = `${API_BASE}/nearest?lat=${lat}&lon=${lon}&source=model`;
-    const res = await dedupFetch(url);
+    const res = await dedupFetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Model fallback failed: ${res.status}`);
     return normalizeResponse(await res.json());
   }
@@ -329,11 +674,22 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       valueTextEl.textContent  = `${value} µg/m³`;
     }
 
-    stationEl.textContent = pmStationText(
-      stationName,
-      provider,
-      sourceKind
-    );
+    const stationText = pmStationText(stationName, provider, sourceKind);
+    const displayProvider = providerName(provider);
+    stationEl.replaceChildren();
+    if (sourceKind === 'model' || !displayProvider) {
+      stationEl.textContent = stationText;
+    } else {
+      const stationLabel = document.createElement('span');
+      stationLabel.textContent = `측정소: ${
+        stationDisplayName(stationName) || '정보 없음'
+      } ·`;
+      stationEl.appendChild(stationLabel);
+      const providerBadge = document.createElement('span');
+      providerBadge.className = 'station-provider-badge';
+      providerBadge.textContent = displayProvider;
+      stationEl.appendChild(providerBadge);
+    }
   }
 
   // 가스 등급 (µg/m³ 기준)
@@ -431,18 +787,19 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   // ===================
   //  메인 로직
   // ===================
-  async function updateAll(lat, lon, isManualSearch = false) {
-    currentCoords = { lat, lon };
+  async function updateAll(
+    lat,
+    lon,
+    { mode = 'current', preserveExisting = false } = {}
+  ) {
     hideError();
 
-    if (shareResultBtn) shareResultBtn.style.display = isManualSearch ? 'inline-flex' : 'none';
     if (dataSourceInfo) dataSourceInfo.style.display = 'block';
 
     const regionEl = document.getElementById('region');
     const regionPromise = getAddressFromCoords(lat, lon);
-    if (regionEl) {
+    if (regionEl && !preserveExisting) {
       regionEl.textContent = '조회 중...';
-      regionPromise.then(addr => { regionEl.textContent = addr; });
     }
 
     try {
@@ -467,41 +824,435 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
         updateDateTime(airData.displayTs);
         updateDataSourceInfo(airData);
         const regionName = await regionPromise;
-        syncWidget(lat, lon, regionName, airData);
+        if (regionEl) regionEl.textContent = regionName;
+        setLookupModeUi(mode, regionName);
+        if (shouldSyncWidget(mode)) {
+          syncWidget(lat, lon, regionName, airData);
+        }
         console.log(`[updateAll] 소스: ${airData.sourceKind} / 측정소: ${airData.station}`);
+        return true;
       } else {
-        drawGauge('PM10', null, '데이터 없음', null, 'unknown');
-        drawGauge('PM25', null, '데이터 없음', null, 'unknown');
-        updateGasData(null);
-        updateDateTime(null);
-        updateDataSourceInfo(null);
+        if (!preserveExisting) {
+          drawGauge('PM10', null, '데이터 없음', null, 'unknown');
+          drawGauge('PM25', null, '데이터 없음', null, 'unknown');
+          updateGasData(null);
+          updateDateTime(null);
+          updateDataSourceInfo(null);
+        }
         showError('가까운 측정소에서 데이터를 가져올 수 없습니다.');
+        return false;
       }
     } catch (err) {
       console.error('[updateAll] 오류:', err);
-      drawGauge('PM10', null, '오류', null, 'unknown');
-      drawGauge('PM25', null, '오류', null, 'unknown');
-      updateGasData(null);
-      updateDateTime(null);
-      updateDataSourceInfo(null);
+      if (!preserveExisting) {
+        drawGauge('PM10', null, '오류', null, 'unknown');
+        drawGauge('PM25', null, '오류', null, 'unknown');
+        updateGasData(null);
+        updateDateTime(null);
+        updateDataSourceInfo(null);
+      }
       showError('데이터를 불러오는 중 오류가 발생했습니다.');
+      return false;
     }
+  }
+
+  async function getFreshGpsCoords() {
+    if (window.Capacitor?.isNativePlatform?.()) {
+      const geolocation = window.Capacitor?.Plugins?.Geolocation;
+      if (!geolocation) throw new Error('Capacitor Geolocation unavailable');
+      const pos = await geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+      });
+      return {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+      };
+    }
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+        }),
+        reject,
+        { enableHighAccuracy: true }
+      );
+    });
+  }
+
+  const refreshCoordinator = createRefreshCoordinator({
+    performUpdate: (coords, context) => updateAll(
+      coords.lat,
+      coords.lon,
+      {
+        mode: context.mode,
+        preserveExisting: !context.initial,
+      }
+    ),
+    getGpsCoords: getFreshGpsCoords,
+    defaultCoords: { lat: 37.572016, lon: 126.975319 },
+    isVisible: () => document.visibilityState === 'visible',
+    onStateChange: state => {
+      currentCoords = state.currentCoords;
+      lastLookupWasManual = state.lastLookupWasManual;
+      lastSuccessfulRefreshAt = state.lastSuccessfulRefreshAt;
+      refreshInProgress = state.refreshInProgress;
+      refreshIntervalId = state.intervalId;
+    },
+  });
+
+  function showTransientError(message) {
+    showError(message);
+    setTimeout(() => {
+      if (errorEl?.textContent === message) hideError();
+    }, 2200);
+  }
+
+  function isPullOnboardingOpen() {
+    return Boolean(pullOnboardingOverlay && !pullOnboardingOverlay.hidden);
+  }
+
+  function closePullOnboarding({ restoreFocus = true } = {}) {
+    if (!pullOnboardingOverlay) return;
+    pullOnboardingOverlay.hidden = true;
+    document.body.classList.remove('pull-onboarding-open');
+    if (
+      restoreFocus &&
+      onboardingPreviousFocus &&
+      typeof onboardingPreviousFocus.focus === 'function'
+    ) {
+      onboardingPreviousFocus.focus();
+    }
+    onboardingPreviousFocus = null;
+  }
+
+  function completePullOnboarding() {
+    localStorage.setItem('onboardingPullToCurrentVersion', '1');
+    onboardingTryActive = false;
+    closePullOnboarding();
+  }
+
+  function openPullOnboarding({ force = false } = {}) {
+    if (
+      !pullOnboardingOverlay ||
+      (!force &&
+        localStorage.getItem('onboardingPullToCurrentVersion') === '1')
+    ) {
+      return;
+    }
+    onboardingPreviousFocus = document.activeElement;
+    pullOnboardingOverlay.hidden = false;
+    document.body.classList.add('pull-onboarding-open');
+    setTimeout(() => pullOnboardingClose?.focus(), 0);
+  }
+
+  function maybeShowPullOnboarding(delay = 0) {
+    if (localStorage.getItem('onboardingPullToCurrentVersion') === '1') {
+      return;
+    }
+    setTimeout(() => {
+      const widgetPromptOpen =
+        document.getElementById('widgetPromptModal')?.classList.contains('open');
+      if (!widgetPromptOpen) openPullOnboarding();
+    }, delay);
+  }
+
+  function startPullOnboardingPractice() {
+    onboardingTryActive = true;
+    closePullOnboarding({ restoreFocus: false });
+    const indicator = document.getElementById('pullRefreshIndicator');
+    const indicatorText = document.getElementById('pullRefreshText');
+    if (!indicator || !indicatorText) return;
+    indicator.classList.add('active');
+    indicator.style.opacity = '1';
+    indicatorText.textContent = '아래로 당겨 내 위치로 돌아가기';
+    if (onboardingIndicatorTimer !== null) {
+      clearTimeout(onboardingIndicatorTimer);
+    }
+    onboardingIndicatorTimer = setTimeout(() => {
+      if (!refreshInProgress) {
+        indicator.classList.remove('active');
+        indicator.style.removeProperty('opacity');
+        indicatorText.textContent = '당겨서 새로고침';
+      }
+      onboardingIndicatorTimer = null;
+    }, 7000);
+  }
+
+  if (pullOnboardingClose) {
+    pullOnboardingClose.addEventListener('click', () => {
+      closePullOnboarding();
+    });
+  }
+  if (pullOnboardingTry) {
+    pullOnboardingTry.addEventListener('click', startPullOnboardingPractice);
+  }
+  if (pullOnboardingDone) {
+    pullOnboardingDone.addEventListener('click', completePullOnboarding);
+  }
+  if (pullOnboardingOverlay) {
+    pullOnboardingOverlay.addEventListener('touchmove', event => {
+      if (event.cancelable) event.preventDefault();
+    }, { passive: false });
+    pullOnboardingOverlay.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closePullOnboarding();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = [...pullOnboardingOverlay.querySelectorAll(
+        'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+      )];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  function setLookupModeUi(mode, address = '') {
+    const isSearch = mode === 'search';
+    if (isSearch && address) currentSearchAddress = address;
+    if (returnLocationWrap) returnLocationWrap.hidden = !isSearch;
+    if (searchLocationAddress && isSearch) {
+      searchLocationAddress.textContent =
+        currentSearchAddress || inputEl?.value?.trim() || '검색한 위치';
+    }
+    if (shareResultBtn) {
+      shareResultBtn.style.display = isSearch ? 'inline-flex' : 'none';
+    }
+    const shareActionRow = document.getElementById('shareActionRow');
+    if (shareActionRow) {
+      shareActionRow.style.display = isSearch ? 'flex' : 'none';
+    }
+    if (!isSearch) currentSearchAddress = '';
+  }
+
+  async function refreshSearchCoords(lat, lon, address = '') {
+    const result = await refreshCoordinator.lookupSearchLocation({ lat, lon }, {
+      reason: 'address-search',
+      address,
+    });
+    if (result.success) {
+      currentSearchAddress =
+        String(address || inputEl?.value || '').trim();
+      setLookupModeUi('search', currentSearchAddress);
+    }
+    return result;
+  }
+
+  async function returnToCurrentLocation(reason = 'return-to-current') {
+    closeSuggestions({ blur: true });
+    if (returnToCurrentBtn) returnToCurrentBtn.disabled = true;
+    const result = await refreshCoordinator.returnToCurrentLocation({ reason });
+    if (result.success) {
+      if (inputEl) inputEl.value = '';
+      currentSearchAddress = '';
+      setLookupModeUi('current');
+      const cleanUrl = `${location.origin}${location.pathname}`;
+      history.replaceState(null, '', cleanUrl);
+    } else if (result.skipped !== 'in-flight') {
+      showTransientError(
+        '현재 위치를 확인하지 못했습니다. 검색 결과를 그대로 유지합니다.'
+      );
+    }
+    if (returnToCurrentBtn) returnToCurrentBtn.disabled = false;
+    return result;
+  }
+
+  if (returnToCurrentBtn) {
+    returnToCurrentBtn.addEventListener('click', () => {
+      returnToCurrentLocation('return-button');
+    });
+  }
+
+  function setupLifecycleRefresh() {
+    const handleVisible = reason => {
+      if (document.visibilityState === 'visible') {
+        refreshCoordinator.handleVisibility(true, reason);
+      }
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        handleVisible('visibilitychange');
+      } else {
+        refreshCoordinator.handleVisibility(false, 'visibilitychange');
+      }
+    });
+    window.addEventListener('pageshow', () => handleVisible('pageshow'));
+
+    const appPlugin = window.Capacitor?.Plugins?.App;
+    if (appPlugin?.addListener) {
+      appPlugin.addListener('appStateChange', ({ isActive }) => {
+        refreshCoordinator.handleVisibility(isActive, 'appStateChange');
+      });
+      appPlugin.addListener('resume', () => handleVisible('resume'));
+      appPlugin.addListener('backButton', () => {
+        if (isPullOnboardingOpen()) {
+          closePullOnboarding();
+        } else if (
+          document.getElementById('settingsModal')?.classList.contains('open')
+        ) {
+          closeSettings();
+        } else if (typeof appPlugin.minimizeApp === 'function') {
+          appPlugin.minimizeApp();
+        }
+      });
+    }
+  }
+
+  function setupPullToRefresh() {
+    const indicator = document.getElementById('pullRefreshIndicator');
+    const indicatorText = document.getElementById('pullRefreshText');
+    if (!indicator || !indicatorText) return;
+
+    const threshold = 70;
+    let tracking = false;
+    let startX = 0;
+    let startY = 0;
+    let pullDistance = 0;
+
+    const isAtTop = () => (
+      window.scrollY <= 0 &&
+      (document.documentElement?.scrollTop || 0) <= 0 &&
+      (document.body?.scrollTop || 0) <= 0
+    );
+    const isExcludedTarget = target => Boolean(
+      target?.closest?.(
+        'input, textarea, select, button, #suggestions, ' +
+        '.modal-overlay, .widget-prompt-overlay, .pull-onboarding-overlay, ' +
+        '[contenteditable="true"]'
+      )
+    );
+    const resetIndicator = (delay = 0) => {
+      setTimeout(() => {
+        indicator.classList.remove('active', 'refreshing');
+        indicator.style.removeProperty('transform');
+        indicator.style.removeProperty('opacity');
+        indicatorText.textContent = '당겨서 새로고침';
+      }, delay);
+    };
+
+    document.addEventListener('touchstart', event => {
+      if (
+        event.touches.length !== 1 ||
+        !canStartPullRefresh({
+          atTop: isAtTop(),
+          inProgress: refreshInProgress,
+          excluded: isExcludedTarget(event.target),
+        })
+      ) {
+        tracking = false;
+        return;
+      }
+      tracking = true;
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+      pullDistance = 0;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', event => {
+      if (!tracking || event.touches.length !== 1) return;
+      const deltaX = event.touches[0].clientX - startX;
+      const deltaY = event.touches[0].clientY - startY;
+      if (deltaY <= 0 || Math.abs(deltaX) > Math.abs(deltaY)) {
+        tracking = false;
+        resetIndicator();
+        return;
+      }
+      if (!isAtTop()) {
+        tracking = false;
+        resetIndicator();
+        return;
+      }
+      if (event.cancelable) event.preventDefault();
+      pullDistance = Math.min(deltaY * 0.55, 100);
+      indicator.classList.add('active');
+      indicator.style.transform =
+        `translate(-50%, ${Math.min(pullDistance - 58, 8)}px)`;
+      indicator.style.opacity = String(Math.min(pullDistance / 45, 1));
+      indicatorText.textContent = pullDistance >= threshold
+        ? '놓아서 새로고침'
+        : '당겨서 새로고침';
+    }, { passive: false });
+
+    document.addEventListener('touchend', async () => {
+      if (!tracking) return;
+      tracking = false;
+      if (!shouldTriggerPullRefresh({
+        atTop: isAtTop(),
+        pullDistance,
+        inProgress: refreshInProgress,
+        threshold,
+      })) {
+        resetIndicator();
+        return;
+      }
+
+      indicator.style.removeProperty('transform');
+      indicator.style.removeProperty('opacity');
+      indicator.classList.add('active', 'refreshing');
+      indicatorText.textContent = '새로고침 중…';
+      const result = await returnToCurrentLocation('pull-to-refresh');
+      if (result.success) {
+        if (onboardingTryActive) {
+          if (onboardingIndicatorTimer !== null) {
+            clearTimeout(onboardingIndicatorTimer);
+            onboardingIndicatorTimer = null;
+          }
+          completePullOnboarding();
+        }
+        resetIndicator(250);
+      } else {
+        indicator.classList.remove('refreshing');
+        indicatorText.textContent = '새로고침 실패';
+        showTransientError('새 데이터를 가져오지 못했습니다. 기존 화면을 유지합니다.');
+        resetIndicator(1000);
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', () => {
+      tracking = false;
+      resetIndicator();
+    }, { passive: true });
   }
 
   // ===================
   //  검색
   // ===================
+  function closeSuggestions({ blur = false } = {}) {
+    suggestionsGeneration += 1;
+    if (suggestionsEl) {
+      suggestionsEl.style.display = 'none';
+      suggestionsEl.innerHTML = '';
+    }
+    if (blur) inputEl?.blur();
+  }
+
   // Android IME(한글 등) 입력 시 input 이벤트가 안 오는 경우 대비
   // keyup + compositionend + paste 이벤트도 같이 처리
   function triggerSearch() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
       const query = inputEl.value.trim();
-      if (!query) { suggestionsEl.style.display = 'none'; return; }
+      if (!query) {
+        closeSuggestions();
+        return;
+      }
+      const requestGeneration = ++suggestionsGeneration;
       try {
         const url = `${KAKAO_ADDRESS_API}?query=${encodeURIComponent(query)}`;
         const res = await dedupFetch(url, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
         const { documents } = await res.json();
+        if (requestGeneration !== suggestionsGeneration) return;
         suggestionsEl.innerHTML = '';
         if (documents.length > 0) {
           documents.slice(0, 5).forEach(d => {
@@ -509,32 +1260,44 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
             li.textContent = d.address_name;
             li.onclick = () => {
               inputEl.value = d.address_name;
-              suggestionsEl.style.display = 'none';
-              updateAll(parseFloat(d.y), parseFloat(d.x), true);
+              closeSuggestions({ blur: true });
+              refreshSearchCoords(
+                parseFloat(d.y),
+                parseFloat(d.x),
+                d.address_name
+              );
             };
             suggestionsEl.appendChild(li);
           });
           suggestionsEl.style.display = 'block';
-        } else { suggestionsEl.style.display = 'none'; }
-      } catch { suggestionsEl.style.display = 'none'; }
+        } else {
+          closeSuggestions();
+        }
+      } catch {
+        if (requestGeneration === suggestionsGeneration) closeSuggestions();
+      }
     }, 300);
   }
 
   if (inputEl) {
-    inputEl.addEventListener('input', triggerSearch);
+    inputEl.addEventListener('input', () => {
+      if (!inputEl.value.trim()) closeSuggestions();
+      triggerSearch();
+    });
     inputEl.addEventListener('keyup', triggerSearch);
     inputEl.addEventListener('compositionend', triggerSearch);
     inputEl.addEventListener('paste', () => setTimeout(triggerSearch, 50));
   }
 
   async function searchByAddress(q) {
+    closeSuggestions({ blur: true });
     if (!q || q.trim().length < 2) { alert('검색어를 두 글자 이상 입력하세요'); return; }
     try {
       const geoRes = await fetch(`${API_BASE}/geo/address?q=${encodeURIComponent(q)}`);
       if (!geoRes.ok) throw new Error('geo failed');
       const geo = await geoRes.json();
       if (inputEl) inputEl.value = geo.address;
-      updateAll(geo.lat, geo.lon, true);
+      refreshSearchCoords(geo.lat, geo.lon, geo.address);
     } catch (err) {
       console.warn('[searchByAddress]', err);
       if (suggestionsEl?.firstChild) suggestionsEl.firstChild.click();
@@ -543,8 +1306,24 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   }
 
   const searchBtn = document.getElementById('searchBtn');
-  if (searchBtn) searchBtn.addEventListener('click', () => searchByAddress(inputEl?.value));
-  if (inputEl) inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchByAddress(inputEl.value); });
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => {
+      closeSuggestions({ blur: true });
+      searchByAddress(inputEl?.value);
+    });
+  }
+  if (inputEl) {
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        closeSuggestions({ blur: true });
+        searchByAddress(inputEl.value);
+      }
+    });
+  }
+  document.addEventListener('pointerdown', event => {
+    if (!event.target.closest?.('#search')) closeSuggestions();
+  });
 
   // ===================
   //  공유 기능
@@ -553,6 +1332,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
 
   if (shareResultBtn) {
     shareResultBtn.addEventListener('click', async () => {
+      closeSuggestions({ blur: true });
       if (!currentCoords) return;
 
       const regionEl = document.getElementById('region');
@@ -605,29 +1385,20 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     const lat = urlParams.get('lat');
     const lon = urlParams.get('lon');
 
-    if (lat && lon) { updateAll(parseFloat(lat), parseFloat(lon), true); return; }
-
-    if (window.Capacitor?.isNativePlatform()) {
-      try {
-        const { Geolocation } = Capacitor.Plugins;
-        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
-        updateAll(pos.coords.latitude, pos.coords.longitude, false);
-      } catch (e) {
-        console.error("Capacitor 위치 오류", e);
-        alert('위치 권한이 없거나 정보를 가져올 수 없습니다. 기본 위치로 조회합니다.');
-        updateAll(37.572016, 126.975319, false);
-      }
-      return;
+    if (lat && lon) {
+      await refreshCoordinator.lookupSearchLocation({
+        lat: parseFloat(lat),
+        lon: parseFloat(lon),
+      }, {
+        initial: true,
+        reason: 'shared-location',
+        address: urlParams.get('q') || '',
+      });
+      refreshCoordinator.startInterval();
+    } else {
+      refreshCoordinator.setLookupMode('current');
+      await refreshCoordinator.initialize();
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => updateAll(pos.coords.latitude, pos.coords.longitude, false),
-      (err) => {
-        console.error("웹 위치 오류", err);
-        alert('위치 정보를 가져올 수 없습니다. 기본 위치로 조회합니다.');
-        updateAll(37.572016, 126.975319, false);
-      }
-    );
   }
 
   // ===================
@@ -636,6 +1407,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   const settingsBtn   = document.getElementById('settingsBtn');
   const settingsModal = document.getElementById('settingsModal');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const replayPullOnboardingBtn =
+    document.getElementById('replayPullOnboardingBtn');
 
   let noticesLoaded = false;
   async function loadNotices() {
@@ -691,6 +1464,12 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
 
   if (settingsBtn)    settingsBtn.addEventListener('click', openSettings);
   if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeSettings);
+  if (replayPullOnboardingBtn) {
+    replayPullOnboardingBtn.addEventListener('click', () => {
+      closeSettings();
+      openPullOnboarding({ force: true });
+    });
+  }
   if (settingsModal) {
     settingsModal.addEventListener('click', (e) => {
       if (e.target === settingsModal) closeSettings();
@@ -793,6 +1572,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
 
   function closeWidgetPrompt() {
     if (widgetPromptModal) widgetPromptModal.classList.remove('open');
+    maybeShowPullOnboarding(250);
   }
   function dismissWidgetPromptWeek() {
     closeWidgetPrompt();
@@ -802,8 +1582,12 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   // 네이티브 앱 환경에서 매 실행마다 표시 (일주일 보지 않기 누른 경우 제외)
   const isNative = window.Capacitor?.isNativePlatform?.();
   const hideUntil = parseInt(localStorage.getItem('widgetPromptHideUntil') || '0', 10);
-  if (isNative && Date.now() > hideUntil && widgetPromptModal) {
+  const shouldShowWidgetPrompt =
+    Boolean(isNative && Date.now() > hideUntil && widgetPromptModal);
+  if (shouldShowWidgetPrompt) {
     setTimeout(() => widgetPromptModal.classList.add('open'), 1500);
+  } else {
+    maybeShowPullOnboarding(1500);
   }
 
   if (widgetPromptClose)   widgetPromptClose.addEventListener('click', closeWidgetPrompt);
@@ -817,5 +1601,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     applyTheme(prefersDark ? 'dark' : 'light');
   }
 
+  setupLifecycleRefresh();
+  setupPullToRefresh();
   initializeApp();
 })();

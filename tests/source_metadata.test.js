@@ -9,6 +9,8 @@ const {
   gasItemSourceText,
   dataSourceText,
   pmStationText,
+  stationDisplayName,
+  shouldSyncWidget,
   formatSeoulDateTime,
   gasTimeText,
 } = require('../www/app.js');
@@ -149,14 +151,22 @@ test('PM display timestamp uses Seoul time without seconds', () => {
   assert.equal(formatSeoulDateTime('invalid'), null);
 });
 
-test('PM station labels use the actual provider without empty parentheses', () => {
+test('PM station labels prefer Korean aliases and keep actual providers separate', () => {
   assert.equal(
-    pmStationText('아암', 'AIRKOREA', 'airkorea_station'),
-    '측정소: 아암 (AirKorea)'
+    pmStationText('Seoul (서울)', 'WAQI', 'waqi_station'),
+    '측정소: 서울 · WAQI'
+  );
+  assert.equal(
+    pmStationText(
+      'Jungang-way, Chuncheon-si, Gangwon, South Korea (중앙로 강원)',
+      'WAQI',
+      'waqi_station'
+    ),
+    '측정소: 중앙로(강원) · WAQI'
   );
   assert.equal(
     pmStationText('WAQI INCHEON', 'WAQI', 'waqi_station'),
-    '측정소: WAQI INCHEON (WAQI)'
+    '측정소: WAQI INCHEON · WAQI'
   );
   assert.equal(
     pmStationText('', 'WAQI', 'waqi_station'),
@@ -166,6 +176,21 @@ test('PM station labels use the actual provider without empty parentheses', () =
     pmStationText('Open-Meteo grid', 'OPENMETEO', 'model'),
     '예측 데이터: Open-Meteo'
   );
+});
+
+test('station formatting keeps original English only when no Korean alias exists', () => {
+  assert.equal(stationDisplayName('Seoul (서울)'), '서울');
+  assert.equal(
+    stationDisplayName('Long English Station (중앙로 강원)'),
+    '중앙로(강원)'
+  );
+  assert.equal(stationDisplayName('WAQI INCHEON'), 'WAQI INCHEON');
+});
+
+test('widget synchronization is allowed only for successful current lookups', () => {
+  assert.equal(shouldSyncWidget('current', true), true);
+  assert.equal(shouldSyncWidget('search', true), false);
+  assert.equal(shouldSyncWidget('current', false), false);
 });
 
 test('widget header uses full-width rows and DB-only PM refresh', () => {
@@ -232,6 +257,6 @@ test('widget header uses full-width rows and DB-only PM refresh', () => {
   assert.match(worker, /source=db/);
   assert.doesNotMatch(worker, /gas_provider|gas_meta/i);
   assert.doesNotMatch(provider, /tokens\.subList|dongIdx/);
-  assert.match(gradle, /versionCode\s+2005/);
-  assert.match(gradle, /versionName\s+"5\.1\.1"/);
+  assert.match(gradle, /versionCode\s+2009/);
+  assert.match(gradle, /versionName\s+"5\.1\.2"/);
 });

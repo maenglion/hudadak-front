@@ -3,6 +3,8 @@ package app.netlify.app_hudadak.twa.widget
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.util.Log
+import java.time.Instant
 
 object WidgetDataStore {
     const val PREFS_NAME = "hudadak_widget_prefs"
@@ -48,6 +50,7 @@ object WidgetDataStore {
         displayTs: String?
     ) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val savedAt = System.currentTimeMillis()
         prefs.edit().apply {
             putLong(KEY_LAT, lat.toBits())
             putLong(KEY_LON, lon.toBits())
@@ -60,9 +63,14 @@ object WidgetDataStore {
             if (!source.isNullOrBlank()) putString(KEY_SOURCE, source)
             if (!displayTs.isNullOrBlank()) putString(KEY_DISPLAY_TS, displayTs)
             else remove(KEY_DISPLAY_TS)
-            putLong(KEY_UPDATED_AT, System.currentTimeMillis())
+            putLong(KEY_UPDATED_AT, savedAt)
             apply()
         }
+        Log.i(
+            TAG,
+            "AUDIT preferences_applied_at=${Instant.ofEpochMilli(savedAt)} " +
+                "display_ts=${displayTs ?: "null"}"
+        )
         refreshAllWidgets(context)
     }
 
@@ -77,4 +85,6 @@ object WidgetDataStore {
             AirWidgetProvider.updateWidget(context, manager, id)
         }
     }
+
+    private const val TAG = "WidgetDataStore"
 }

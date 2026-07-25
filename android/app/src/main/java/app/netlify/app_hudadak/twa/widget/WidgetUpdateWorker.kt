@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URL
+import java.time.Instant
 import java.util.Calendar
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
@@ -69,13 +70,24 @@ class WidgetUpdateWorker(
         val widgetCount = WidgetDataStore.installedWidgetIds(context).size
         val hour = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul"))
             .get(Calendar.HOUR_OF_DAY)
-        if (!WidgetRules.shouldRun(hour, widgetCount)) return@withContext Result.success()
+        Log.i(
+            TAG,
+            "AUDIT worker_started_at=${Instant.now()} widget_count=$widgetCount kst_hour=$hour"
+        )
+        if (!WidgetRules.shouldRun(hour, widgetCount)) {
+            Log.i(TAG, "AUDIT worker_skipped_at=${Instant.now()} reason=rules")
+            return@withContext Result.success()
+        }
 
         val coordinates = WidgetDataStore.getCoordinates(context) ?: getLastKnownLocation()?.also {
             WidgetDataStore.saveCoordinates(context, it.lat, it.lon)
-        } ?: return@withContext Result.success()
+        } ?: run {
+            Log.i(TAG, "AUDIT worker_skipped_at=${Instant.now()} reason=no_coordinates")
+            return@withContext Result.success()
+        }
 
         fetchAndSave(coordinates)
+        Log.i(TAG, "AUDIT worker_finished_at=${Instant.now()}")
         Result.success()
     }
 
@@ -87,8 +99,11 @@ class WidgetUpdateWorker(
             connection.connectTimeout = 8000
             connection.readTimeout = 8000
             connection.requestMethod = "GET"
+            Log.i(TAG, "AUDIT api_request_at=${Instant.now()} source=db")
 
-            when (connection.responseCode) {
+            val responseCode = connection.responseCode
+            Log.i(TAG, "AUDIT api_response_at=${Instant.now()} status=$responseCode")
+            when (responseCode) {
                 HttpsURLConnection.HTTP_NO_CONTENT -> return
                 HttpsURLConnection.HTTP_OK -> Unit
                 else -> {
@@ -99,6 +114,10 @@ class WidgetUpdateWorker(
 
             val json = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
             val displayTs = json.optString("display_ts").takeIf { it.isNotBlank() }
+            Log.i(
+                TAG,
+                "AUDIT api_payload_at=${Instant.now()} display_ts=${displayTs ?: "null"}"
+            )
             if (WidgetRules.isFutureDisplayTs(displayTs, System.currentTimeMillis())) {
                 Log.w(TAG, "Rejected future widget display_ts: $displayTs")
                 return
@@ -128,6 +147,7 @@ class WidgetUpdateWorker(
                 json.optString("source").takeIf { it.isNotBlank() },
                 displayTs
             )
+            Log.i(TAG, "AUDIT worker_cache_save_returned_at=${Instant.now()}")
         } catch (e: Exception) {
             Log.w(TAG, "Widget refresh failed; keeping cache", e)
         } finally {
