@@ -49,8 +49,23 @@ object WidgetRules {
         }
     }
 
-    fun shouldRun(hourInSeoul: Int, widgetCount: Int): Boolean =
-        widgetCount > 0 && hourInSeoul in 6..23
+    fun shouldRun(
+        hourInSeoul: Int,
+        widgetCount: Int,
+        manual: Boolean = false
+    ): Boolean = widgetCount > 0 && (manual || hourInSeoul in 6..23)
+
+    fun shouldRetry(runAttemptCount: Int): Boolean = runAttemptCount < 2
+
+    fun isRetryableHttp(status: Int): Boolean =
+        status == 408 || status == 429 || status in 500..599
+
+    fun resolveSourceKind(sourceKind: String?, source: String?): String? =
+        sourceKind?.trim()?.takeIf { it.isNotEmpty() }
+            ?: source?.trim()?.takeIf { it.isNotEmpty() }
+
+    fun isCurrentSyncMode(mode: String?): Boolean =
+        mode.equals("current", ignoreCase = true)
 
     fun parseDisplayTimestamp(value: String?): Long? {
         if (value.isNullOrBlank()) return null

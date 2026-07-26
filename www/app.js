@@ -603,6 +603,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     const widgetSync = window.Capacitor?.Plugins?.WidgetSync;
     if (!widgetSync) return;
     widgetSync.update({
+      mode: 'current',
       lat,
       lon,
       region,

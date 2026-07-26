@@ -14,13 +14,15 @@ import app.netlify.app_hudadak.twa.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.time.Instant
 
 class AirWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
-        WidgetUpdateWorker.schedule(context)
-        WidgetUpdateWorker.enqueueImmediate(context)
+        WidgetWorkScheduler.ensurePeriodic(context)
+        WidgetWorkScheduler.enqueueAutomatic(
+            context,
+            WidgetWorkScheduler.TRIGGER_WIDGET_ENABLED
+        )
     }
 
     override fun onUpdate(
@@ -31,12 +33,24 @@ class AirWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateWidget(context, appWidgetManager, appWidgetId)
         }
-        WidgetUpdateWorker.enqueueImmediate(context)
+        WidgetWorkScheduler.ensurePeriodic(context)
+        WidgetWorkScheduler.enqueueAutomatic(
+            context,
+            WidgetWorkScheduler.TRIGGER_WIDGET_UPDATE
+        )
     }
 
     override fun onDisabled(context: Context) {
-        if (WidgetDataStore.installedWidgetIds(context).isEmpty()) {
-            WidgetUpdateWorker.cancelPeriodic(context)
+        if (!WidgetWorkScheduler.hasInstalledWidgets(context)) {
+            WidgetWorkScheduler.cancelAll(context)
+        }
+    }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (intent.action == ACTION_MANUAL_REFRESH) {
+            val enqueued = WidgetWorkScheduler.enqueueManual(context)
+            Log.i(TAG, "AUDIT manual_widget_refresh_enqueued=$enqueued")
         }
     }
 
@@ -171,16 +185,33 @@ class AirWidgetProvider : AppWidgetProvider() {
                 context, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_header, pendingIntent)
+
+            val refreshIntent = Intent(context, AirWidgetProvider::class.java).apply {
+                action = ACTION_MANUAL_REFRESH
+            }
+            val refreshPendingIntent = PendingIntent.getBroadcast(
+                context,
+                appWidgetId,
+                refreshIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_refresh, refreshPendingIntent)
+            views.setContentDescription(
+                R.id.widget_refresh,
+                context.getString(R.string.widget_refresh_description)
+            )
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
             Log.i(
                 TAG,
-                "AUDIT remote_views_applied_at=${Instant.now()} " +
+                "AUDIT remote_views_applied_at_ms=${System.currentTimeMillis()} " +
                     "widget_id=$appWidgetId display_ts=${displayTs ?: "null"}"
             )
         }
 
         private const val TAG = "AirWidgetProvider"
+        const val ACTION_MANUAL_REFRESH =
+            "app.netlify.app_hudadak.twa.action.MANUAL_WIDGET_REFRESH"
     }
 }

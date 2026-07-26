@@ -5,4 +5,5 @@
     <string name="package_name">app.netlify.app_hudadak.twa</string>
     <string name="custom_url_scheme">app.netlify.app_hudadak.twa</string>
     <string name="widget_description">현재 위치의 미세먼지·초미세먼지 등급을 홈 화면에서 바로 확인</string>
+    <string name="widget_refresh_description">위젯 새로고침</string>
 </resources>

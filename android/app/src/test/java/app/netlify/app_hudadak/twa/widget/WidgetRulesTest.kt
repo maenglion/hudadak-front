@@ -59,10 +59,35 @@ class WidgetRulesTest {
         assertFalse(WidgetRules.shouldRun(5, 1))
         assertTrue(WidgetRules.shouldRun(6, 1))
         assertTrue(WidgetRules.shouldRun(23, 1))
+        assertTrue(WidgetRules.shouldRun(0, 1, manual = true))
+        assertTrue(WidgetRules.shouldRun(5, 1, manual = true))
     }
 
     @Test
     fun noInstalledWidgetSkipsNetworkWork() {
         assertFalse(WidgetRules.shouldRun(12, 0))
+        assertFalse(WidgetRules.shouldRun(12, 0, manual = true))
+    }
+
+    @Test
+    fun retriesAreLimitedAndOnlyTransientHttpErrorsQualify() {
+        assertTrue(WidgetRules.shouldRetry(0))
+        assertTrue(WidgetRules.shouldRetry(1))
+        assertFalse(WidgetRules.shouldRetry(2))
+        assertTrue(WidgetRules.isRetryableHttp(408))
+        assertTrue(WidgetRules.isRetryableHttp(429))
+        assertTrue(WidgetRules.isRetryableHttp(503))
+        assertFalse(WidgetRules.isRetryableHttp(400))
+        assertFalse(WidgetRules.isRetryableHttp(204))
+    }
+
+    @Test
+    fun sourceKindAndNativeSyncModeAreExplicit() {
+        assertEquals("observed", WidgetRules.resolveSourceKind("observed", "db"))
+        assertEquals("db", WidgetRules.resolveSourceKind(null, "db"))
+        assertTrue(WidgetRules.isCurrentSyncMode("current"))
+        assertTrue(WidgetRules.isCurrentSyncMode("CURRENT"))
+        assertFalse(WidgetRules.isCurrentSyncMode("search"))
+        assertFalse(WidgetRules.isCurrentSyncMode(null))
     }
 }

@@ -1,178 +1,277 @@
 package app.netlify.app_hudadak.twa.widget
 
 import android.content.Context
-import android.location.Location
-import android.location.LocationManager
 import android.util.Log
-import androidx.work.BackoffPolicy
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.IOException
+import java.net.SocketTimeoutException
 import java.net.URL
-import java.time.Instant
 import java.util.Calendar
 import java.util.TimeZone
-import java.util.concurrent.TimeUnit
 import javax.net.ssl.HttpsURLConnection
+
+enum class WidgetFetchResult {
+    UPDATED,
+    UNCHANGED,
+    NO_CONTENT,
+    NO_COORDINATES,
+    NO_WIDGETS,
+    SKIPPED_RECENT,
+    SKIPPED_IN_FLIGHT,
+    SKIPPED_NIGHT,
+    RETRYABLE_ERROR,
+    NON_RETRYABLE_ERROR
+}
+
+data class WidgetFetchOutcome(
+    val result: WidgetFetchResult,
+    val failureReason: String? = null,
+    val displayTs: String? = null,
+    val remoteViewsApplied: Boolean = false
+)
 
 class WidgetUpdateWorker(
     private val context: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
-    companion object {
-        private const val PERIODIC_WORK_NAME = "hudadak_widget_update"
-        private const val IMMEDIATE_WORK_NAME = "hudadak_widget_update_immediate"
-        private const val API_BASE = "https://air-api-350359872967.asia-northeast3.run.app"
-        private const val TAG = "WidgetUpdateWorker"
-        private val networkConstraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        fun schedule(context: Context) {
-            val request = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(30, TimeUnit.MINUTES)
-                .setConstraints(networkConstraints)
-                .setBackoffCriteria(BackoffPolicy.LINEAR, 5, TimeUnit.MINUTES)
-                .build()
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                PERIODIC_WORK_NAME,
-                ExistingPeriodicWorkPolicy.UPDATE,
-                request
-            )
-        }
-
-        fun enqueueImmediate(context: Context) {
-            val request = OneTimeWorkRequestBuilder<WidgetUpdateWorker>()
-                .setConstraints(networkConstraints)
-                .build()
-            WorkManager.getInstance(context).enqueueUniqueWork(
-                IMMEDIATE_WORK_NAME,
-                ExistingWorkPolicy.KEEP,
-                request
-            )
-        }
-
-        fun cancelPeriodic(context: Context) {
-            WorkManager.getInstance(context).cancelUniqueWork(PERIODIC_WORK_NAME)
-        }
-    }
-
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        val trigger = inputData.getString(WidgetWorkScheduler.INPUT_TRIGGER)
+            ?: WidgetWorkScheduler.TRIGGER_PERIODIC
+        val manual = trigger == WidgetWorkScheduler.TRIGGER_MANUAL
         val widgetCount = WidgetDataStore.installedWidgetIds(context).size
+        val hasCoordinates = WidgetDataStore.getCoordinates(context) != null
         val hour = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul"))
             .get(Calendar.HOUR_OF_DAY)
+
+        WidgetDataStore.recordWorkerStarted(context, trigger, runAttemptCount)
         Log.i(
             TAG,
-            "AUDIT worker_started_at=${Instant.now()} widget_count=$widgetCount kst_hour=$hour"
+            "AUDIT worker_started_at_ms=${System.currentTimeMillis()} " +
+                "trigger=$trigger work_id=$id " +
+                "attempt=$runAttemptCount widget_count=$widgetCount " +
+                "has_current_coordinates=$hasCoordinates"
         )
-        if (!WidgetRules.shouldRun(hour, widgetCount)) {
-            Log.i(TAG, "AUDIT worker_skipped_at=${Instant.now()} reason=rules")
-            return@withContext Result.success()
+
+        val outcome = when {
+            widgetCount == 0 -> WidgetFetchOutcome(WidgetFetchResult.NO_WIDGETS)
+            !manual && !WidgetRules.shouldRun(hour, widgetCount) ->
+                WidgetFetchOutcome(WidgetFetchResult.SKIPPED_NIGHT)
+            !manual && WidgetDataStore.isRecentSuccessfulCheck(
+                context,
+                System.currentTimeMillis()
+            ) -> WidgetFetchOutcome(WidgetFetchResult.SKIPPED_RECENT)
+            else -> {
+                val coordinates = WidgetDataStore.getCoordinates(context)
+                if (coordinates == null) {
+                    WidgetFetchOutcome(
+                        WidgetFetchResult.NO_COORDINATES,
+                        failureReason = "NO_CURRENT_COORDS"
+                    )
+                } else if (
+                    !manual && !WidgetDataStore.tryAcquireAutomaticLease(
+                        context,
+                        id.toString(),
+                        System.currentTimeMillis()
+                    )
+                ) {
+                    WidgetFetchOutcome(WidgetFetchResult.SKIPPED_IN_FLIGHT)
+                } else {
+                    try {
+                        fetchAndSave(coordinates, trigger)
+                    } finally {
+                        if (!manual) {
+                            WidgetDataStore.releaseAutomaticLease(context, id.toString())
+                        }
+                    }
+                }
+            }
         }
 
-        val coordinates = WidgetDataStore.getCoordinates(context) ?: getLastKnownLocation()?.also {
-            WidgetDataStore.saveCoordinates(context, it.lat, it.lon)
-        } ?: run {
-            Log.i(TAG, "AUDIT worker_skipped_at=${Instant.now()} reason=no_coordinates")
-            return@withContext Result.success()
-        }
-
-        fetchAndSave(coordinates)
-        Log.i(TAG, "AUDIT worker_finished_at=${Instant.now()}")
-        Result.success()
+        finishWork(trigger, outcome)
     }
 
-    private fun fetchAndSave(coordinates: WidgetDataStore.Coordinates) {
+    private fun finishWork(trigger: String, outcome: WidgetFetchOutcome): Result {
+        val failed = outcome.result == WidgetFetchResult.RETRYABLE_ERROR ||
+            outcome.result == WidgetFetchResult.NON_RETRYABLE_ERROR
+
+        when (outcome.result) {
+            WidgetFetchResult.UPDATED,
+            WidgetFetchResult.UNCHANGED -> Unit
+            WidgetFetchResult.NO_CONTENT -> WidgetDataStore.recordSuccessfulCheck(
+                context,
+                trigger,
+                result = WidgetFetchResult.NO_CONTENT.name
+            )
+            else -> WidgetDataStore.recordResult(
+                context,
+                outcome.result.name,
+                outcome.failureReason,
+                failed
+            )
+        }
+
+        val shouldRetry = outcome.result == WidgetFetchResult.RETRYABLE_ERROR &&
+            WidgetRules.shouldRetry(runAttemptCount)
+        val workResult = if (shouldRetry) Result.retry() else Result.success()
+        Log.i(
+            TAG,
+            "AUDIT worker_finished_at_ms=${System.currentTimeMillis()} " +
+                "trigger=$trigger work_id=$id " +
+                "attempt=$runAttemptCount result=${outcome.result} " +
+                "display_ts=${outcome.displayTs ?: "null"} " +
+                "remote_views_applied=${outcome.remoteViewsApplied} " +
+                "work_result=${if (shouldRetry) "RETRY" else "SUCCESS"}"
+        )
+        return workResult
+    }
+
+    private fun fetchAndSave(
+        coordinates: WidgetDataStore.Coordinates,
+        trigger: String
+    ): WidgetFetchOutcome {
         var connection: HttpsURLConnection? = null
-        try {
+        return try {
             val url = "$API_BASE/nearest?lat=${coordinates.lat}&lon=${coordinates.lon}&source=db"
             connection = URL(url).openConnection() as HttpsURLConnection
             connection.connectTimeout = 8000
             connection.readTimeout = 8000
             connection.requestMethod = "GET"
-            Log.i(TAG, "AUDIT api_request_at=${Instant.now()} source=db")
+            connection.useCaches = false
+            connection.setRequestProperty("Cache-Control", "no-cache")
 
-            val responseCode = connection.responseCode
-            Log.i(TAG, "AUDIT api_response_at=${Instant.now()} status=$responseCode")
-            when (responseCode) {
-                HttpsURLConnection.HTTP_NO_CONTENT -> return
-                HttpsURLConnection.HTTP_OK -> Unit
-                else -> {
-                    Log.w(TAG, "Widget API returned HTTP ${connection.responseCode}; keeping cache")
-                    return
-                }
-            }
-
-            val json = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-            val displayTs = json.optString("display_ts").takeIf { it.isNotBlank() }
+            WidgetDataStore.recordApiRequested(context)
             Log.i(
                 TAG,
-                "AUDIT api_payload_at=${Instant.now()} display_ts=${displayTs ?: "null"}"
+                "AUDIT api_request_at_ms=${System.currentTimeMillis()} " +
+                    "trigger=$trigger source=db"
             )
-            if (WidgetRules.isFutureDisplayTs(displayTs, System.currentTimeMillis())) {
-                Log.w(TAG, "Rejected future widget display_ts: $displayTs")
-                return
-            }
-            val pm10 = json.optDouble("pm10").let { if (it.isNaN()) null else it }
-            val pm25 = json.optDouble("pm25").let { if (it.isNaN()) null else it }
-            if (pm10 == null && pm25 == null) return
 
-            WidgetDataStore.save(
-                context,
-                coordinates.lat,
-                coordinates.lon,
-                context.getSharedPreferences(
-                    WidgetDataStore.PREFS_NAME,
-                    Context.MODE_PRIVATE
-                ).getString(
-                    WidgetDataStore.KEY_REGION,
-                    json.optString("name", "알 수 없는 위치")
-                ) ?: json.optString("name", "알 수 없는 위치"),
-                json.optString(
-                    "name",
-                    json.optString("station", "알 수 없는 측정소")
-                ),
-                pm10,
-                pm25,
-                json.optString("provider").takeIf { it.isNotBlank() },
-                json.optString("source").takeIf { it.isNotBlank() },
-                displayTs
+            val responseCode = connection.responseCode
+            WidgetDataStore.recordApiResponse(context, responseCode)
+            Log.i(
+                TAG,
+                "AUDIT api_response_at_ms=${System.currentTimeMillis()} " +
+                    "trigger=$trigger status=$responseCode"
             )
-            Log.i(TAG, "AUDIT worker_cache_save_returned_at=${Instant.now()}")
+
+            when {
+                responseCode == HttpsURLConnection.HTTP_NO_CONTENT ->
+                    WidgetFetchOutcome(WidgetFetchResult.NO_CONTENT)
+                responseCode == HttpsURLConnection.HTTP_OK ->
+                    parseAndSave(connection, coordinates, trigger)
+                WidgetRules.isRetryableHttp(responseCode) ->
+                    WidgetFetchOutcome(
+                        WidgetFetchResult.RETRYABLE_ERROR,
+                        failureReason = "HTTP_$responseCode"
+                    )
+                else -> WidgetFetchOutcome(
+                    WidgetFetchResult.NON_RETRYABLE_ERROR,
+                    failureReason = "NON_RETRYABLE_HTTP_$responseCode"
+                )
+            }
+        } catch (e: SocketTimeoutException) {
+            Log.w(TAG, "Widget refresh timed out; keeping cache")
+            WidgetFetchOutcome(
+                WidgetFetchResult.RETRYABLE_ERROR,
+                failureReason = "TIMEOUT"
+            )
+        } catch (e: IOException) {
+            Log.w(TAG, "Widget refresh IO failure; keeping cache", e)
+            WidgetFetchOutcome(
+                WidgetFetchResult.RETRYABLE_ERROR,
+                failureReason = "IO_ERROR"
+            )
         } catch (e: Exception) {
             Log.w(TAG, "Widget refresh failed; keeping cache", e)
+            WidgetFetchOutcome(
+                WidgetFetchResult.NON_RETRYABLE_ERROR,
+                failureReason = "INVALID_RESPONSE"
+            )
         } finally {
             connection?.disconnect()
         }
     }
 
-    private fun getLastKnownLocation(): WidgetDataStore.Coordinates? {
-        return try {
-            val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val providers = listOf(
-                LocationManager.GPS_PROVIDER,
-                LocationManager.NETWORK_PROVIDER,
-                LocationManager.PASSIVE_PROVIDER
+    private fun parseAndSave(
+        connection: HttpsURLConnection,
+        coordinates: WidgetDataStore.Coordinates,
+        trigger: String
+    ): WidgetFetchOutcome {
+        val json = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+        val displayTs = json.optString("display_ts").takeIf { it.isNotBlank() }
+        Log.i(
+            TAG,
+            "AUDIT api_payload_at_ms=${System.currentTimeMillis()} " +
+                "display_ts=${displayTs ?: "null"}"
+        )
+
+        if (WidgetRules.isFutureDisplayTs(displayTs, System.currentTimeMillis())) {
+            return WidgetFetchOutcome(
+                WidgetFetchResult.NON_RETRYABLE_ERROR,
+                failureReason = "FUTURE_TIMESTAMP",
+                displayTs = displayTs
             )
-            var best: Location? = null
-            for (provider in providers) {
-                @Suppress("MissingPermission")
-                val location = manager.getLastKnownLocation(provider) ?: continue
-                if (best == null || location.accuracy < best.accuracy) best = location
-            }
-            best?.let { WidgetDataStore.Coordinates(it.latitude, it.longitude) }
-        } catch (e: Exception) {
-            Log.w(TAG, "No last known location available", e)
-            null
         }
+
+        val pm10 = json.optDouble("pm10").let { if (it.isNaN()) null else it }
+        val pm25 = json.optDouble("pm25").let { if (it.isNaN()) null else it }
+        if (pm10 == null && pm25 == null) {
+            return WidgetFetchOutcome(
+                WidgetFetchResult.NON_RETRYABLE_ERROR,
+                failureReason = "EMPTY_PM",
+                displayTs = displayTs
+            )
+        }
+
+        val region = WidgetDataStore.getRegion(context)
+            ?: json.optString("region").takeIf { it.isNotBlank() }
+            ?: json.optString("name").takeIf { it.isNotBlank() }
+            ?: "위치 확인 필요"
+        val station = json.optString("name")
+            .takeIf { it.isNotBlank() }
+            ?: json.optString("station").takeIf { it.isNotBlank() }
+        val source = WidgetRules.resolveSourceKind(
+            json.optString("source_kind").takeIf { it.isNotBlank() },
+            json.optString("source").takeIf { it.isNotBlank() }
+        )
+
+        val saveResult = WidgetDataStore.saveObservation(
+            context,
+            WidgetDataStore.Observation(
+                lat = coordinates.lat,
+                lon = coordinates.lon,
+                region = region,
+                station = station,
+                pm10 = pm10,
+                pm25 = pm25,
+                provider = json.optString("provider").takeIf { it.isNotBlank() },
+                source = source,
+                displayTs = displayTs
+            ),
+            origin = trigger
+        )
+        return when (saveResult) {
+            WidgetDataStore.SaveResult.UPDATED -> WidgetFetchOutcome(
+                WidgetFetchResult.UPDATED,
+                displayTs = displayTs,
+                remoteViewsApplied = true
+            )
+            WidgetDataStore.SaveResult.UNCHANGED -> WidgetFetchOutcome(
+                WidgetFetchResult.UNCHANGED,
+                displayTs = displayTs,
+                remoteViewsApplied = false
+            )
+        }
+    }
+
+    companion object {
+        private const val API_BASE =
+            "https://air-api-350359872967.asia-northeast3.run.app"
+        private const val TAG = "WidgetUpdateWorker"
     }
 }

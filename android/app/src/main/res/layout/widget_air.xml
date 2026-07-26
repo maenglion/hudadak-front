@@ -17,18 +17,37 @@
     android:paddingTop="16dp"
     android:paddingBottom="23dp">
 
-    <!-- 첫째 줄: 측정 위치 기준 지역명 -->
-    <TextView
-        android:id="@+id/widget_region"
+    <!-- 지역명은 앱 열기, 새로고침은 독립된 네이티브 동작 -->
+    <RelativeLayout
+        android:id="@+id/widget_header"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="위치 확인 중..."
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:maxLines="1"
-        android:singleLine="true"
-        android:ellipsize="end" />
+        android:layout_height="24dp">
+
+        <TextView
+            android:id="@+id/widget_region"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/widget_refresh"
+            android:layout_marginEnd="6dp"
+            android:text="위치 확인 중..."
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:ellipsize="end" />
+
+        <ImageView
+            android:id="@+id/widget_refresh"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_widget_refresh"
+            android:contentDescription="@string/widget_refresh_description" />
+    </RelativeLayout>
 
     <!-- 둘째 줄: 데이터 시각과 실제 PM provider -->
     <TextView

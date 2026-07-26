@@ -35,6 +35,15 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_air_info" />
         </receiver>
 
+        <receiver
+            android:name=".widget.WidgetPackageReplacedReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <!-- FileProvider (기존) -->
         <provider
             android:name="androidx.core.content.FileProvider"

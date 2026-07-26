@@ -257,6 +257,6 @@ test('widget header uses full-width rows and DB-only PM refresh', () => {
   assert.match(worker, /source=db/);
   assert.doesNotMatch(worker, /gas_provider|gas_meta/i);
   assert.doesNotMatch(provider, /tokens\.subList|dongIdx/);
-  assert.match(gradle, /versionCode\s+2009/);
-  assert.match(gradle, /versionName\s+"5\.1\.2"/);
+  assert.match(gradle, /versionCode\s+2010/);
+  assert.match(gradle, /versionName\s+"5\.1\.3"/);
 });
