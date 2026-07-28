@@ -55,7 +55,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:text="갱신 --:-- · 출처 미상"
+        android:text="항목별 최신 실측값"
         android:textColor="#80FFFFFF"
         android:textSize="11sp"
         android:maxLines="1"
@@ -63,9 +63,10 @@
 
     <!-- PM10 박스 -->
     <LinearLayout
+        android:id="@+id/widget_pm10_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="22dp"
+        android:layout_marginTop="10dp"
         android:orientation="vertical">
 
         <RelativeLayout
@@ -131,13 +132,25 @@
             android:layout_width="match_parent" android:layout_height="8dp"
             android:progressDrawable="@drawable/widget_progress_verybad"
             android:max="200" android:progress="0" android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/widget_pm10_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="--:-- · 출처 미상"
+            android:textColor="#80FFFFFF"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:singleLine="true" />
     </LinearLayout>
 
     <!-- PM25 박스 -->
     <LinearLayout
+        android:id="@+id/widget_pm25_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="12dp"
         android:orientation="vertical">
 
         <RelativeLayout
@@ -203,6 +216,17 @@
             android:layout_width="match_parent" android:layout_height="8dp"
             android:progressDrawable="@drawable/widget_progress_verybad"
             android:max="150" android:progress="0" android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/widget_pm25_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="--:-- · 출처 미상"
+            android:textColor="#80FFFFFF"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:singleLine="true" />
     </LinearLayout>
 
 </LinearLayout>

@@ -103,6 +103,87 @@ class WidgetDataStoreTest {
     }
 
     @Test
+    fun pollutantMetadataIsStoredIndependently() {
+        val value = observation(displayTs = null).copy(
+            pm10Provider = "AIRKOREA",
+            pm10Station = "인천 신흥",
+            pm10StationId = 10,
+            pm10SourceKind = "airkorea_station",
+            pm10DisplayTs = "2026-07-28T14:00:00+09:00",
+            pm25Provider = "WAQI",
+            pm25Station = "Aam",
+            pm25StationId = 20,
+            pm25SourceKind = "waqi_station",
+            pm25DisplayTs = "2026-07-28T13:00:00+09:00"
+        )
+        WidgetDataStore.saveObservation(context, value, "worker")
+        val prefs = context.getSharedPreferences(
+            WidgetDataStore.PREFS_NAME, Context.MODE_PRIVATE
+        )
+        assertEquals("AIRKOREA", prefs.getString(WidgetDataStore.KEY_PM10_PROVIDER, null))
+        assertEquals("WAQI", prefs.getString(WidgetDataStore.KEY_PM25_PROVIDER, null))
+        assertEquals(
+            "2026-07-28T14:00:00+09:00",
+            prefs.getString(WidgetDataStore.KEY_PM10_DISPLAY_TS, null)
+        )
+        assertEquals(
+            "2026-07-28T13:00:00+09:00",
+            prefs.getString(WidgetDataStore.KEY_PM25_DISPLAY_TS, null)
+        )
+    }
+
+    @Test
+    fun legacyCommonMetadataIsUsedUntilNewKeysAreWritten() {
+        val prefs = context.getSharedPreferences(
+            WidgetDataStore.PREFS_NAME, Context.MODE_PRIVATE
+        )
+        prefs.edit()
+            .putString(WidgetDataStore.KEY_PROVIDER, "AIRKOREA")
+            .putString(WidgetDataStore.KEY_STATION, "아암")
+            .putString(WidgetDataStore.KEY_DISPLAY_TS, "2026-07-28T12:00:00+09:00")
+            .commit()
+        assertEquals(
+            "AIRKOREA",
+            WidgetDataStore.pollutantString(
+                prefs, WidgetDataStore.KEY_PM10_PROVIDER, WidgetDataStore.KEY_PROVIDER
+            )
+        )
+        assertEquals(
+            "AIRKOREA",
+            WidgetDataStore.pollutantString(
+                prefs, WidgetDataStore.KEY_PM25_PROVIDER, WidgetDataStore.KEY_PROVIDER
+            )
+        )
+    }
+
+    @Test
+    fun rejectedFuturePm10PreservesPm10WhilePm25Updates() {
+        val initial = observation(displayTs = null).copy(
+            pm10Provider = "AIRKOREA",
+            pm10DisplayTs = "2026-07-28T12:00:00+09:00",
+            pm25Provider = "WAQI",
+            pm25DisplayTs = "2026-07-28T12:00:00+09:00"
+        )
+        WidgetDataStore.saveObservation(context, initial, "worker")
+        val update = initial.copy(
+            pm10 = null,
+            pm25 = 18.0,
+            pm25DisplayTs = "2026-07-28T13:00:00+09:00",
+            preservePm10 = true
+        )
+        WidgetDataStore.saveObservation(context, update, "worker")
+        val prefs = context.getSharedPreferences(
+            WidgetDataStore.PREFS_NAME, Context.MODE_PRIVATE
+        )
+        assertEquals(31.0f, prefs.getFloat(WidgetDataStore.KEY_PM10, Float.NaN))
+        assertEquals(18.0f, prefs.getFloat(WidgetDataStore.KEY_PM25, Float.NaN))
+        assertEquals(
+            "2026-07-28T12:00:00+09:00",
+            prefs.getString(WidgetDataStore.KEY_PM10_DISPLAY_TS, null)
+        )
+    }
+
+    @Test
     fun freshnessAndManualDebounceUseSeparateWindows() {
         val prefs = context.getSharedPreferences(
             WidgetDataStore.PREFS_NAME,

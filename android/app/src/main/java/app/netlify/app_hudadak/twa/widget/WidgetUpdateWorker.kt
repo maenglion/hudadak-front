@@ -203,28 +203,36 @@ class WidgetUpdateWorker(
         trigger: String
     ): WidgetFetchOutcome {
         val json = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-        val displayTs = json.optString("display_ts").takeIf { it.isNotBlank() }
+        val legacyDisplayTs = json.optString("display_ts").takeIf { it.isNotBlank() }
+        val pm10Meta = json.optJSONObject("pm10_meta")
+        val pm25Meta = json.optJSONObject("pm25_meta")
+        val pm10DisplayTs = pm10Meta?.optString("display_ts")
+            ?.takeIf { it.isNotBlank() } ?: legacyDisplayTs
+        val pm25DisplayTs = pm25Meta?.optString("display_ts")
+            ?.takeIf { it.isNotBlank() } ?: legacyDisplayTs
         Log.i(
             TAG,
             "AUDIT api_payload_at_ms=${System.currentTimeMillis()} " +
-                "display_ts=${displayTs ?: "null"}"
+                "pm10_ts=${pm10DisplayTs ?: "null"} " +
+                "pm25_ts=${pm25DisplayTs ?: "null"}"
         )
 
-        if (WidgetRules.isFutureDisplayTs(displayTs, System.currentTimeMillis())) {
-            return WidgetFetchOutcome(
-                WidgetFetchResult.NON_RETRYABLE_ERROR,
-                failureReason = "FUTURE_TIMESTAMP",
-                displayTs = displayTs
-            )
-        }
-
-        val pm10 = json.optDouble("pm10").let { if (it.isNaN()) null else it }
-        val pm25 = json.optDouble("pm25").let { if (it.isNaN()) null else it }
+        val now = System.currentTimeMillis()
+        val pm10Future = WidgetRules.isFutureDisplayTs(pm10DisplayTs, now)
+        val pm25Future = WidgetRules.isFutureDisplayTs(pm25DisplayTs, now)
+        val pm10 = json.optDouble("pm10")
+            .let { if (it.isNaN() || pm10Future) null else it }
+        val pm25 = json.optDouble("pm25")
+            .let { if (it.isNaN() || pm25Future) null else it }
         if (pm10 == null && pm25 == null) {
             return WidgetFetchOutcome(
                 WidgetFetchResult.NON_RETRYABLE_ERROR,
-                failureReason = "EMPTY_PM",
-                displayTs = displayTs
+                failureReason = if (pm10Future || pm25Future) {
+                    "FUTURE_TIMESTAMPS"
+                } else {
+                    "EMPTY_PM"
+                },
+                displayTs = listOfNotNull(pm10DisplayTs, pm25DisplayTs).maxOrNull()
             )
         }
 
@@ -232,13 +240,17 @@ class WidgetUpdateWorker(
             ?: json.optString("region").takeIf { it.isNotBlank() }
             ?: json.optString("name").takeIf { it.isNotBlank() }
             ?: "위치 확인 필요"
-        val station = json.optString("name")
-            .takeIf { it.isNotBlank() }
-            ?: json.optString("station").takeIf { it.isNotBlank() }
-        val source = WidgetRules.resolveSourceKind(
+        val legacyStation = json.optString("name").takeIf { it.isNotBlank() }
+        val legacyProvider = json.optString("provider").takeIf { it.isNotBlank() }
+        val legacySource = WidgetRules.resolveSourceKind(
             json.optString("source_kind").takeIf { it.isNotBlank() },
             json.optString("source").takeIf { it.isNotBlank() }
         )
+        fun JSONObject?.text(key: String): String? =
+            this?.optString(key)?.takeIf { it.isNotBlank() }
+        fun JSONObject?.stationId(): Long? =
+            this?.takeIf { it.has("station_id") && !it.isNull("station_id") }
+                ?.optLong("station_id")
 
         val saveResult = WidgetDataStore.saveObservation(
             context,
@@ -246,24 +258,40 @@ class WidgetUpdateWorker(
                 lat = coordinates.lat,
                 lon = coordinates.lon,
                 region = region,
-                station = station,
+                station = legacyStation,
                 pm10 = pm10,
                 pm25 = pm25,
-                provider = json.optString("provider").takeIf { it.isNotBlank() },
-                source = source,
-                displayTs = displayTs
+                provider = legacyProvider,
+                source = legacySource,
+                displayTs = legacyDisplayTs,
+                pm10Provider = pm10Meta.text("provider").takeUnless { pm10Future },
+                pm10Station = pm10Meta.text("station").takeUnless { pm10Future },
+                pm10StationId = pm10Meta.stationId().takeUnless { pm10Future },
+                pm10SourceKind = pm10Meta.text("source_kind").takeUnless { pm10Future },
+                pm10DisplayTs = pm10DisplayTs.takeUnless { pm10Future },
+                pm25Provider = pm25Meta.text("provider").takeUnless { pm25Future },
+                pm25Station = pm25Meta.text("station").takeUnless { pm25Future },
+                pm25StationId = pm25Meta.stationId().takeUnless { pm25Future },
+                pm25SourceKind = pm25Meta.text("source_kind").takeUnless { pm25Future },
+                pm25DisplayTs = pm25DisplayTs.takeUnless { pm25Future },
+                preservePm10 = pm10Future,
+                preservePm25 = pm25Future
             ),
             origin = trigger
         )
+        val latestDisplayTs = listOfNotNull(
+            pm10DisplayTs.takeUnless { pm10Future },
+            pm25DisplayTs.takeUnless { pm25Future }
+        ).maxOrNull()
         return when (saveResult) {
             WidgetDataStore.SaveResult.UPDATED -> WidgetFetchOutcome(
                 WidgetFetchResult.UPDATED,
-                displayTs = displayTs,
+                displayTs = latestDisplayTs,
                 remoteViewsApplied = true
             )
             WidgetDataStore.SaveResult.UNCHANGED -> WidgetFetchOutcome(
                 WidgetFetchResult.UNCHANGED,
-                displayTs = displayTs,
+                displayTs = latestDisplayTs,
                 remoteViewsApplied = false
             )
         }

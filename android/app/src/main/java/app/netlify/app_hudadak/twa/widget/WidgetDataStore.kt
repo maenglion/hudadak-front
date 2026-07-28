@@ -17,6 +17,16 @@ object WidgetDataStore {
     const val KEY_PROVIDER = "provider"
     const val KEY_SOURCE = "source"
     const val KEY_DISPLAY_TS = "display_ts"
+    const val KEY_PM10_PROVIDER = "pm10_provider"
+    const val KEY_PM10_STATION = "pm10_station"
+    const val KEY_PM10_STATION_ID = "pm10_station_id"
+    const val KEY_PM10_SOURCE_KIND = "pm10_source_kind"
+    const val KEY_PM10_DISPLAY_TS = "pm10_display_ts"
+    const val KEY_PM25_PROVIDER = "pm25_provider"
+    const val KEY_PM25_STATION = "pm25_station"
+    const val KEY_PM25_STATION_ID = "pm25_station_id"
+    const val KEY_PM25_SOURCE_KIND = "pm25_source_kind"
+    const val KEY_PM25_DISPLAY_TS = "pm25_display_ts"
     const val KEY_UPDATED_AT = "updated_at"
 
     const val KEY_LAST_WORKER_STARTED_AT = "last_worker_started_at"
@@ -48,7 +58,19 @@ object WidgetDataStore {
         val pm25: Double?,
         val provider: String?,
         val source: String?,
-        val displayTs: String?
+        val displayTs: String?,
+        val pm10Provider: String? = null,
+        val pm10Station: String? = null,
+        val pm10StationId: Long? = null,
+        val pm10SourceKind: String? = null,
+        val pm10DisplayTs: String? = null,
+        val pm25Provider: String? = null,
+        val pm25Station: String? = null,
+        val pm25StationId: Long? = null,
+        val pm25SourceKind: String? = null,
+        val pm25DisplayTs: String? = null,
+        val preservePm10: Boolean = false,
+        val preservePm25: Boolean = false
     )
 
     enum class SaveResult {
@@ -78,25 +100,37 @@ object WidgetDataStore {
         origin: String
     ): SaveResult {
         val values = prefs(context)
-        if (isSameObservation(values, observation)) {
-            recordSuccessfulCheck(context, origin, observation.displayTs)
+        val effective = resolvePreserved(values, observation)
+        if (isSameObservation(values, effective)) {
+            recordSuccessfulCheck(context, origin, effective.displayTs)
             return SaveResult.UNCHANGED
         }
 
         val savedAt = System.currentTimeMillis()
+        val pm10DisplayTs = effective.pm10DisplayTs ?: effective.displayTs
+        val pm25DisplayTs = effective.pm25DisplayTs ?: effective.displayTs
         values.edit().apply {
-            putLong(KEY_LAT, observation.lat.toBits())
-            putLong(KEY_LON, observation.lon.toBits())
-            putString(KEY_REGION, observation.region)
-            putNullableString(KEY_STATION, observation.station)
-            putNullableFloat(KEY_PM10, observation.pm10)
-            putNullableFloat(KEY_PM25, observation.pm25)
-            putNullableString(KEY_PROVIDER, observation.provider)
-            putNullableString(KEY_SOURCE, observation.source)
-            putNullableString(KEY_DISPLAY_TS, observation.displayTs)
+            putLong(KEY_LAT, effective.lat.toBits())
+            putLong(KEY_LON, effective.lon.toBits())
+            putString(KEY_REGION, effective.region)
+            putNullableFloat(KEY_PM10, effective.pm10)
+            putNullableFloat(KEY_PM25, effective.pm25)
+            putNullableString(KEY_PM10_PROVIDER, effective.pm10Provider ?: effective.provider)
+            putNullableString(KEY_PM10_STATION, effective.pm10Station ?: effective.station)
+            putNullableLong(KEY_PM10_STATION_ID, effective.pm10StationId)
+            putNullableString(KEY_PM10_SOURCE_KIND, effective.pm10SourceKind ?: effective.source)
+            putNullableString(KEY_PM10_DISPLAY_TS, pm10DisplayTs)
+            putNullableString(KEY_PM25_PROVIDER, effective.pm25Provider ?: effective.provider)
+            putNullableString(KEY_PM25_STATION, effective.pm25Station ?: effective.station)
+            putNullableLong(KEY_PM25_STATION_ID, effective.pm25StationId)
+            putNullableString(KEY_PM25_SOURCE_KIND, effective.pm25SourceKind ?: effective.source)
+            putNullableString(KEY_PM25_DISPLAY_TS, pm25DisplayTs)
             putLong(KEY_UPDATED_AT, savedAt)
             putLong(KEY_LAST_SUCCESSFUL_CHECK_AT, savedAt)
-            putNullableString(KEY_LAST_SAVED_DISPLAY_TS, observation.displayTs)
+            putNullableString(
+                KEY_LAST_SAVED_DISPLAY_TS,
+                listOfNotNull(pm10DisplayTs, pm25DisplayTs).maxOrNull()
+            )
             putString(KEY_LAST_UPDATE_ORIGIN, origin)
             putString(KEY_LAST_RESULT, SaveResult.UPDATED.name)
             remove(KEY_LAST_FAILURE_REASON)
@@ -106,11 +140,54 @@ object WidgetDataStore {
         Log.i(
             TAG,
             "AUDIT preferences_applied_at_ms=$savedAt " +
-                "origin=$origin display_ts=${observation.displayTs ?: "null"}"
+                "origin=$origin pm10_ts=${pm10DisplayTs ?: "null"} " +
+                "pm25_ts=${pm25DisplayTs ?: "null"}"
         )
         refreshAllWidgets(context)
         return SaveResult.UPDATED
     }
+
+    private fun resolvePreserved(
+        values: SharedPreferences,
+        observation: Observation
+    ): Observation = observation.copy(
+        pm10 = if (observation.preservePm10) {
+            nullableFloat(values, KEY_PM10)?.toDouble()
+        } else observation.pm10,
+        pm10Provider = if (observation.preservePm10) {
+            pollutantString(values, KEY_PM10_PROVIDER, KEY_PROVIDER)
+        } else observation.pm10Provider,
+        pm10Station = if (observation.preservePm10) {
+            pollutantString(values, KEY_PM10_STATION, KEY_STATION)
+        } else observation.pm10Station,
+        pm10StationId = if (observation.preservePm10) {
+            pollutantLong(values, KEY_PM10_STATION_ID)
+        } else observation.pm10StationId,
+        pm10SourceKind = if (observation.preservePm10) {
+            pollutantString(values, KEY_PM10_SOURCE_KIND, KEY_SOURCE)
+        } else observation.pm10SourceKind,
+        pm10DisplayTs = if (observation.preservePm10) {
+            pollutantString(values, KEY_PM10_DISPLAY_TS, KEY_DISPLAY_TS)
+        } else observation.pm10DisplayTs,
+        pm25 = if (observation.preservePm25) {
+            nullableFloat(values, KEY_PM25)?.toDouble()
+        } else observation.pm25,
+        pm25Provider = if (observation.preservePm25) {
+            pollutantString(values, KEY_PM25_PROVIDER, KEY_PROVIDER)
+        } else observation.pm25Provider,
+        pm25Station = if (observation.preservePm25) {
+            pollutantString(values, KEY_PM25_STATION, KEY_STATION)
+        } else observation.pm25Station,
+        pm25StationId = if (observation.preservePm25) {
+            pollutantLong(values, KEY_PM25_STATION_ID)
+        } else observation.pm25StationId,
+        pm25SourceKind = if (observation.preservePm25) {
+            pollutantString(values, KEY_PM25_SOURCE_KIND, KEY_SOURCE)
+        } else observation.pm25SourceKind,
+        pm25DisplayTs = if (observation.preservePm25) {
+            pollutantString(values, KEY_PM25_DISPLAY_TS, KEY_DISPLAY_TS)
+        } else observation.pm25DisplayTs
+    )
 
     fun installedWidgetIds(context: Context): IntArray =
         AppWidgetManager.getInstance(context).getAppWidgetIds(
@@ -235,12 +312,34 @@ object WidgetDataStore {
             Double.fromBits(values.getLong(KEY_LAT, 0L)) == observation.lat &&
             Double.fromBits(values.getLong(KEY_LON, 0L)) == observation.lon &&
             values.getString(KEY_REGION, null) == observation.region &&
-            values.getString(KEY_STATION, null) == observation.station?.takeIf { it.isNotBlank() } &&
             nullableFloat(values, KEY_PM10) == observation.pm10?.toFloat() &&
             nullableFloat(values, KEY_PM25) == observation.pm25?.toFloat() &&
-            values.getString(KEY_PROVIDER, null) == observation.provider?.takeIf { it.isNotBlank() } &&
-            values.getString(KEY_SOURCE, null) == observation.source?.takeIf { it.isNotBlank() } &&
-            values.getString(KEY_DISPLAY_TS, null) == observation.displayTs?.takeIf { it.isNotBlank() }
+            pollutantString(values, KEY_PM10_PROVIDER, KEY_PROVIDER) ==
+                (observation.pm10Provider ?: observation.provider)?.takeIf { it.isNotBlank() } &&
+            pollutantString(values, KEY_PM10_STATION, KEY_STATION) ==
+                (observation.pm10Station ?: observation.station)?.takeIf { it.isNotBlank() } &&
+            pollutantString(values, KEY_PM10_SOURCE_KIND, KEY_SOURCE) ==
+                (observation.pm10SourceKind ?: observation.source)?.takeIf { it.isNotBlank() } &&
+            pollutantString(values, KEY_PM10_DISPLAY_TS, KEY_DISPLAY_TS) ==
+                (observation.pm10DisplayTs ?: observation.displayTs)?.takeIf { it.isNotBlank() } &&
+            pollutantString(values, KEY_PM25_PROVIDER, KEY_PROVIDER) ==
+                (observation.pm25Provider ?: observation.provider)?.takeIf { it.isNotBlank() } &&
+            pollutantString(values, KEY_PM25_STATION, KEY_STATION) ==
+                (observation.pm25Station ?: observation.station)?.takeIf { it.isNotBlank() } &&
+            pollutantString(values, KEY_PM25_SOURCE_KIND, KEY_SOURCE) ==
+                (observation.pm25SourceKind ?: observation.source)?.takeIf { it.isNotBlank() } &&
+            pollutantString(values, KEY_PM25_DISPLAY_TS, KEY_DISPLAY_TS) ==
+                (observation.pm25DisplayTs ?: observation.displayTs)?.takeIf { it.isNotBlank() }
+
+    fun pollutantString(
+        values: SharedPreferences,
+        pollutantKey: String,
+        legacyKey: String
+    ): String? = values.getString(pollutantKey, null)
+        ?: values.getString(legacyKey, null)
+
+    private fun pollutantLong(values: SharedPreferences, key: String): Long? =
+        if (values.contains(key)) values.getLong(key, 0L) else null
 
     private fun nullableFloat(values: SharedPreferences, key: String): Float? =
         if (values.contains(key)) values.getFloat(key, Float.NaN).takeUnless { it.isNaN() }
@@ -258,6 +357,13 @@ object WidgetDataStore {
         value: Double?
     ) {
         if (value == null) remove(key) else putFloat(key, value.toFloat())
+    }
+
+    private fun SharedPreferences.Editor.putNullableLong(
+        key: String,
+        value: Long?
+    ) {
+        if (value == null) remove(key) else putLong(key, value)
     }
 
     private fun refreshAllWidgets(context: Context) {

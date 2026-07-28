@@ -7,6 +7,16 @@ const HudadakSourceUtils = (() => {
   }
 
   function normalizeResponse(data) {
+    const legacyMeta = {
+      provider: data.provider || null,
+      station: data.name || data.station?.name || null,
+      station_id: data.station_id ?? null,
+      display_ts: data.display_ts || null,
+      source_kind: data.source_kind || data.source || 'unknown',
+      lat: data.lat ?? null,
+      lon: data.lon ?? null,
+      distance_m: data.distance_m ?? null,
+    };
     return {
       station:    data.name || data.station?.name || '정보 없음',
       provider:   data.provider || null,
@@ -14,6 +24,12 @@ const HudadakSourceUtils = (() => {
       displayTs:  data.display_ts || null,
       pm10: toNum(data.pm10),
       pm25: toNum(data.pm25),
+      pm10Meta: data.pm10_meta || (
+        toNum(data.pm10) !== null ? { ...legacyMeta, unit: data.unit_pm10 } : null
+      ),
+      pm25Meta: data.pm25_meta || (
+        toNum(data.pm25) !== null ? { ...legacyMeta, unit: data.unit_pm25 } : null
+      ),
       so2:  toNum(data.so2),
       co:   toNum(data.co),
       o3:   toNum(data.o3),
@@ -86,12 +102,24 @@ const HudadakSourceUtils = (() => {
   }
 
   function dataSourceText(airData) {
-    if (!airData?.provider) return '데이터 출처 확인 불가';
-    const pmProvider = providerName(airData.provider);
-    if (!pmProvider) return '데이터 출처 확인 불가';
-    const pmType = airData.sourceKind === 'model' ? '예측' : '실측';
+    if (!airData) return '데이터 출처 확인 불가';
+    const fallbackMeta = airData.provider ? {
+      provider: airData.provider,
+      source_kind: airData.sourceKind,
+    } : null;
+    const pmMetas = [
+      airData.pm10Meta || fallbackMeta,
+      airData.pm25Meta || fallbackMeta,
+    ];
+    const labels = pmMetas.map(meta => meta?.provider ? (
+      `${meta.source_kind === 'model' ? '예측' : '실측'}: ${providerName(meta.provider)}`
+    ) : null);
+    const uniqueLabels = [...new Set(labels.filter(Boolean))];
+    if (!uniqueLabels.length) return '데이터 출처 확인 불가';
     const providers = gasProviders(airData);
-    const pmText = `미세먼지 ${pmType}: ${pmProvider}`;
+    const pmText = uniqueLabels.length === 1
+      ? `미세먼지 ${uniqueLabels[0]}`
+      : `미세먼지 PM10 ${labels[0] || '확인 불가'} · PM2.5 ${labels[1] || '확인 불가'}`;
     return providers.length
       ? `${pmText} · 기타 공기지표: ${providers.join('·')} 모델`
       : pmText;
@@ -607,12 +635,18 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       lat,
       lon,
       region,
-      station: airData.station,
       pm10: airData.pm10,
+      pm10_provider: airData.pm10Meta?.provider,
+      pm10_station: airData.pm10Meta?.station,
+      pm10_station_id: airData.pm10Meta?.station_id,
+      pm10_source_kind: airData.pm10Meta?.source_kind,
+      pm10_display_ts: airData.pm10Meta?.display_ts,
       pm25: airData.pm25,
-      provider: airData.provider,
-      source: airData.sourceKind,
-      display_ts: airData.displayTs,
+      pm25_provider: airData.pm25Meta?.provider,
+      pm25_station: airData.pm25Meta?.station,
+      pm25_station_id: airData.pm25Meta?.station_id,
+      pm25_source_kind: airData.pm25Meta?.source_kind,
+      pm25_display_ts: airData.pm25Meta?.display_ts,
     }).catch((err) => console.warn('[WidgetSync]', err));
   }
 
@@ -641,7 +675,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     return SCALE[type].find(c => v <= c.max) || SCALE[type][SCALE[type].length - 1];
   }
 
-  function drawGauge(pmType, value, stationName, provider, sourceKind) {
+  function drawGauge(pmType, value, stationName, provider, sourceKind, displayTs) {
     const wheelEl      = document.getElementById(`gauge${pmType}`);
     const statusTextEl = document.getElementById(`statusText${pmType}`);
     const valueTextEl  = document.getElementById(`valueText${pmType}`);
@@ -691,6 +725,14 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       providerBadge.textContent = displayProvider;
       stationEl.appendChild(providerBadge);
     }
+    const formattedTime = formatSeoulDateTime(displayTs);
+    const timeLine = document.createElement('span');
+    timeLine.className = 'station-time';
+    timeLine.textContent = formattedTime
+      ? `기준: ${formattedTime}`
+      : '기준: 확인 불가';
+    stationEl.appendChild(document.createElement('br'));
+    stationEl.appendChild(timeLine);
   }
 
   // 가스 등급 (µg/m³ 기준)
@@ -770,10 +812,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     });
   }
 
-  function updateDateTime(displayTs) {
+  function updateDateTime() {
     const timeEl = document.getElementById('time');
     if (!timeEl) return;
-    timeEl.textContent = formatSeoulDateTime(displayTs) || '확인 불가';
+    timeEl.textContent = '항목별 최신 실측값';
   }
 
   function updateDataSourceInfo(airData) {
@@ -810,19 +852,21 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
         drawGauge(
           'PM10',
           airData.pm10,
-          airData.station,
-          airData.provider,
-          airData.sourceKind
+          airData.pm10Meta?.station,
+          airData.pm10Meta?.provider,
+          airData.pm10Meta?.source_kind,
+          airData.pm10Meta?.display_ts
         );
         drawGauge(
           'PM25',
           airData.pm25,
-          airData.station,
-          airData.provider,
-          airData.sourceKind
+          airData.pm25Meta?.station,
+          airData.pm25Meta?.provider,
+          airData.pm25Meta?.source_kind,
+          airData.pm25Meta?.display_ts
         );
         updateGasData(airData);
-        updateDateTime(airData.displayTs);
+        updateDateTime();
         updateDataSourceInfo(airData);
         const regionName = await regionPromise;
         if (regionEl) regionEl.textContent = regionName;
@@ -1495,16 +1539,18 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       drawGauge(
         'PM10',
         lastAirData.pm10,
-        lastAirData.station,
-        lastAirData.provider,
-        lastAirData.sourceKind
+        lastAirData.pm10Meta?.station,
+        lastAirData.pm10Meta?.provider,
+        lastAirData.pm10Meta?.source_kind,
+        lastAirData.pm10Meta?.display_ts
       );
       drawGauge(
         'PM25',
         lastAirData.pm25,
-        lastAirData.station,
-        lastAirData.provider,
-        lastAirData.sourceKind
+        lastAirData.pm25Meta?.station,
+        lastAirData.pm25Meta?.provider,
+        lastAirData.pm25Meta?.source_kind,
+        lastAirData.pm25Meta?.display_ts
       );
     }
   };

@@ -49,6 +49,35 @@ test('normalizeResponse preserves PM and gas metadata separately', () => {
   assert.equal(response.gasDisplayTs, '2026-07-23T11:00:00+09:00');
   assert.equal(response.gasStation, null);
   assert.equal(response.gasMeta.o3.provider, 'OPENMETEO');
+  assert.equal(response.pm10Meta.provider, 'WAQI');
+  assert.equal(response.pm25Meta.provider, 'WAQI');
+});
+
+test('normalizeResponse preserves independent PM station and timestamp metadata', () => {
+  const response = normalizeResponse({
+    pm10: 36,
+    pm25: 22,
+    pm10_meta: {
+      provider: 'AIRKOREA',
+      station: '인천 신흥',
+      station_id: 10,
+      display_ts: '2026-07-28T14:00:00+09:00',
+      source_kind: 'airkorea_station',
+    },
+    pm25_meta: {
+      provider: 'WAQI',
+      station: 'Aam, Incheon',
+      station_id: 20,
+      display_ts: '2026-07-28T13:00:00+09:00',
+      source_kind: 'waqi_station',
+    },
+  });
+  assert.equal(response.pm10Meta.station, '인천 신흥');
+  assert.equal(response.pm25Meta.provider, 'WAQI');
+  assert.notEqual(
+    response.pm10Meta.display_ts,
+    response.pm25Meta.display_ts
+  );
 });
 
 test('WAQI PM and Open-Meteo gases never share a provider label', () => {
@@ -136,7 +165,11 @@ test('static default source copy and PM-station gas assignment are removed', () 
   assert.doesNotMatch(app, /gasStationEl\.textContent\s*=\s*airData\.station/);
   assert.match(html, /데이터 출처 확인 불가/);
   const widgetPayload = app.match(/widgetSync\.update\(\{([\s\S]*?)\}\)/)?.[1] || '';
-  assert.match(widgetPayload, /provider:\s*airData\.provider/);
+  assert.match(widgetPayload, /pm10_provider:\s*airData\.pm10Meta\?\.provider/);
+  assert.match(widgetPayload, /pm25_provider:\s*airData\.pm25Meta\?\.provider/);
+  assert.match(widgetPayload, /pm10_display_ts/);
+  assert.match(widgetPayload, /pm25_display_ts/);
+  assert.doesNotMatch(widgetPayload, /\n\s*provider:/);
   assert.doesNotMatch(widgetPayload, /gasProvider|gasMeta/);
 });
 
@@ -252,8 +285,12 @@ test('widget header uses full-width rows and DB-only PM refresh', () => {
   assert.match(metadataView, /android:singleLine="true"/);
   assert.doesNotMatch(layout, /@\+id\/widget_station/);
   assert.doesNotMatch(layout, /@\+id\/widget_source_label/);
-  assert.match(provider, /topMetadataLabel/);
-  assert.doesNotMatch(provider, /KEY_STATION/);
+  assert.match(provider, /KEY_PM10_DISPLAY_TS/);
+  assert.match(provider, /KEY_PM25_DISPLAY_TS/);
+  assert.match(provider, /widget_pm10_meta/);
+  assert.match(provider, /widget_pm25_meta/);
+  assert.match(layout, /@\+id\/widget_pm10_meta/);
+  assert.match(layout, /@\+id\/widget_pm25_meta/);
   assert.match(worker, /source=db/);
   assert.doesNotMatch(worker, /gas_provider|gas_meta/i);
   assert.doesNotMatch(provider, /tokens\.subList|dongIdx/);

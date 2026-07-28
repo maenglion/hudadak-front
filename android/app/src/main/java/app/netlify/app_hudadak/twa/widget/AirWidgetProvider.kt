@@ -119,10 +119,18 @@ class AirWidgetProvider : AppWidgetProvider() {
             val region    = prefs.getString(WidgetDataStore.KEY_REGION, "위치 확인 중...") ?: "위치 확인 중..."
             val pm10      = prefs.getFloat(WidgetDataStore.KEY_PM10, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
             val pm25      = prefs.getFloat(WidgetDataStore.KEY_PM25, Float.NaN).let { if (it.isNaN()) null else it.toDouble() }
-            val updatedAt = prefs.getLong(WidgetDataStore.KEY_UPDATED_AT, 0L)
-            val source    = prefs.getString(WidgetDataStore.KEY_SOURCE, null)
-            val provider  = prefs.getString(WidgetDataStore.KEY_PROVIDER, null)
-            val displayTs = prefs.getString(WidgetDataStore.KEY_DISPLAY_TS, null)
+            val pm10Provider = WidgetDataStore.pollutantString(
+                prefs, WidgetDataStore.KEY_PM10_PROVIDER, WidgetDataStore.KEY_PROVIDER
+            )
+            val pm10DisplayTs = WidgetDataStore.pollutantString(
+                prefs, WidgetDataStore.KEY_PM10_DISPLAY_TS, WidgetDataStore.KEY_DISPLAY_TS
+            )
+            val pm25Provider = WidgetDataStore.pollutantString(
+                prefs, WidgetDataStore.KEY_PM25_PROVIDER, WidgetDataStore.KEY_PROVIDER
+            )
+            val pm25DisplayTs = WidgetDataStore.pollutantString(
+                prefs, WidgetDataStore.KEY_PM25_DISPLAY_TS, WidgetDataStore.KEY_DISPLAY_TS
+            )
 
             val pm10GradeStr = pm10Grade(pm10)
             val pm25GradeStr = pm25Grade(pm25)
@@ -158,23 +166,30 @@ class AirWidgetProvider : AppWidgetProvider() {
                 pm25?.toInt() ?: 0, 150
             )
 
-            val displayMillis = WidgetRules.parseDisplayTimestamp(displayTs)
             val timeFormat = SimpleDateFormat("HH:mm", Locale.KOREA).apply {
                 timeZone = java.util.TimeZone.getTimeZone("Asia/Seoul")
             }
-            val timeText = when {
-                displayMillis != null -> timeFormat.format(Date(displayMillis))
-                updatedAt > 0L -> timeFormat.format(Date(updatedAt))
-                else -> "--:--"
+            fun metadataText(displayTs: String?, provider: String?): String {
+                val millis = WidgetRules.parseDisplayTimestamp(displayTs)
+                val time = millis?.let { timeFormat.format(Date(it)) } ?: "--:--"
+                return "$time · ${WidgetRules.providerDisplayName(provider) ?: "출처 미상"}"
             }
-            views.setTextViewText(
-                R.id.widget_updated_at,
-                WidgetRules.topMetadataLabel(
-                    timeText,
-                    displayMillis != null,
-                    provider,
-                    source
-                )
+            val pm10Metadata = metadataText(pm10DisplayTs, pm10Provider)
+            val pm25Metadata = metadataText(pm25DisplayTs, pm25Provider)
+            views.setTextViewText(R.id.widget_updated_at, "항목별 최신 실측값")
+            views.setTextViewText(R.id.widget_pm10_meta, pm10Metadata)
+            views.setTextViewText(R.id.widget_pm25_meta, pm25Metadata)
+            views.setContentDescription(
+                R.id.widget_pm10_section,
+                "미세먼지 ${pm10?.toInt() ?: "--"} 마이크로그램, " +
+                    "$pm10GradeStr, ${WidgetRules.providerDisplayName(pm10Provider) ?: "출처 미상"}, " +
+                    "${pm10Metadata.substringBefore(" · ")} 측정"
+            )
+            views.setContentDescription(
+                R.id.widget_pm25_section,
+                "초미세먼지 ${pm25?.toInt() ?: "--"} 마이크로그램, " +
+                    "$pm25GradeStr, ${WidgetRules.providerDisplayName(pm25Provider) ?: "출처 미상"}, " +
+                    "${pm25Metadata.substringBefore(" · ")} 측정"
             )
 
             // 터치 → 앱 실행
@@ -206,7 +221,8 @@ class AirWidgetProvider : AppWidgetProvider() {
             Log.i(
                 TAG,
                 "AUDIT remote_views_applied_at_ms=${System.currentTimeMillis()} " +
-                    "widget_id=$appWidgetId display_ts=${displayTs ?: "null"}"
+                    "widget_id=$appWidgetId pm10_ts=${pm10DisplayTs ?: "null"} " +
+                    "pm25_ts=${pm25DisplayTs ?: "null"}"
             )
         }
 

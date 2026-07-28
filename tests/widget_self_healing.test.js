@@ -16,6 +16,10 @@ test('WidgetSync payload and native plugin enforce current mode twice', () => {
 
   const payload = app.match(/widgetSync\.update\(\{([\s\S]*?)\}\)/)?.[1] || '';
   assert.match(payload, /mode:\s*['"]current['"]/);
+  assert.match(payload, /pm10_provider/);
+  assert.match(payload, /pm25_provider/);
+  assert.match(payload, /pm10_display_ts/);
+  assert.match(payload, /pm25_display_ts/);
   assert.match(plugin, /isCurrentSyncMode\(mode\)/);
   assert.match(plugin, /MODE_NOT_CURRENT/);
   assert.match(plugin, /EMPTY_PM/);
@@ -75,7 +79,7 @@ test('worker is DB-only, current-coordinate-only, cache-free and bounded', () =>
   assert.match(worker, /shouldRetry\(runAttemptCount\)/);
   assert.match(worker, /tryAcquireAutomaticLease/);
   assert.match(worker, /releaseAutomaticLease/);
-  assert.match(worker, /FUTURE_TIMESTAMP/);
+  assert.match(worker, /FUTURE_TIMESTAMPS/);
   assert.match(worker, /EMPTY_PM/);
   assert.match(worker, /source_kind[\s\S]*?source/);
 });
@@ -113,10 +117,11 @@ test('null observations remove stale preference keys and unchanged data skips re
 
   assert.match(store, /putNullableFloat\(KEY_PM10/);
   assert.match(store, /putNullableFloat\(KEY_PM25/);
-  assert.match(store, /putNullableString\(KEY_PROVIDER/);
-  assert.match(store, /putNullableString\(KEY_SOURCE/);
-  assert.match(store, /putNullableString\(KEY_DISPLAY_TS/);
-  assert.match(store, /putNullableString\(KEY_STATION/);
+  assert.match(store, /putNullableString\(KEY_PM10_PROVIDER/);
+  assert.match(store, /putNullableString\(KEY_PM25_PROVIDER/);
+  assert.match(store, /putNullableString\(KEY_PM10_DISPLAY_TS/);
+  assert.match(store, /putNullableString\(KEY_PM25_DISPLAY_TS/);
+  assert.match(store, /pollutantString\(values,\s*KEY_PM10_PROVIDER,\s*KEY_PROVIDER\)/);
   assert.match(store, /isSameObservation[\s\S]*?SaveResult\.UNCHANGED/);
   assert.match(store, /SaveResult\.UPDATED[\s\S]*?refreshAllWidgets/);
 });

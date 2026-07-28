@@ -7,7 +7,7 @@ import java.util.TimeZone
 object WidgetRules {
     private val seoulTimeZone: TimeZone = TimeZone.getTimeZone("Asia/Seoul")
 
-    private fun providerDisplayName(provider: String?): String? {
+    fun providerDisplayName(provider: String?): String? {
         val value = provider?.trim()?.takeIf { it.isNotEmpty() } ?: return null
         return when {
             value.equals("AIRKOREA", ignoreCase = true) -> "AirKorea"
