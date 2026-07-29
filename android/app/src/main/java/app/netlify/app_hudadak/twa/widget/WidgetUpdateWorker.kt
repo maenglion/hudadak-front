@@ -136,7 +136,8 @@ class WidgetUpdateWorker(
     ): WidgetFetchOutcome {
         var connection: HttpsURLConnection? = null
         return try {
-            val url = "$API_BASE/nearest?lat=${coordinates.lat}&lon=${coordinates.lon}&source=db"
+            val url = "$API_BASE/nearest?lat=${coordinates.lat}&lon=${coordinates.lon}" +
+                "&source=db&lookup_mode=current"
             connection = URL(url).openConnection() as HttpsURLConnection
             connection.connectTimeout = 8000
             connection.readTimeout = 8000

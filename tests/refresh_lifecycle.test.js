@@ -8,6 +8,8 @@ const {
   canStartPullRefresh,
   shouldTriggerPullRefresh,
   shouldSyncWidget,
+  buildNearestUrl,
+  normalizeRegionScope,
 } = require('../www/app.js');
 
 function createFakeTimers() {
@@ -163,7 +165,15 @@ test('search-mode foreground refresh never synchronizes the widget', async () =>
     },
     now: () => now,
   });
-  coordinator.setLookupMode('search', { lat: 37.8315, lon: 127.5090 });
+  coordinator.setLookupMode(
+    'search',
+    { lat: 37.8315, lon: 127.5090 },
+    {
+      regionLevel: 'sigungu',
+      regionCode: '41820',
+      regionName: '경기도 가평군',
+    }
+  );
 
   await coordinator.refresh({ manual: true, reason: 'address-refresh' });
   now += 61 * 1000;
@@ -171,7 +181,72 @@ test('search-mode foreground refresh never synchronizes the widget', async () =>
 
   assert.equal(widgetSyncCalls, 0);
   assert.deepEqual(contexts.map(context => context.mode), ['search', 'search']);
+  assert.deepEqual(contexts.at(-1).regionScope, {
+    regionLevel: 'sigungu',
+    regionCode: '41820',
+    regionName: '경기도 가평군',
+  });
   coordinator.stopInterval();
+});
+
+test('search nearest URL sends the official administrative scope', () => {
+  const url = new URL(buildNearestUrl(
+    'https://example.test',
+    37.2635,
+    127.0287,
+    'auto',
+    {
+      mode: 'search',
+      regionScope: {
+        regionLevel: 'sigungu',
+        regionCode: '41110',
+        regionName: '경기도 수원시',
+      },
+    }
+  ));
+
+  assert.equal(url.searchParams.get('lookup_mode'), 'search');
+  assert.equal(url.searchParams.get('region_level'), 'sigungu');
+  assert.equal(url.searchParams.get('region_code'), '41110');
+  assert.equal(url.searchParams.get('region_name'), '경기도 수원시');
+  assert.equal(url.searchParams.get('source'), 'auto');
+});
+
+test('current nearest URL never carries a stale search region', () => {
+  const url = new URL(buildNearestUrl(
+    'https://example.test',
+    37.4134,
+    126.6177,
+    'auto',
+    {
+      mode: 'current',
+      regionScope: {
+        regionLevel: 'sigungu',
+        regionCode: '41820',
+      },
+    }
+  ));
+
+  assert.equal(url.searchParams.get('lookup_mode'), 'current');
+  assert.equal(url.searchParams.has('region_level'), false);
+  assert.equal(url.searchParams.has('region_code'), false);
+});
+
+test('invalid search scope is rejected before a nearest request', () => {
+  assert.equal(normalizeRegionScope({
+    region_level: 'sido',
+    region_code: '50',
+  }).regionCode, '50');
+  assert.throws(
+    () => buildNearestUrl(
+      'https://example.test',
+      37,
+      127,
+      'auto',
+      { mode: 'search' }
+    ),
+    /administrative region/
+  );
 });
 
 test('search lookup changes mode only after a successful response', async () => {
@@ -423,8 +498,14 @@ test('runtime wiring preserves existing UI and disables nearest HTTP cache', () 
     path.join(__dirname, '..', 'www', 'app.js'),
     'utf8'
   );
-  assert.match(app, /source=auto`;\s*const res = await dedupFetch\(url, \{ cache: 'no-store' \}\)/);
-  assert.match(app, /source=model`;\s*const res = await dedupFetch\(url, \{ cache: 'no-store' \}\)/);
+  assert.match(app, /buildNearestUrl\([\s\S]*?'auto'[\s\S]*?\{ mode, regionScope \}/);
+  assert.match(app, /buildNearestUrl\([\s\S]*?'model'[\s\S]*?\{ mode, regionScope \}/);
+  assert.equal(
+    (app.match(/dedupFetch\(url, \{ cache: 'no-store' \}\)/g) || []).length >= 2,
+    true
+  );
+  assert.match(app, /region_level/);
+  assert.match(app, /region_code/);
   assert.match(app, /if \(!preserveExisting\) \{\s*drawGauge\('PM10', null/);
   assert.match(
     app,

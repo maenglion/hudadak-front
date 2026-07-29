@@ -143,6 +143,52 @@ const HudadakSourceUtils = (() => {
     return succeeded && mode === 'current';
   }
 
+  function normalizeRegionScope(scope) {
+    const regionLevel = scope?.regionLevel || scope?.region_level;
+    const regionCode = String(
+      scope?.regionCode || scope?.region_code || ''
+    ).trim();
+    const regionName = String(
+      scope?.regionName ||
+      scope?.region_name ||
+      scope?.normalized_region_name ||
+      ''
+    ).trim();
+    const expectedLength = regionLevel === 'sido' ? 2 : 5;
+    if (
+      !['sido', 'sigungu'].includes(regionLevel) ||
+      !new RegExp(`^\\d{${expectedLength}}$`).test(regionCode)
+    ) {
+      return null;
+    }
+    return { regionLevel, regionCode, regionName };
+  }
+
+  function buildNearestUrl(
+    apiBase,
+    lat,
+    lon,
+    source,
+    { mode = 'current', regionScope = null } = {}
+  ) {
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lon: String(lon),
+      source,
+      lookup_mode: mode === 'search' ? 'search' : 'current',
+    });
+    if (mode === 'search') {
+      const scope = normalizeRegionScope(regionScope);
+      if (!scope) {
+        throw new Error('Search lookup requires an administrative region');
+      }
+      params.set('region_level', scope.regionLevel);
+      params.set('region_code', scope.regionCode);
+      if (scope.regionName) params.set('region_name', scope.regionName);
+    }
+    return `${apiBase}/nearest?${params.toString()}`;
+  }
+
   function formatSeoulDateTime(displayTs) {
     if (!displayTs) return null;
     const timestamp = new Date(displayTs);
@@ -195,6 +241,7 @@ const HudadakSourceUtils = (() => {
     let currentCoords = null;
     let lastCurrentCoords = null;
     let searchAddress = '';
+    let searchScope = null;
     let lastSuccessfulRefreshAt = 0;
     let lastAutomaticTriggerAt = 0;
     let refreshInProgress = false;
@@ -209,6 +256,7 @@ const HudadakSourceUtils = (() => {
           ? { ...lastCurrentCoords }
           : null,
         searchAddress,
+        searchScope: searchScope ? { ...searchScope } : null,
         lastSuccessfulRefreshAt,
         refreshInProgress,
         intervalId,
@@ -219,7 +267,7 @@ const HudadakSourceUtils = (() => {
       onStateChange(getState());
     }
 
-    function setLookupMode(mode, coords = null) {
+    function setLookupMode(mode, coords = null, regionScope = null) {
       lookupMode = mode === 'search' ? 'search' : 'current';
       if (coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lon)) {
         currentCoords = { lat: coords.lat, lon: coords.lon };
@@ -227,7 +275,12 @@ const HudadakSourceUtils = (() => {
           lastCurrentCoords = { ...currentCoords };
         }
       }
-      if (lookupMode === 'current') searchAddress = '';
+      if (lookupMode === 'search') {
+        searchScope = normalizeRegionScope(regionScope) || searchScope;
+      } else {
+        searchAddress = '';
+        searchScope = null;
+      }
       notify();
     }
 
@@ -286,6 +339,7 @@ const HudadakSourceUtils = (() => {
           manual,
           mode: lookupMode,
           reason,
+          regionScope: lookupMode === 'search' ? searchScope : null,
         });
         if (success) {
           lastSuccessfulRefreshAt = now();
@@ -307,6 +361,7 @@ const HudadakSourceUtils = (() => {
       initial = false,
       reason = 'address-search',
       address = '',
+      regionScope = null,
     } = {}) {
       if (refreshInProgress) {
         return { started: false, success: false, skipped: 'in-flight' };
@@ -323,17 +378,20 @@ const HudadakSourceUtils = (() => {
       notify();
       try {
         const nextCoords = { lat: coords.lat, lon: coords.lon };
+        const nextSearchScope = normalizeRegionScope(regionScope);
         const success = await performUpdate(nextCoords, {
           initial,
           manual: true,
           mode: 'search',
           reason,
           searchAddress: address,
+          regionScope: nextSearchScope,
         });
         if (success) {
           lookupMode = 'search';
           currentCoords = nextCoords;
           searchAddress = String(address || '').trim();
+          searchScope = nextSearchScope;
           lastSuccessfulRefreshAt = now();
         }
         return { started: true, success: Boolean(success) };
@@ -393,6 +451,7 @@ const HudadakSourceUtils = (() => {
           currentCoords = nextCoords;
           lastCurrentCoords = { ...nextCoords };
           searchAddress = '';
+          searchScope = null;
           lastSuccessfulRefreshAt = now();
         }
         return { started: true, success: Boolean(success) };
@@ -482,6 +541,8 @@ const HudadakSourceUtils = (() => {
     dataSourceText,
     pmStationText,
     shouldSyncWidget,
+    normalizeRegionScope,
+    buildNearestUrl,
     formatSeoulDateTime,
     gasTimeText,
     createRefreshCoordinator,
@@ -595,32 +656,54 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   // ===================
   //  데이터 조회
   // ===================
-  async function fetchAirData(lat, lon) {
+  async function fetchAirData(
+    lat,
+    lon,
+    { mode = 'current', regionScope = null } = {}
+  ) {
     try {
-      const url = `${API_BASE}/nearest?lat=${lat}&lon=${lon}&source=auto`;
+      const url = buildNearestUrl(
+        API_BASE,
+        lat,
+        lon,
+        'auto',
+        { mode, regionScope }
+      );
       const res = await dedupFetch(url, { cache: 'no-store' });
 
       if (res.status === 204) {
         console.warn('[fetchAirData] DB 데이터 없음, 모델 폴백');
-        return await fetchModelFallback(lat, lon);
+        return await fetchModelFallback(lat, lon, { mode, regionScope });
       }
       if (!res.ok) throw new Error(`API error: ${res.status}`);
       const data = await res.json();
 
       if (toNum(data.pm10) === null && toNum(data.pm25) === null) {
         console.warn('[fetchAirData] PM 데이터 없음, 모델 폴백');
-        return await fetchModelFallback(lat, lon);
+        return await fetchModelFallback(lat, lon, { mode, regionScope });
       }
       return normalizeResponse(data);
     } catch (err) {
       console.error('[fetchAirData] API 호출 실패:', err);
-      try { return await fetchModelFallback(lat, lon); }
+      try {
+        return await fetchModelFallback(lat, lon, { mode, regionScope });
+      }
       catch { return null; }
     }
   }
 
-  async function fetchModelFallback(lat, lon) {
-    const url = `${API_BASE}/nearest?lat=${lat}&lon=${lon}&source=model`;
+  async function fetchModelFallback(
+    lat,
+    lon,
+    { mode = 'current', regionScope = null } = {}
+  ) {
+    const url = buildNearestUrl(
+      API_BASE,
+      lat,
+      lon,
+      'model',
+      { mode, regionScope }
+    );
     const res = await dedupFetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Model fallback failed: ${res.status}`);
     return normalizeResponse(await res.json());
@@ -833,7 +916,11 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   async function updateAll(
     lat,
     lon,
-    { mode = 'current', preserveExisting = false } = {}
+    {
+      mode = 'current',
+      preserveExisting = false,
+      regionScope = null,
+    } = {}
   ) {
     hideError();
 
@@ -846,7 +933,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     }
 
     try {
-      const airData = await fetchAirData(lat, lon);
+      const airData = await fetchAirData(lat, lon, {
+        mode,
+        regionScope,
+      });
       if (airData) {
         lastAirData = airData;
         drawGauge(
@@ -932,6 +1022,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       {
         mode: context.mode,
         preserveExisting: !context.initial,
+        regionScope: context.regionScope,
       }
     ),
     getGpsCoords: getFreshGpsCoords,
@@ -1080,10 +1171,16 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     if (!isSearch) currentSearchAddress = '';
   }
 
-  async function refreshSearchCoords(lat, lon, address = '') {
+  async function refreshSearchCoords(
+    lat,
+    lon,
+    address = '',
+    regionScope = null
+  ) {
     const result = await refreshCoordinator.lookupSearchLocation({ lat, lon }, {
       reason: 'address-search',
       address,
+      regionScope,
     });
     if (result.success) {
       currentSearchAddress =
@@ -1306,11 +1403,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
             li.onclick = () => {
               inputEl.value = d.address_name;
               closeSuggestions({ blur: true });
-              refreshSearchCoords(
-                parseFloat(d.y),
-                parseFloat(d.x),
-                d.address_name
-              );
+              searchByAddress(d.address_name);
             };
             suggestionsEl.appendChild(li);
           });
@@ -1342,7 +1435,11 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
       if (!geoRes.ok) throw new Error('geo failed');
       const geo = await geoRes.json();
       if (inputEl) inputEl.value = geo.address;
-      refreshSearchCoords(geo.lat, geo.lon, geo.address);
+      await refreshSearchCoords(geo.lat, geo.lon, geo.address, {
+        regionLevel: geo.region_level,
+        regionCode: geo.region_code,
+        regionName: geo.normalized_region_name || geo.region_name,
+      });
     } catch (err) {
       console.warn('[searchByAddress]', err);
       if (suggestionsEl?.firstChild) suggestionsEl.firstChild.click();

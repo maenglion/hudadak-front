@@ -78,11 +78,11 @@ test('station text is compact and limited to two lines', () => {
 test('updateAll receives an explicit lookup mode and gates widget sync', () => {
   assert.match(
     app,
-    /async function updateAll\([\s\S]*?\{ mode = 'current', preserveExisting = false \}/
+    /async function updateAll\([\s\S]*?mode = 'current',[\s\S]*?preserveExisting = false,[\s\S]*?regionScope = null/
   );
   assert.match(
     app,
-    /performUpdate:[\s\S]*?mode: context\.mode/
+    /performUpdate:[\s\S]*?mode: context\.mode,[\s\S]*?regionScope: context\.regionScope/
   );
   assert.match(
     app,
