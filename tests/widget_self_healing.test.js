@@ -69,6 +69,7 @@ test('worker is DB-only, current-coordinate-only, cache-free and bounded', () =>
   assert.match(worker, /WidgetDataStore\.getCoordinates/);
   assert.doesNotMatch(worker, /lastKnownLocation|getLastKnownLocation|requestLocationUpdates/);
   assert.match(worker, /source=db/);
+  assert.match(worker, /pm_fallback=true/);
   assert.match(worker, /lookup_mode=current/);
   assert.doesNotMatch(worker, /region_code|region_level/);
   assert.doesNotMatch(worker, /source=auto|gas_meta|gas_provider/i);

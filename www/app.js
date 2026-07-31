@@ -47,6 +47,13 @@ const HudadakSourceUtils = (() => {
     };
   }
 
+  function hasPmData(airData) {
+    return Boolean(
+      airData &&
+      (airData.pm10 !== null || airData.pm25 !== null)
+    );
+  }
+
   function providerName(provider) {
     const value = String(provider || '').trim();
     switch (value.toUpperCase()) {
@@ -90,15 +97,51 @@ const HudadakSourceUtils = (() => {
 
   function gasSummaryLabel(airData) {
     const providers = gasProviders(airData);
-    if (providers.length === 1) return `모델(${providers[0]})`;
-    if (providers.length > 1) return '출처 혼합';
+    const kinds = [...new Set(
+      ['so2', 'co', 'o3', 'no2']
+        .filter(key => airData?.[key] !== null && airData?.[key] !== undefined)
+        .map(key => airData.gasMeta?.[key]?.source_kind)
+        .filter(Boolean)
+    )];
+    if (providers.length === 1 && kinds.length === 1) {
+      return kinds[0] === 'model'
+        ? `모델(${providers[0]})`
+        : `인근 참고값(${providers[0]})`;
+    }
+    if (providers.length > 1 || kinds.length > 1) return '출처 혼합';
     return '';
   }
 
-  function gasItemSourceText(meta) {
+  function parseGasTimestamp(displayTs) {
+    if (!displayTs) return null;
+    const value = String(displayTs).trim();
+    const hasZone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value);
+    const parsed = new Date(hasZone ? value : `${value}+09:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  function gasAgeText(displayTs, now = Date.now()) {
+    const timestamp = parseGasTimestamp(displayTs);
+    const nowMs = now instanceof Date ? now.getTime() : Number(now);
+    if (!timestamp || !Number.isFinite(nowMs)) return '';
+    const elapsedMs = nowMs - timestamp.getTime();
+    if (elapsedMs < 0) return '';
+    const hours = Math.floor(elapsedMs / (60 * 60 * 1000));
+    return hours < 1 ? '1시간 미만' : `${hours}시간 전`;
+  }
+
+  function gasItemSourceText(meta, now = Date.now()) {
     if (!meta?.provider) return '';
-    const kind = meta.source_kind === 'model' ? ' 모델' : '';
-    return `출처: ${providerName(meta.provider)}${kind}`;
+    const provider = providerName(meta.provider);
+    if (meta.source_kind === 'model') {
+      return `${provider} · 현재 위치 모델값`;
+    }
+    const age = gasAgeText(meta.display_ts, now);
+    return [
+      provider,
+      '인근 참고값',
+      age,
+    ].filter(Boolean).join(' · ');
   }
 
   function dataSourceText(airData) {
@@ -116,27 +159,25 @@ const HudadakSourceUtils = (() => {
     ) : null);
     const uniqueLabels = [...new Set(labels.filter(Boolean))];
     if (!uniqueLabels.length) return '데이터 출처 확인 불가';
-    const providers = gasProviders(airData);
+    const gasSummary = gasSummaryLabel(airData);
     const pmText = uniqueLabels.length === 1
       ? `미세먼지 ${uniqueLabels[0]}`
       : `미세먼지 PM10 ${labels[0] || '확인 불가'} · PM2.5 ${labels[1] || '확인 불가'}`;
-    return providers.length
-      ? `${pmText} · 기타 공기지표: ${providers.join('·')} 모델`
+    return gasSummary
+      ? `${pmText} · 기타 공기지표: ${gasSummary}`
       : pmText;
   }
 
   function pmStationText(station, provider, sourceKind) {
     const displayProvider = providerName(provider);
     if (sourceKind === 'model') {
-      return displayProvider
-        ? `예측 데이터: ${displayProvider}`
-        : '예측 데이터';
+      return `${displayProvider || 'Open-Meteo'} · 현재 위치 모델값`;
     }
     const stationName = stationDisplayName(station);
-    if (!stationName) return '측정소: 정보 없음';
-    return `측정소: ${stationName}${
-      displayProvider ? ` · ${displayProvider}` : ''
-    }`;
+    const sourceLabel = `${
+      displayProvider ? `${displayProvider} · ` : ''
+    }인근 측정소 실측`;
+    return stationName ? `${sourceLabel} (${stationName})` : sourceLabel;
   }
 
   function shouldSyncWidget(mode, succeeded = true) {
@@ -191,8 +232,8 @@ const HudadakSourceUtils = (() => {
 
   function formatSeoulDateTime(displayTs) {
     if (!displayTs) return null;
-    const timestamp = new Date(displayTs);
-    if (Number.isNaN(timestamp.getTime())) return null;
+    const timestamp = parseGasTimestamp(displayTs);
+    if (!timestamp) return null;
     return timestamp.toLocaleString('ko-KR', {
       timeZone: 'Asia/Seoul',
       year: 'numeric',
@@ -533,10 +574,12 @@ const HudadakSourceUtils = (() => {
   return {
     toNum,
     normalizeResponse,
+    hasPmData,
     providerName,
     stationDisplayName,
     gasProviders,
     gasSummaryLabel,
+    gasAgeText,
     gasItemSourceText,
     dataSourceText,
     pmStationText,
@@ -706,7 +749,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     );
     const res = await dedupFetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Model fallback failed: ${res.status}`);
-    return normalizeResponse(await res.json());
+    const normalized = normalizeResponse(await res.json());
+    return hasPmData(normalized) ? normalized : null;
   }
 
   function syncWidget(lat, lon, region, airData) {
@@ -798,15 +842,16 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
     if (sourceKind === 'model' || !displayProvider) {
       stationEl.textContent = stationText;
     } else {
-      const stationLabel = document.createElement('span');
-      stationLabel.textContent = `측정소: ${
-        stationDisplayName(stationName) || '정보 없음'
-      } ·`;
-      stationEl.appendChild(stationLabel);
       const providerBadge = document.createElement('span');
       providerBadge.className = 'station-provider-badge';
       providerBadge.textContent = displayProvider;
       stationEl.appendChild(providerBadge);
+      const stationLabel = document.createElement('span');
+      const compactStation = stationDisplayName(stationName);
+      stationLabel.textContent = ` · 인근 측정소 실측${
+        compactStation ? ` (${compactStation})` : ''
+      }`;
+      stationEl.appendChild(stationLabel);
     }
     const formattedTime = formatSeoulDateTime(displayTs);
     const timeLine = document.createElement('span');
@@ -898,7 +943,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (() => {
   function updateDateTime() {
     const timeEl = document.getElementById('time');
     if (!timeEl) return;
-    timeEl.textContent = '항목별 최신 실측값';
+    timeEl.textContent = '항목별 최신값';
   }
 
   function updateDataSourceInfo(airData) {

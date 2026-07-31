@@ -5,7 +5,9 @@ const test = require('node:test');
 
 const {
   normalizeResponse,
+  hasPmData,
   gasSummaryLabel,
+  gasAgeText,
   gasItemSourceText,
   dataSourceText,
   pmStationText,
@@ -15,10 +17,22 @@ const {
   gasTimeText,
 } = require('../www/app.js');
 
-function gasMeta(provider, displayTs, station = null) {
+test('PM response is usable when either pollutant has a value', () => {
+  assert.equal(hasPmData({ pm10: 10, pm25: null }), true);
+  assert.equal(hasPmData({ pm10: null, pm25: 5 }), true);
+  assert.equal(hasPmData({ pm10: null, pm25: null }), false);
+  assert.equal(hasPmData(null), false);
+});
+
+function gasMeta(
+  provider,
+  displayTs,
+  station = null,
+  sourceKind = 'model'
+) {
   return {
     provider,
-    source_kind: 'model',
+    source_kind: sourceKind,
     display_ts: displayTs,
     station,
   };
@@ -89,9 +103,9 @@ test('WAQI PM and Open-Meteo gases never share a provider label', () => {
     gasMeta: { o3: gasMeta('OPENMETEO', '2026-07-23T11:00:00+09:00') },
   };
 
-  assert.equal(dataSourceText(data), '미세먼지 실측: WAQI · 기타 공기지표: Open-Meteo 모델');
+  assert.equal(dataSourceText(data), '미세먼지 실측: WAQI · 기타 공기지표: 모델(Open-Meteo)');
   assert.equal(gasSummaryLabel(data), '모델(Open-Meteo)');
-  assert.equal(gasItemSourceText(data.gasMeta.o3), '출처: Open-Meteo 모델');
+  assert.equal(gasItemSourceText(data.gasMeta.o3), 'Open-Meteo · 현재 위치 모델값');
   assert.doesNotMatch(gasItemSourceText(data.gasMeta.o3), /WAQI/);
 });
 
@@ -106,7 +120,7 @@ test('AirKorea PM and OWM gases use their actual provider names', () => {
     },
   };
 
-  assert.equal(dataSourceText(data), '미세먼지 실측: AirKorea · 기타 공기지표: OpenWeather 모델');
+  assert.equal(dataSourceText(data), '미세먼지 실측: AirKorea · 기타 공기지표: 모델(OpenWeather)');
   assert.equal(gasSummaryLabel(data), '모델(OpenWeather)');
 });
 
@@ -125,7 +139,7 @@ test('Open-Meteo PM fallback is labeled as a prediction', () => {
 
   assert.equal(
     dataSourceText(data),
-    '미세먼지 예측: Open-Meteo · 기타 공기지표: Open-Meteo 모델'
+    '미세먼지 예측: Open-Meteo · 기타 공기지표: 모델(Open-Meteo)'
   );
 });
 
@@ -147,13 +161,70 @@ test('mixed gas metadata keeps each pollutant provider', () => {
   };
 
   assert.equal(gasSummaryLabel(data), '출처 혼합');
-  assert.equal(gasItemSourceText(data.gasMeta.so2), '출처: Open-Meteo 모델');
-  assert.equal(gasItemSourceText(data.gasMeta.co), '출처: OpenWeather 모델');
+  assert.equal(gasItemSourceText(data.gasMeta.so2), 'Open-Meteo · 현재 위치 모델값');
+  assert.equal(gasItemSourceText(data.gasMeta.co), 'OpenWeather · 현재 위치 모델값');
   assert.equal(
     dataSourceText(data),
-    '미세먼지 실측: AirKorea · 기타 공기지표: Open-Meteo·OpenWeather 모델'
+    '미세먼지 실측: AirKorea · 기타 공기지표: 출처 혼합'
   );
   assert.equal(gasTimeText(data), '출처별 기준시각 상이');
+});
+
+test('observed gas reference shows provider and elapsed hours', () => {
+  const observed = gasMeta(
+    'WAQI',
+    '2026-07-23T04:00:00+09:00',
+    'Nearby station',
+    'observed'
+  );
+  const now = new Date('2026-07-23T12:00:00+09:00');
+
+  assert.equal(
+    gasItemSourceText(observed, now),
+    'WAQI · 인근 참고값 · 8시간 전'
+  );
+  assert.equal(
+    gasAgeText(observed.display_ts, now),
+    '8시간 전'
+  );
+  assert.equal(
+    gasSummaryLabel({
+      o3: 45,
+      gasMeta: { o3: observed },
+    }),
+    '인근 참고값(WAQI)'
+  );
+});
+
+test('gas items may mix observed and model metadata independently', () => {
+  const data = {
+    o3: 45,
+    no2: 12,
+    gasMeta: {
+      o3: gasMeta(
+        'AIRKOREA',
+        '2026-07-23T05:00:00+09:00',
+        'Ozone station',
+        'observed'
+      ),
+      no2: gasMeta(
+        'OPENMETEO',
+        '2026-07-23T12:00:00+09:00'
+      ),
+    },
+  };
+  assert.equal(gasSummaryLabel(data), '출처 혼합');
+  assert.equal(
+    gasItemSourceText(
+      data.gasMeta.o3,
+      new Date('2026-07-23T12:00:00+09:00')
+    ),
+    'AirKorea · 인근 참고값 · 7시간 전'
+  );
+  assert.equal(
+    gasItemSourceText(data.gasMeta.no2),
+    'Open-Meteo · 현재 위치 모델값'
+  );
 });
 
 test('static default source copy and PM-station gas assignment are removed', () => {
@@ -187,7 +258,7 @@ test('PM display timestamp uses Seoul time without seconds', () => {
 test('PM station labels prefer Korean aliases and keep actual providers separate', () => {
   assert.equal(
     pmStationText('Seoul (서울)', 'WAQI', 'waqi_station'),
-    '측정소: 서울 · WAQI'
+    'WAQI · 인근 측정소 실측 (서울)'
   );
   assert.equal(
     pmStationText(
@@ -195,19 +266,19 @@ test('PM station labels prefer Korean aliases and keep actual providers separate
       'WAQI',
       'waqi_station'
     ),
-    '측정소: 중앙로(강원) · WAQI'
+    'WAQI · 인근 측정소 실측 (중앙로(강원))'
   );
   assert.equal(
     pmStationText('WAQI INCHEON', 'WAQI', 'waqi_station'),
-    '측정소: WAQI INCHEON · WAQI'
+    'WAQI · 인근 측정소 실측 (WAQI INCHEON)'
   );
   assert.equal(
     pmStationText('', 'WAQI', 'waqi_station'),
-    '측정소: 정보 없음'
+    'WAQI · 인근 측정소 실측'
   );
   assert.equal(
     pmStationText('Open-Meteo grid', 'OPENMETEO', 'model'),
-    '예측 데이터: Open-Meteo'
+    'Open-Meteo · 현재 위치 모델값'
   );
 });
 
@@ -292,8 +363,13 @@ test('widget header uses full-width rows and DB-only PM refresh', () => {
   assert.match(layout, /@\+id\/widget_pm10_meta/);
   assert.match(layout, /@\+id\/widget_pm25_meta/);
   assert.match(worker, /source=db/);
+  assert.match(worker, /pm_fallback=true/);
+  assert.match(provider, /KEY_PM10_SOURCE_KIND/);
+  assert.match(provider, /KEY_PM25_SOURCE_KIND/);
+  assert.match(provider, /항목별 최신값/);
+  assert.doesNotMatch(provider, /항목별 최신 실측값/);
   assert.doesNotMatch(worker, /gas_provider|gas_meta/i);
   assert.doesNotMatch(provider, /tokens\.subList|dongIdx/);
-  assert.match(gradle, /versionCode\s+2011/);
+  assert.match(gradle, /versionCode\s+2012/);
   assert.match(gradle, /versionName\s+"5\.1\.4"/);
 });

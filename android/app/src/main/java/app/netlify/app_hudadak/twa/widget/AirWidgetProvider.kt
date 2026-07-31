@@ -125,11 +125,17 @@ class AirWidgetProvider : AppWidgetProvider() {
             val pm10DisplayTs = WidgetDataStore.pollutantString(
                 prefs, WidgetDataStore.KEY_PM10_DISPLAY_TS, WidgetDataStore.KEY_DISPLAY_TS
             )
+            val pm10SourceKind = WidgetDataStore.pollutantString(
+                prefs, WidgetDataStore.KEY_PM10_SOURCE_KIND, WidgetDataStore.KEY_SOURCE
+            )
             val pm25Provider = WidgetDataStore.pollutantString(
                 prefs, WidgetDataStore.KEY_PM25_PROVIDER, WidgetDataStore.KEY_PROVIDER
             )
             val pm25DisplayTs = WidgetDataStore.pollutantString(
                 prefs, WidgetDataStore.KEY_PM25_DISPLAY_TS, WidgetDataStore.KEY_DISPLAY_TS
+            )
+            val pm25SourceKind = WidgetDataStore.pollutantString(
+                prefs, WidgetDataStore.KEY_PM25_SOURCE_KIND, WidgetDataStore.KEY_SOURCE
             )
 
             val pm10GradeStr = pm10Grade(pm10)
@@ -169,27 +175,40 @@ class AirWidgetProvider : AppWidgetProvider() {
             val timeFormat = SimpleDateFormat("HH:mm", Locale.KOREA).apply {
                 timeZone = java.util.TimeZone.getTimeZone("Asia/Seoul")
             }
-            fun metadataText(displayTs: String?, provider: String?): String {
+            fun metadataText(
+                displayTs: String?,
+                provider: String?,
+                sourceKind: String?
+            ): String {
                 val millis = WidgetRules.parseDisplayTimestamp(displayTs)
                 val time = millis?.let { timeFormat.format(Date(it)) } ?: "--:--"
-                return "$time · ${WidgetRules.providerDisplayName(provider) ?: "출처 미상"}"
+                val displayProvider =
+                    WidgetRules.providerDisplayName(provider) ?: "출처 미상"
+                val isModel = sourceKind.equals("model", ignoreCase = true) ||
+                    provider.equals("OPENMETEO", ignoreCase = true) ||
+                    provider.equals("OPEN-METEO", ignoreCase = true)
+                return "$time · $displayProvider ${
+                    if (isModel) "모델" else "실측"
+                }"
             }
-            val pm10Metadata = metadataText(pm10DisplayTs, pm10Provider)
-            val pm25Metadata = metadataText(pm25DisplayTs, pm25Provider)
-            views.setTextViewText(R.id.widget_updated_at, "항목별 최신 실측값")
+            val pm10Metadata = metadataText(
+                pm10DisplayTs, pm10Provider, pm10SourceKind
+            )
+            val pm25Metadata = metadataText(
+                pm25DisplayTs, pm25Provider, pm25SourceKind
+            )
+            views.setTextViewText(R.id.widget_updated_at, "항목별 최신값")
             views.setTextViewText(R.id.widget_pm10_meta, pm10Metadata)
             views.setTextViewText(R.id.widget_pm25_meta, pm25Metadata)
             views.setContentDescription(
                 R.id.widget_pm10_section,
                 "미세먼지 ${pm10?.toInt() ?: "--"} 마이크로그램, " +
-                    "$pm10GradeStr, ${WidgetRules.providerDisplayName(pm10Provider) ?: "출처 미상"}, " +
-                    "${pm10Metadata.substringBefore(" · ")} 측정"
+                    "$pm10GradeStr, $pm10Metadata"
             )
             views.setContentDescription(
                 R.id.widget_pm25_section,
                 "초미세먼지 ${pm25?.toInt() ?: "--"} 마이크로그램, " +
-                    "$pm25GradeStr, ${WidgetRules.providerDisplayName(pm25Provider) ?: "출처 미상"}, " +
-                    "${pm25Metadata.substringBefore(" · ")} 측정"
+                    "$pm25GradeStr, $pm25Metadata"
             )
 
             // 터치 → 앱 실행
